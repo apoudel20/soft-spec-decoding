@@ -36,22 +36,26 @@ def test_hf_parity(m, ids):
     return ok
 
 
-def run_chunk(m, ids, H, S, soft_embeds, gate):
+def run_chunk(m, ids, H, S, soft_embeds, gate, detached=False):
     c = m.get_cache()
     m.step(c, ids[:-1], lo=-1, graph=False)
     c.n = len(ids) - 1
     g = torch.Generator(device="cuda").manual_seed(0)
     hard = torch.randint(0, 150000, (H,), device="cuda", generator=g)
     emb = torch.cat([m.embed_ids(ids[-1:]), m.embed_ids(hard), soft_embeds.to(torch.bfloat16)], 0)
-    lg = m.step(c, embeds=emb, gate=gate)
     n0 = c.n
+    if detached:  # soft rows at RoPE positions n0+1.., hidden from the hard-draft rows
+        rope = torch.cat([m.ar[n0:n0 + H + 1], m.ar[n0 + 1:n0 + 1 + S]])
+        lg = m.step(c, embeds=emb, gate=gate, rope=rope, hide=(H + 1, 1, H + 1))
+    else:
+        lg = m.step(c, embeds=emb, gate=gate)
     kv = (c.k[:, :, :, : n0 + H + 1].clone(), c.v[:, :, :, : n0 + H + 1].clone())
     return lg, kv
 
 
 def test_gated_exact(m, ids, adapter=None):
     ok_all = True
-    for H, S in [(2, 4), (4, 8), (8, 16), (1, 1), (0, 16)]:
+    for H, S in [(2, 4), (4, 8), (8, 16), (1, 1), (0, 16), (8, 8)]:
         rnd = torch.Generator(device="cuda").manual_seed(H * 100 + S)
         # base: LoRA off, soft rows get some arbitrary embeddings
         base_soft = torch.randn(S, m.d, device="cuda", generator=rnd) * 0.02
@@ -60,13 +64,14 @@ def test_gated_exact(m, ids, adapter=None):
         q = torch.softmax(torch.randn(S, 64, device="cuda", generator=rnd) * 3, -1)
         qi = torch.randint(0, m.V, (S, 64), device="cuda", generator=rnd)
         soft = m.embed_soft(qi, q) + m.e_flag
-        lg_c, kv_c = run_chunk(m, ids, H, S, soft, gate=H + 1)
-        hard_ok = torch.equal(lg_b[: H + 1], lg_c[: H + 1])
-        kv_ok = torch.equal(kv_b[0], kv_c[0]) and torch.equal(kv_b[1], kv_c[1])
-        soft_diff = (lg_b[H + 1:] - lg_c[H + 1:]).abs().max().item() if S else 0.0
-        print(f"[gated H={H} S={S}] hard-row logits bitwise equal: {hard_ok}  kept KV bitwise equal: {kv_ok}  "
-              f"(soft rows differ by up to {soft_diff:.3g}, as they should)")
-        ok_all &= hard_ok and kv_ok and soft_diff > 0
+        for det in (False, True):
+            lg_c, kv_c = run_chunk(m, ids, H, S, soft, gate=H + 1, detached=det)
+            hard_ok = torch.equal(lg_b[: H + 1], lg_c[: H + 1])
+            kv_ok = torch.equal(kv_b[0], kv_c[0]) and torch.equal(kv_b[1], kv_c[1])
+            soft_diff = (lg_b[H + 1:] - lg_c[H + 1:]).abs().max().item() if S else 0.0
+            print(f"[gated {'detached' if det else 'attached'} H={H} S={S}] hard-row logits bitwise equal: {hard_ok}  "
+                  f"kept KV bitwise equal: {kv_ok}  (soft rows differ by up to {soft_diff:.3g}, as they should)")
+            ok_all &= hard_ok and kv_ok and soft_diff > 0
     return ok_all
 
 

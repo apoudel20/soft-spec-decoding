@@ -5,7 +5,8 @@ Method specs (comma-separated key=val after a colon):
   sd:g=5                                   classic SD, Qwen2.5-0.5B drafts g tokens
   jacobi:H=8                               frozen-target Jacobi (Arm A)
   softjacobi:H=4,S=8                       training-free soft-tail Jacobi, frozen target (Arm A variant)
-  C:ckpt=c_soft,H=4,S=8[,stale=reset][,sharpen=0.5]     Arm C (soft); inp=hard for C-hard
+  C:ckpt=c_soft,H=4,S=8[,tail=attached|detached][,stale=reset][,sharpen=0.5]
+                                           Arm C (soft; default tail=detached); inp=hard for C-hard
   D:ckpt=d3_soft,B=8,K=2[,inp=soft]        Arm D block drafter + frozen target
   CD:ckpt=c_soft,dckpt=d3_soft,H=4,S=8,K=2 Arm C+D
 Sets: mtbench:N, gsm8k:N, humaneval:N, dev_chat:N, dev_math:N, dev_code:N
@@ -78,13 +79,14 @@ def run_method(M, spec, prompt, max_new, temp, gen):
         return gen_softtail(M.target(), prompt, max_new, H=i("H", 8), S=0, temp=temp, gen=gen)
     if name == "softjacobi":
         return gen_softtail(M.target(), prompt, max_new, H=i("H", 4), S=i("S", 8), temp=temp,
-                            sharpen=float(kv.get("sharpen", 1.0)), stale=kv.get("stale", "reuse"), gen=gen)
+                            sharpen=float(kv.get("sharpen", 1.0)), stale=kv.get("stale", "reuse"),
+                            tail=kv.get("tail", "attached"), gen=gen)
     if name in ("C", "CD"):
         dm = M.drafter(kv["dckpt"]) if name == "CD" else None
         return gen_softtail(M.target(kv["ckpt"]), prompt, max_new, H=i("H", 4), S=i("S", 8), temp=temp,
                             inp=kv.get("inp", "soft"), lora=True, flag=True, stale=kv.get("stale", "reuse"),
                             sharpen=float(kv.get("sharpen", 1.0)), dm=dm, d_iters=i("K", 2),
-                            d_inp=kv.get("dinp", "soft"), gen=gen)
+                            d_inp=kv.get("dinp", "soft"), tail=kv.get("tail", "detached"), gen=gen)
     if name == "D":
         return gen_block(M.target(), M.drafter(kv["ckpt"]), prompt, max_new, B=i("B", 8), iters=i("K", 2),
                          inp=kv.get("inp", "soft"), temp=temp, gen=gen)

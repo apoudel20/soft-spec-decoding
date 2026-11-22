@@ -260,7 +260,7 @@ def gen_block(tm, dm, prompt, max_new, B=8, iters=2, inp="soft", temp=0, gen=Non
 @_timed
 @torch.no_grad()
 def gen_softtail(tm, prompt, max_new, H=4, S=8, temp=0, inp="soft", lora=False, flag=False,
-                 stale="reuse", sharpen=1.0, dm=None, d_iters=2, d_inp="soft", gen=None):
+                 stale="reuse", sharpen=1.0, dm=None, d_iters=2, d_inp="soft", tail="attached", gen=None):
     """One target pass per round over [x_last | H hard drafts | S soft tail].
 
     - Plain Jacobi: S=0, lora=False (guesses are the target's own previous outputs).
@@ -269,9 +269,17 @@ def gen_softtail(tm, prompt, max_new, H=4, S=8, temp=0, inp="soft", lora=False, 
     - Arm C+D: dm = block drafter that fills guess slots the target has no guess for yet.
     Hard drafts are argmax (greedy) or a sample (temp>0) of the current guess distribution.
     Only hard-slot KV is ever kept, and the LoRA (gate=H+1) touches only soft rows.
+
+    tail="attached" (the plan's literal layout): soft slots guess offsets H+1..H+S and attend to
+      the hard drafts, so after a rejection at offset a+1 every later output is stale.
+    tail="detached": soft slots guess offsets 1..S (S >= H), sit at those RoPE positions and cannot
+      attend to the hard-draft rows, only to the committed prefix (incl. x_last) and earlier soft
+      slots. Their outputs never condition on an unverified token. Hard rows are unaffected.
     """
     st = Stats()
-    n_g = H + S
+    det = tail == "detached"
+    assert not det or S >= H
+    n_g = S if det else H + S
     tc, lg = _prefill(tm, prompt, max_new + n_g + 8)
     dc = _prefill_draft(dm, prompt) if dm is not None else None
     run = Run(prompt, max_new)
@@ -311,24 +319,32 @@ def gen_softtail(tm, prompt, max_new, H=4, S=8, temp=0, inp="soft", lora=False, 
         # soft tail rows
         rows = []
         if S:
-            gi, gp = G_ids[H:], G_p[H:]
+            gi, gp = (G_ids, G_p) if det else (G_ids[H:], G_p[H:])
             if inp == "soft":
                 pp = gp if sharpen == 1.0 else gp.pow(1.0 / sharpen)
                 rows = tm.embed_soft(gi, pp)
             else:
                 rows = tm.rows32(gi[:, 0])
-            k = torch.arange(H, n_g, device=dev)
+            k = torch.arange(n_g - S, n_g, device=dev)
             rows = torch.where((k < nv)[:, None], rows, fresh[None])
             if e_flag is not None:
                 rows = rows + e_flag
         x = torch.tensor([prev], device=dev)
         hx = tm.rows32(torch.cat([x, h]))
         emb = torch.cat([hx, rows]) if S else hx
-        tl = tm.step(tc, embeds=emb, gate=(H + 1) if lora else None)
+        if det:
+            n0 = tc.n
+            rope = torch.cat([tm.ar[n0:n0 + H + 1], tm.ar[n0 + 1:n0 + 1 + S]])
+            tl = tm.step(tc, embeds=emb, gate=(H + 1) if lora else None, rope=rope, hide=(H + 1, 1, H + 1))
+        else:
+            tl = tm.step(tc, embeds=emb, gate=(H + 1) if lora else None)
         a, toks = verify(tl[: H + 1], h, qs, temp, gen)
         tc.n += 1 + a
         n_new = n_g - a
-        if stale == "reset" and a < H:
+        if det:  # soft row i guesses offset i+1 and predicts offset i+2; new offset m = old a+1+m
+            G_ids[:n_new], G_p[:n_new] = to_topk(tl[H + 1 + a:H + 1 + S])
+            nv = n_new
+        elif stale == "reset" and a < H:
             nv = 0
         else:
             G_ids[:n_new], G_p[:n_new] = to_topk(tl[a + 1:])

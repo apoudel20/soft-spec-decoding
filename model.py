@@ -226,7 +226,7 @@ class QwenLM(nn.Module):
         self.cache.n = 0
         return self.cache
 
-    def _static_forward(self, emb, pos, mask, gate, lo):
+    def _static_forward(self, emb, pos, rpos, mask, gate, lo):
         c = self.cache
 
         def kvfn(li, k, v):
@@ -234,7 +234,7 @@ class QwenLM(nn.Module):
             c.v[li].index_copy_(2, pos, v)
             return c.k[li], c.v[li]
 
-        hn = self._run(emb.view(1, -1, self.d), pos, mask, gate, kvfn)
+        hn = self._run(emb.view(1, -1, self.d), rpos, mask, gate, kvfn)
         return self.logits(hn[0, lo:])
 
     def _graph(self, T, gate, lo):
@@ -245,21 +245,22 @@ class QwenLM(nn.Module):
             c = self.cache
             emb = torch.zeros(T, self.d, dtype=torch.bfloat16, device=self.dev)
             pos = self.ar[c.maxlen - T:].clone()  # warmup writes go to the scratch slack
+            rpos = pos.clone()
             mask = self.tri[c.maxlen - T:].clone()[None, None]
             s = torch.cuda.Stream()
             s.wait_stream(torch.cuda.current_stream())
             with torch.cuda.stream(s):
                 for _ in range(2):
-                    self._static_forward(emb, pos, mask, gate, lo)
+                    self._static_forward(emb, pos, rpos, mask, gate, lo)
             torch.cuda.current_stream().wait_stream(s)
             graph = torch.cuda.CUDAGraph()
             with torch.cuda.graph(graph):  # private pool per graph (a shared pool hit an allocator assert)
-                out = self._static_forward(emb, pos, mask, gate, lo)
-            g = self.graphs[key] = (graph, emb, pos, mask, out)
+                out = self._static_forward(emb, pos, rpos, mask, gate, lo)
+            g = self.graphs[key] = (graph, emb, pos, rpos, mask, out)
         return g
 
     @torch.no_grad()
-    def step(self, cache, ids=None, embeds=None, gate=None, lo=0, graph=True):
+    def step(self, cache, ids=None, embeds=None, gate=None, lo=0, graph=True, rope=None, hide=None):
         """Decode one chunk of T tokens at positions cache.n .. cache.n+T-1.
 
         Writes their KV at those positions but does NOT advance cache.n; the caller sets
@@ -267,6 +268,9 @@ class QwenLM(nn.Module):
         Returns fp32 logits for chunk rows lo: (e.g. lo=-1 for the last row only).
         With graph=True on the model's own cache, replays a CUDA graph per (T, gate, lo); attention
         then runs over the whole static cache with a mask, the same kernels for every method.
+        rope: optional (T,) RoPE positions (default n..n+T-1; KV is still stored at n..n+T-1).
+        hide: optional (r0, k0, k1): chunk rows >= r0 cannot attend to chunk rows k0..k1-1. Used by
+        the detached soft tail. Rows < r0 are unaffected, so hard rows stay exact.
         """
         if embeds is None:
             embeds = self.embed_ids(ids)
@@ -275,25 +279,30 @@ class QwenLM(nn.Module):
         assert n + T <= cache.limit, "sequence too long for the static cache"
         lo = lo % T
         if graph and self.use_graphs and cache is self.cache:
-            gr, emb, pos, mask, out = self._graph(T, gate, lo)
+            gr, emb, pos, rpos, mask, out = self._graph(T, gate, lo)
             emb.copy_(h)
             pos.copy_(self.ar[n:n + T])
+            rpos.copy_(self.ar[n:n + T] if rope is None else rope)
             mask.copy_(self.tri[n:n + T][None, None])
+            if hide is not None:
+                mask[..., hide[0]:, n + hide[1]:n + hide[2]] = False
             gr.replay()
             return out.clone()
         positions = torch.arange(n, n + T, device=self.dev)
-        if T == 1:
+        if T == 1 and hide is None:
             mask = None
         else:
             j = torch.arange(n + T, device=self.dev)
             mask = (j[None, :] <= positions[:, None])[None, None]
+            if hide is not None:
+                mask[..., hide[0]:, n + hide[1]:n + hide[2]] = False
 
         def kvfn(li, k, v):
             cache.k[li, :, :, n:n + T] = k
             cache.v[li, :, :, n:n + T] = v
             return cache.k[li, :, :, :n + T], cache.v[li, :, :, :n + T]
 
-        hn = self._run(h.view(1, T, self.d), positions, mask, gate, kvfn)
+        hn = self._run(h.view(1, T, self.d), positions if rope is None else rope, mask, gate, kvfn)
         return self.logits(hn[0, lo:])
 
     def full(self, ids, collect_kv=False):
