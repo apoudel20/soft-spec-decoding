@@ -33,14 +33,18 @@ not from passing distributions. That is still a useful result.
 
 ## Setup
 
-| Item | Choice (swap freely) |
+| Item | Choice for this run |
 |---|---|
-| Target | A small open instruct model, roughly 1–2B parameters, from a family with a smaller sibling |
-| Drafter | A DFlash-style block drafter if code is available; otherwise an EAGLE-style head or the smaller sibling model |
-| Train data | Target-generated responses to ShareGPT/UltraChat prompts (self-distilled, so the labels match what the target actually says) |
-| Eval | MT-Bench (chat), GSM8K (math), HumanEval (code). Code and math are where any blur hurts. |
-| Decoding | Greedy first; then temperature 1 with standard rejection sampling |
-| Hardware | One GPU is enough at this scale |
+| Target | Qwen2.5-1.5B-Instruct (28 layers, d=1536, GQA 12/2, tied embeddings, vocab 151936) |
+| Drafter | Qwen2.5-0.5B-Instruct (24 layers, d=896, same tokenizer and vocab). Used as-is for classic speculative decoding, and as the base of a parallel block drafter (gated LoRA plus learned mask and flag embeddings) for Arm D. No DFlash code reused. |
+| Train data | Target-generated responses (half greedy, half T=1) to UltraChat-200k `train_sft` prompts, plus GSM8K `train` and MBPP `train` prompts. Disjoint from all eval prompts. |
+| Dev (for any selection) | Held-out UltraChat `test_sft`, held-out GSM8K `train` questions, MBPP `validation`. Never the eval sets. |
+| Eval | MT-Bench (first turns), GSM8K `test`, HumanEval. Subset sizes are reported in RESULTS.md. |
+| Decoding | Greedy first, then temperature 1 with standard rejection sampling. No repetition penalty, top-p or top-k (the model's shipped generation config is ignored). Batch size 1. |
+| Precision | bf16 weights and activations. LoRA weights in fp32, applied in bf16. |
+| Sequence length | Prompt ≤ 128 tokens, response ≤ 384 tokens for training data (≤ 512 total). Eval generations up to 256 new tokens. |
+| Implementation | A self-written Qwen2 forward pass (loaded from the HF safetensors) with a static KV cache, SDPA attention and position-gated LoRA, so every arm shares the same kernels. Checked against HF `transformers`. Eager PyTorch, no CUDA graphs or torch.compile. |
+| Hardware | 1× RTX 4070 Ti, 12 GB (about 10 GB free, since the display uses the rest), Windows 11, Python 3.12, torch 2.11 + CUDA 12.8 |
 
 ## Metrics
 

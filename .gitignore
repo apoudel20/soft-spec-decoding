@@ -1,0 +1,19 @@
+# Never commit environments, model caches, generated data or checkpoints.
+.venv/
+venv/
+__pycache__/
+*.pyc
+hf_cache/
+.cache/
+data/
+ckpt/
+checkpoints/
+runs/
+logs/
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.npy
+*.npz
+*.log
