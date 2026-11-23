@@ -11,6 +11,7 @@ from common import DATA
 
 REPO = r"C:\Users\aayus\Projects\soft-spec-decoding"
 NAMES = ["q3_train", "q3_train_more", "q3_dev_math_40", "q3_dev_code_40", "q3_dev_chat_40"]
+NAMES += [n + "_long" for n in NAMES]
 
 README = """# Generated token data
 
@@ -47,7 +48,8 @@ def main():
         with open(os.path.join(out, n + ".jsonl"), "w", encoding="utf-8") as f:
             for it in items:
                 f.write(json.dumps({"prompt": list(it["prompt"]), "resp": list(it["resp"])}) + "\n")
-        rows.append(f"| `{n}.jsonl` | {len(items)} | {WHAT[n]} |")
+        what = WHAT[n] if n in WHAT else WHAT[n[:-5]] + ", capped answers continued to 1,024 tokens"
+        rows.append(f"| `{n}.jsonl` | {len(items)} | {what} |")
         print(n, len(items))
     open(os.path.join(out, "README.md"), "w", encoding="utf-8").write(README.replace("{rows}", "\n".join(rows)))
 
