@@ -1,0 +1,501 @@
+{
+ "args": {
+  "sets": [
+   "gsm8k:40",
+   "mtbench:40",
+   "humaneval:40"
+  ],
+  "block": "d3_soft",
+  "B": 8,
+  "K": 2,
+  "ctx": 60
+ },
+ "sets": {
+  "gsm8k": {
+   "temp_expected_acceptance_base": {
+    "0.3": 0.9377564124442662,
+    "0.5": 0.9369905345021613,
+    "0.7": 0.93593996910556,
+    "1.0": 0.9329159488233846,
+    "1.3": 0.9266798823430562
+   },
+   "base": {
+    "content word": {
+     "share_of_tokens": 0.34174404521598706,
+     "n": 3386,
+     "accuracy": 0.9128765505020673,
+     "share_of_failures": 0.4828150572831424
+    },
+    "function word": {
+     "share_of_tokens": 0.17702866370609607,
+     "n": 1754,
+     "accuracy": 0.8996579247434435,
+     "share_of_failures": 0.28805237315875615
+    },
+    "markdown/latex": {
+     "share_of_tokens": 0.09144125958821155,
+     "n": 906,
+     "accuracy": 0.9713024282560706,
+     "share_of_failures": 0.0425531914893617
+    },
+    "newline": {
+     "share_of_tokens": 0.004743641501816714,
+     "n": 47,
+     "accuracy": 0.9361702127659575,
+     "share_of_failures": 0.004909983633387889
+    },
+    "number": {
+     "share_of_tokens": 0.13433589018974565,
+     "n": 1331,
+     "accuracy": 0.9789631855747558,
+     "share_of_failures": 0.04582651391162029
+    },
+    "punctuation": {
+     "share_of_tokens": 0.17157852240613647,
+     "n": 1700,
+     "accuracy": 0.9629411764705882,
+     "share_of_failures": 0.10310965630114566
+    },
+    "whitespace": {
+     "share_of_tokens": 0.07912797739200646,
+     "n": 784,
+     "accuracy": 0.9744897959183674,
+     "share_of_failures": 0.03273322422258593
+    },
+    "_failure_flavour": {
+     "same_word_diff_spacing_or_case": 0.03273322422258593,
+     "draft_has_target_prob_ge_0.2": 0.48117839607201307,
+     "target_near_tie_margin_lt_0.2": 0.3158756137479542,
+     "target_confident_top1_ge_0.9": 0.09656301145662848
+    },
+    "_overall_accuracy": 0.9383326604763828
+   },
+   "block_slot0": {
+    "content word": {
+     "share_of_tokens": 0.34708839547549225,
+     "n": 3314,
+     "accuracy": 0.8949909474954738,
+     "share_of_failures": 0.5028901734104047
+    },
+    "function word": {
+     "share_of_tokens": 0.17658148303309593,
+     "n": 1686,
+     "accuracy": 0.8873072360616845,
+     "share_of_failures": 0.2745664739884393
+    },
+    "markdown/latex": {
+     "share_of_tokens": 0.0902806870548806,
+     "n": 862,
+     "accuracy": 0.9663573085846868,
+     "share_of_failures": 0.04190751445086705
+    },
+    "newline": {
+     "share_of_tokens": 0.004398826979472141,
+     "n": 42,
+     "accuracy": 0.9523809523809523,
+     "share_of_failures": 0.002890173410404624
+    },
+    "number": {
+     "share_of_tokens": 0.1330121491411814,
+     "n": 1270,
+     "accuracy": 0.9755905511811024,
+     "share_of_failures": 0.044797687861271675
+    },
+    "punctuation": {
+     "share_of_tokens": 0.1692501047339757,
+     "n": 1616,
+     "accuracy": 0.9585396039603961,
+     "share_of_failures": 0.0968208092485549
+    },
+    "whitespace": {
+     "share_of_tokens": 0.07938835358190197,
+     "n": 758,
+     "accuracy": 0.9670184696569921,
+     "share_of_failures": 0.036127167630057806
+    },
+    "_failure_flavour": {
+     "same_word_diff_spacing_or_case": 0.03468208092485549,
+     "draft_has_target_prob_ge_0.2": 0.4407514450867052,
+     "target_near_tie_margin_lt_0.2": 0.2904624277456647,
+     "target_confident_top1_ge_0.9": 0.11416184971098266
+    },
+    "_overall_accuracy": 0.9275240888144114
+   },
+   "d3_soft:K2": {
+    "content word": {
+     "share_of_tokens": 0.4563807659366206,
+     "n": 3730,
+     "accuracy": 0.0,
+     "share_of_failures": 0.4563807659366206
+    },
+    "function word": {
+     "share_of_tokens": 0.192830050165178,
+     "n": 1576,
+     "accuracy": 0.0,
+     "share_of_failures": 0.192830050165178
+    },
+    "markdown/latex": {
+     "share_of_tokens": 0.06484766915453322,
+     "n": 530,
+     "accuracy": 0.0,
+     "share_of_failures": 0.06484766915453322
+    },
+    "newline": {
+     "share_of_tokens": 0.0035482686895876667,
+     "n": 29,
+     "accuracy": 0.0,
+     "share_of_failures": 0.0035482686895876667
+    },
+    "number": {
+     "share_of_tokens": 0.08356784534442677,
+     "n": 683,
+     "accuracy": 0.0,
+     "share_of_failures": 0.08356784534442677
+    },
+    "punctuation": {
+     "share_of_tokens": 0.13960601982136303,
+     "n": 1141,
+     "accuracy": 0.0,
+     "share_of_failures": 0.13960601982136303
+    },
+    "whitespace": {
+     "share_of_tokens": 0.059219380888290714,
+     "n": 484,
+     "accuracy": 0.0,
+     "share_of_failures": 0.059219380888290714
+    },
+    "_failure_flavour": {
+     "same_word_diff_spacing_or_case": 0.020555487581059587,
+     "draft_has_target_prob_ge_0.2": 0.14107426893429587,
+     "target_near_tie_margin_lt_0.2": 0.12467882050654594,
+     "target_confident_top1_ge_0.9": 0.5589134956564297
+    },
+    "_overall_accuracy": 0.0
+   }
+  },
+  "mtbench": {
+   "temp_expected_acceptance_base": {
+    "0.3": 0.8269043942213219,
+    "0.5": 0.8288320494639645,
+    "0.7": 0.8296881909660672,
+    "1.0": 0.8267234169404242,
+    "1.3": 0.8166989826964408
+   },
+   "base": {
+    "content word": {
+     "share_of_tokens": 0.43130990415335463,
+     "n": 3510,
+     "accuracy": 0.7584045584045584,
+     "share_of_failures": 0.5934219734079776
+    },
+    "function word": {
+     "share_of_tokens": 0.2714426148930941,
+     "n": 2209,
+     "accuracy": 0.8184698958804889,
+     "share_of_failures": 0.2806158152554234
+    },
+    "markdown/latex": {
+     "share_of_tokens": 0.06389776357827476,
+     "n": 520,
+     "accuracy": 0.9384615384615385,
+     "share_of_failures": 0.02239328201539538
+    },
+    "newline": {
+     "share_of_tokens": 0.007618579503563529,
+     "n": 62,
+     "accuracy": 0.9032258064516129,
+     "share_of_failures": 0.004198740377886634
+    },
+    "number": {
+     "share_of_tokens": 0.05935119193905136,
+     "n": 483,
+     "accuracy": 0.9772256728778468,
+     "share_of_failures": 0.007697690692792162
+    },
+    "punctuation": {
+     "share_of_tokens": 0.13996067829933645,
+     "n": 1139,
+     "accuracy": 0.8893766461808604,
+     "share_of_failures": 0.08817354793561931
+    },
+    "whitespace": {
+     "share_of_tokens": 0.026419267633325142,
+     "n": 215,
+     "accuracy": 0.9767441860465116,
+     "share_of_failures": 0.0034989503149055285
+    },
+    "_failure_flavour": {
+     "same_word_diff_spacing_or_case": 0.016794961511546535,
+     "draft_has_target_prob_ge_0.2": 0.3449965010496851,
+     "target_near_tie_margin_lt_0.2": 0.5178446466060181,
+     "target_confident_top1_ge_0.9": 0.03568929321203639
+    },
+    "_overall_accuracy": 0.824404030474318
+   },
+   "block_slot0": {
+    "content word": {
+     "share_of_tokens": 0.43284924816861586,
+     "n": 3368,
+     "accuracy": 0.7289192399049882,
+     "share_of_failures": 0.5920881971465629
+    },
+    "function word": {
+     "share_of_tokens": 0.2695026346227991,
+     "n": 2097,
+     "accuracy": 0.7958989031950405,
+     "share_of_failures": 0.2775616083009079
+    },
+    "markdown/latex": {
+     "share_of_tokens": 0.06181724714047038,
+     "n": 481,
+     "accuracy": 0.9272349272349272,
+     "share_of_failures": 0.022697795071335927
+    },
+    "newline": {
+     "share_of_tokens": 0.007454054748746948,
+     "n": 58,
+     "accuracy": 0.896551724137931,
+     "share_of_failures": 0.0038910505836575876
+    },
+    "number": {
+     "share_of_tokens": 0.06001799254594525,
+     "n": 467,
+     "accuracy": 0.961456102783726,
+     "share_of_failures": 0.011673151750972763
+    },
+    "punctuation": {
+     "share_of_tokens": 0.14124148567022235,
+     "n": 1099,
+     "accuracy": 0.8771610555050046,
+     "share_of_failures": 0.08754863813229571
+    },
+    "whitespace": {
+     "share_of_tokens": 0.027117337103200103,
+     "n": 211,
+     "accuracy": 0.966824644549763,
+     "share_of_failures": 0.004539559014267186
+    },
+    "_failure_flavour": {
+     "same_word_diff_spacing_or_case": 0.01556420233463035,
+     "draft_has_target_prob_ge_0.2": 0.3236057068741894,
+     "target_near_tie_margin_lt_0.2": 0.4695201037613489,
+     "target_confident_top1_ge_0.9": 0.057068741893644616
+    },
+    "_overall_accuracy": 0.8018249582315897
+   },
+   "d3_soft:K2": {
+    "content word": {
+     "share_of_tokens": 0.5391656858898914,
+     "n": 4123,
+     "accuracy": 0.0,
+     "share_of_failures": 0.5391656858898914
+    },
+    "function word": {
+     "share_of_tokens": 0.2420557081208317,
+     "n": 1851,
+     "accuracy": 0.0,
+     "share_of_failures": 0.2420557081208317
+    },
+    "markdown/latex": {
+     "share_of_tokens": 0.04289263763567412,
+     "n": 328,
+     "accuracy": 0.0,
+     "share_of_failures": 0.04289263763567412
+    },
+    "newline": {
+     "share_of_tokens": 0.00745390349156532,
+     "n": 57,
+     "accuracy": 0.0,
+     "share_of_failures": 0.00745390349156532
+    },
+    "number": {
+     "share_of_tokens": 0.04812344710343926,
+     "n": 368,
+     "accuracy": 0.0,
+     "share_of_failures": 0.04812344710343926
+    },
+    "punctuation": {
+     "share_of_tokens": 0.09637766444357264,
+     "n": 737,
+     "accuracy": 0.0,
+     "share_of_failures": 0.09637766444357264
+    },
+    "whitespace": {
+     "share_of_tokens": 0.0239309533150255,
+     "n": 183,
+     "accuracy": 0.0,
+     "share_of_failures": 0.0239309533150255
+    },
+    "_failure_flavour": {
+     "same_word_diff_spacing_or_case": 0.018700143847260365,
+     "draft_has_target_prob_ge_0.2": 0.15574735190270694,
+     "target_near_tie_margin_lt_0.2": 0.2935791813783183,
+     "target_confident_top1_ge_0.9": 0.333987184516804
+    },
+    "_overall_accuracy": 0.0
+   }
+  },
+  "humaneval": {
+   "temp_expected_acceptance_base": {
+    "0.3": 0.9694007612358625,
+    "0.5": 0.9687143028069275,
+    "0.7": 0.96727061095556,
+    "1.0": 0.963071744387686,
+    "1.3": 0.9551275294030351
+   },
+   "base": {
+    "content word": {
+     "share_of_tokens": 0.3124786324786325,
+     "n": 1828,
+     "accuracy": 0.9562363238512035,
+     "share_of_failures": 0.4444444444444444
+    },
+    "function word": {
+     "share_of_tokens": 0.11282051282051282,
+     "n": 660,
+     "accuracy": 0.9803030303030303,
+     "share_of_failures": 0.07222222222222222
+    },
+    "markdown/latex": {
+     "share_of_tokens": 0.09418803418803419,
+     "n": 551,
+     "accuracy": 0.956442831215971,
+     "share_of_failures": 0.13333333333333333
+    },
+    "newline": {
+     "share_of_tokens": 0.03606837606837607,
+     "n": 211,
+     "accuracy": 0.909952606635071,
+     "share_of_failures": 0.10555555555555556
+    },
+    "number": {
+     "share_of_tokens": 0.08512820512820513,
+     "n": 498,
+     "accuracy": 0.9919678714859438,
+     "share_of_failures": 0.022222222222222223
+    },
+    "punctuation": {
+     "share_of_tokens": 0.2294017094017094,
+     "n": 1342,
+     "accuracy": 0.9731743666169895,
+     "share_of_failures": 0.2
+    },
+    "whitespace": {
+     "share_of_tokens": 0.12991452991452992,
+     "n": 760,
+     "accuracy": 0.9947368421052631,
+     "share_of_failures": 0.022222222222222223
+    },
+    "_failure_flavour": {
+     "same_word_diff_spacing_or_case": 0.17222222222222222,
+     "draft_has_target_prob_ge_0.2": 0.49444444444444446,
+     "target_near_tie_margin_lt_0.2": 0.35,
+     "target_confident_top1_ge_0.9": 0.08888888888888889
+    },
+    "_overall_accuracy": 0.9692307692307692
+   },
+   "block_slot0": {
+    "content word": {
+     "share_of_tokens": 0.3162112932604736,
+     "n": 1736,
+     "accuracy": 0.9441244239631337,
+     "share_of_failures": 0.5
+    },
+    "function word": {
+     "share_of_tokens": 0.11785063752276867,
+     "n": 647,
+     "accuracy": 0.9706336939721792,
+     "share_of_failures": 0.0979381443298969
+    },
+    "markdown/latex": {
+     "share_of_tokens": 0.07704918032786885,
+     "n": 423,
+     "accuracy": 0.9432624113475178,
+     "share_of_failures": 0.12371134020618557
+    },
+    "newline": {
+     "share_of_tokens": 0.03351548269581057,
+     "n": 184,
+     "accuracy": 0.9184782608695652,
+     "share_of_failures": 0.07731958762886598
+    },
+    "number": {
+     "share_of_tokens": 0.08816029143897997,
+     "n": 484,
+     "accuracy": 0.9917355371900827,
+     "share_of_failures": 0.020618556701030927
+    },
+    "punctuation": {
+     "share_of_tokens": 0.23406193078324225,
+     "n": 1285,
+     "accuracy": 0.9758754863813229,
+     "share_of_failures": 0.15979381443298968
+    },
+    "whitespace": {
+     "share_of_tokens": 0.1331511839708561,
+     "n": 731,
+     "accuracy": 0.9945280437756499,
+     "share_of_failures": 0.020618556701030927
+    },
+    "_failure_flavour": {
+     "same_word_diff_spacing_or_case": 0.08762886597938144,
+     "draft_has_target_prob_ge_0.2": 0.3711340206185567,
+     "target_near_tie_margin_lt_0.2": 0.31958762886597936,
+     "target_confident_top1_ge_0.9": 0.17010309278350516
+    },
+    "_overall_accuracy": 0.9646630236794171
+   },
+   "d3_soft:K2": {
+    "content word": {
+     "share_of_tokens": 0.3920899417787593,
+     "n": 1953,
+     "accuracy": 0.0,
+     "share_of_failures": 0.3920899417787593
+    },
+    "function word": {
+     "share_of_tokens": 0.11965468781369203,
+     "n": 596,
+     "accuracy": 0.0,
+     "share_of_failures": 0.11965468781369203
+    },
+    "markdown/latex": {
+     "share_of_tokens": 0.07006625175667537,
+     "n": 349,
+     "accuracy": 0.0,
+     "share_of_failures": 0.07006625175667537
+    },
+    "newline": {
+     "share_of_tokens": 0.0357357960248946,
+     "n": 178,
+     "accuracy": 0.0,
+     "share_of_failures": 0.0357357960248946
+    },
+    "number": {
+     "share_of_tokens": 0.07689219032322826,
+     "n": 383,
+     "accuracy": 0.0,
+     "share_of_failures": 0.07689219032322826
+    },
+    "punctuation": {
+     "share_of_tokens": 0.22766512748444087,
+     "n": 1134,
+     "accuracy": 0.0,
+     "share_of_failures": 0.22766512748444087
+    },
+    "whitespace": {
+     "share_of_tokens": 0.07789600481830958,
+     "n": 388,
+     "accuracy": 0.0,
+     "share_of_failures": 0.07789600481830958
+    },
+    "_failure_flavour": {
+     "same_word_diff_spacing_or_case": 0.04798233286488657,
+     "draft_has_target_prob_ge_0.2": 0.04376631198554507,
+     "target_near_tie_margin_lt_0.2": 0.05480827143143947,
+     "target_confident_top1_ge_0.9": 0.8267416181489661
+    },
+    "_overall_accuracy": 0.0
+   }
+  }
+ }
+}

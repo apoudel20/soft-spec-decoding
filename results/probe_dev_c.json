@@ -1,0 +1,432 @@
+{
+ "args": {
+  "sets": [
+   "dev_math:8",
+   "dev_chat:8"
+  ],
+  "methods": [
+   "C:ckpt=probe_c,H=4,S=8,tail=attached",
+   "C:ckpt=probe_c,H=4,S=8,tail=detached",
+   "C:ckpt=probe_c,H=2,S=8,tail=detached",
+   "C:ckpt=probe_c,H=6,S=12,tail=detached",
+   "softjacobi:H=4,S=8,tail=detached"
+  ],
+  "temp": 0.0,
+  "max_new": 128,
+  "seed": 0,
+  "out": "probe_dev_c"
+ },
+ "sets": {
+  "dev_math": {
+   "n": 8,
+   "n_total": 8,
+   "methods": {
+    "ar": {
+     "tau": 1.0,
+     "time": 10.787455000041518,
+     "tokens": 1024,
+     "tok_per_s": 94.92507732324806,
+     "speedup": 1.0
+    },
+    "C:ckpt=probe_c,H=4,S=8,tail=attached": {
+     "tau": 1.0694736842105264,
+     "rounds": 950,
+     "drafter_passes_per_round": 0.0,
+     "time": 16.472961100022076,
+     "tokens": 1024,
+     "tok_per_s": 62.16247302366468,
+     "speedup": 0.6548582816739039,
+     "acc_cond": [
+      0.0632,
+      0.0833,
+      0.6,
+      0.0
+     ],
+     "acc_uncond": [
+      0.0632,
+      0.0053,
+      0.0032,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "graph_captures_in_timed_runs": 0,
+     "exact_match": "8/8",
+     "divergence_gaps": []
+    },
+    "C:ckpt=probe_c,H=4,S=8,tail=detached": {
+     "tau": 1.5825545171339563,
+     "rounds": 642,
+     "drafter_passes_per_round": 0.0,
+     "time": 11.090002199984156,
+     "tokens": 1024,
+     "tok_per_s": 92.33541901384501,
+     "speedup": 0.9727189233611632,
+     "acc_cond": [
+      0.4081,
+      0.2939,
+      0.3247,
+      0.56
+     ],
+     "acc_uncond": [
+      0.4081,
+      0.1199,
+      0.0389,
+      0.0218,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "graph_captures_in_timed_runs": 0,
+     "exact_match": "8/8",
+     "divergence_gaps": []
+    },
+    "C:ckpt=probe_c,H=2,S=8,tail=detached": {
+     "tau": 1.5776397515527951,
+     "rounds": 644,
+     "drafter_passes_per_round": 0.0,
+     "time": 11.752337100042496,
+     "tokens": 1024,
+     "tok_per_s": 87.13160550817567,
+     "speedup": 0.9178987045906394,
+     "acc_cond": [
+      0.441,
+      0.3275
+     ],
+     "acc_uncond": [
+      0.441,
+      0.1444,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "graph_captures_in_timed_runs": 0,
+     "exact_match": "8/8",
+     "divergence_gaps": []
+    },
+    "C:ckpt=probe_c,H=6,S=12,tail=detached": {
+     "tau": 1.6256,
+     "rounds": 625,
+     "drafter_passes_per_round": 0.0,
+     "time": 12.708926900028018,
+     "tokens": 1024,
+     "tok_per_s": 80.573285852934,
+     "speedup": 0.8488092727968823,
+     "acc_cond": [
+      0.4224,
+      0.2841,
+      0.4267,
+      0.5312,
+      0.5882,
+      0.4
+     ],
+     "acc_uncond": [
+      0.4224,
+      0.12,
+      0.0512,
+      0.0272,
+      0.016,
+      0.0064,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "graph_captures_in_timed_runs": 0,
+     "exact_match": "8/8",
+     "divergence_gaps": []
+    },
+    "softjacobi:H=4,S=8,tail=detached": {
+     "tau": 1.0820021299254525,
+     "rounds": 939,
+     "drafter_passes_per_round": 0.0,
+     "time": 13.966380999976536,
+     "tokens": 1024,
+     "tok_per_s": 73.31892206017581,
+     "speedup": 0.7723872777106425,
+     "acc_cond": [
+      0.065,
+      0.1967,
+      0.4167,
+      0.2
+     ],
+     "acc_uncond": [
+      0.065,
+      0.0128,
+      0.0053,
+      0.0011,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "graph_captures_in_timed_runs": 0,
+     "exact_match": "8/8",
+     "divergence_gaps": []
+    }
+   }
+  },
+  "dev_chat": {
+   "n": 8,
+   "n_total": 8,
+   "methods": {
+    "ar": {
+     "tau": 1.0,
+     "time": 11.187967099947855,
+     "tokens": 1024,
+     "tok_per_s": 91.52690483016997,
+     "speedup": 1.0
+    },
+    "C:ckpt=probe_c,H=4,S=8,tail=attached": {
+     "tau": 1.0506721820062048,
+     "rounds": 967,
+     "drafter_passes_per_round": 0.0,
+     "time": 17.954444000002695,
+     "tokens": 1024,
+     "tok_per_s": 57.0332336662637,
+     "speedup": 0.6231308025994108,
+     "acc_cond": [
+      0.0424,
+      0.2195,
+      0.0
+     ],
+     "acc_uncond": [
+      0.0424,
+      0.0093,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "graph_captures_in_timed_runs": 0,
+     "exact_match": "4/8",
+     "divergence_gaps": [
+      0.003,
+      0.007,
+      0.015,
+      0.016
+     ]
+    },
+    "C:ckpt=probe_c,H=4,S=8,tail=detached": {
+     "tau": 1.3879781420765027,
+     "rounds": 732,
+     "drafter_passes_per_round": 0.0,
+     "time": 13.730134000012185,
+     "tokens": 1024,
+     "tok_per_s": 74.58048115182935,
+     "speedup": 0.8148476263915505,
+     "acc_cond": [
+      0.3115,
+      0.193,
+      0.25,
+      0.2727
+     ],
+     "acc_uncond": [
+      0.3115,
+      0.0601,
+      0.015,
+      0.0041,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "graph_captures_in_timed_runs": 0,
+     "exact_match": "4/8",
+     "divergence_gaps": [
+      0.003,
+      0.007,
+      0.015,
+      0.016
+     ]
+    },
+    "C:ckpt=probe_c,H=2,S=8,tail=detached": {
+     "tau": 1.372972972972973,
+     "rounds": 740,
+     "drafter_passes_per_round": 0.0,
+     "time": 13.870525599952089,
+     "tokens": 1024,
+     "tok_per_s": 73.82560903124948,
+     "speedup": 0.8066000829836254,
+     "acc_cond": [
+      0.3108,
+      0.2043
+     ],
+     "acc_uncond": [
+      0.3108,
+      0.0635,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "graph_captures_in_timed_runs": 0,
+     "exact_match": "4/8",
+     "divergence_gaps": [
+      0.003,
+      0.007,
+      0.015,
+      0.016
+     ]
+    },
+    "C:ckpt=probe_c,H=6,S=12,tail=detached": {
+     "tau": 1.382312925170068,
+     "rounds": 735,
+     "drafter_passes_per_round": 0.0,
+     "time": 15.170848600042518,
+     "tokens": 1024,
+     "tok_per_s": 67.49787220189714,
+     "speedup": 0.7374648178821387,
+     "acc_cond": [
+      0.3034,
+      0.1928,
+      0.2791,
+      0.25,
+      0.6667,
+      0.0
+     ],
+     "acc_uncond": [
+      0.3034,
+      0.0585,
+      0.0163,
+      0.0041,
+      0.0027,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "graph_captures_in_timed_runs": 0,
+     "exact_match": "4/8",
+     "divergence_gaps": [
+      0.003,
+      0.007,
+      0.015,
+      0.016
+     ]
+    },
+    "softjacobi:H=4,S=8,tail=detached": {
+     "tau": 1.0605427974947808,
+     "rounds": 958,
+     "drafter_passes_per_round": 0.0,
+     "time": 14.315981199993985,
+     "tokens": 1024,
+     "tok_per_s": 71.52845380939941,
+     "speedup": 0.781501941337598,
+     "acc_cond": [
+      0.0491,
+      0.2128,
+      0.1,
+      0.0
+     ],
+     "acc_uncond": [
+      0.0491,
+      0.0104,
+      0.001,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "graph_captures_in_timed_runs": 0,
+     "exact_match": "4/8",
+     "divergence_gaps": [
+      0.003,
+      0.007,
+      0.015,
+      0.016
+     ]
+    }
+   }
+  }
+ },
+ "time": "2026-11-22 17:24"
+}

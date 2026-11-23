@@ -83,9 +83,9 @@ def diag_block(d, seqs, B, stride, iters, inp):
     for s in seqs:
         ids = torch.tensor(s["prompt"] + s["resp"], device="cuda")
         r = len(s["prompt"])
-        starts = torch.arange(r, len(ids) - B - 1, stride, device="cuda")
-        if len(starts) == 0:
+        if len(ids) - B - 1 <= r:  # response too short for one full block
             continue
+        starts = torch.arange(r, len(ids) - B - 1, stride, device="cuda")
         _, kvs = d.full(ids[None], collect_kv=True)
         nb = len(starts)
         st = starts[None]
