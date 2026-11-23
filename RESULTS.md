@@ -363,6 +363,30 @@ and each layer reduced by PCA (fit on training rows) to the same width for both 
 - Remaining length peaks at layer 18 of 36 in the 8B. Content summaries peak at layers 24 to 36.
 - So the target does know more about its own future, and which layer to tap depends on what is predicted.
 
+## Sketch A on DFlash (plan vector into the block inputs)
+
+`dflash_plan.py`, results in `results/dflash_plan.json`. Target Qwen3-8B (4-bit), drafter z-lab/Qwen3-8B-DFlash-b16
+frozen. A learned plan vector is added to the input embeddings of slots 1 to 15 of each 16-token block: its direction
+from a linear map of the target's layer 18 and 20 states at the last verified position, its length a learned scalar
+that starts at 5% of a token-embedding norm. Trained for 549 steps on the 8B's own answers (8 blocks per answer).
+The oracle variant uses the mean layer-20 state over the true next 64 positions instead. Evaluated on held-out dev
+answers, every 16th position, teacher-forced context, greedy chain acceptance.
+
+| Set | Blocks | Plain DFlash | + mid-layer plan | + oracle plan |
+|---|---|---|---|---|
+| Math | see json | 7.46 | 7.49 (+0.4%) | 7.44 (-0.3%) |
+| Code | see json | 6.71 | 6.91 (+3.0%) | 6.83 (+1.8%) |
+| Chat | see json | 2.94 | 2.95 (+0.3%) | 2.95 (+0.4%) |
+
+No meaningful effect. The learned strength grew from 0.05 to 0.125, so the head was used, but neither the realistic
+plan nor the oracle moves acceptance. Because the oracle fails too, this points at the injection pathway (input
+embeddings) rather than at the value of future information. DFlash reads the target through context keys and values,
+which `kv_oracle.py` tests next without training.
+
+A first version of the head (zero-initialised projection with a norm cap) damaged the drafter within 3 steps
+(6.96 to 4.82 accepted on the smoke set) because Adam moved all weights at once and the output hit the cap. The
+smoke test caught it before the full run.
+
 ## What the results say
 
 1. **Refinement works, softness doesn't (target side).** Arm C turns the spare width of the verification

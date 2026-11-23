@@ -43,17 +43,21 @@ B = 16
 
 
 class PlanHead(nn.Module):
-    def __init__(self, din, dout, enorm):
+    """Direction from a learned projection, strength from a learned scalar that starts at 5% of a token-embedding
+    norm. (v1 used a zero-initialised projection with a norm cap: Adam moves every weight by about the learning rate,
+    so the output hit the cap within a few steps and the drafter got worse. A scalar strength avoids that, and
+    starting it above zero avoids the deadlock of a zero gate.)"""
+
+    def __init__(self, din, dout, enorm, alpha0=0.05):
         super().__init__()
         self.ln = nn.LayerNorm(din, elementwise_affine=False)
         self.proj = nn.Linear(din, dout)
-        nn.init.zeros_(self.proj.weight)
-        nn.init.zeros_(self.proj.bias)
+        self.alpha = nn.Parameter(torch.tensor(alpha0))
         self.enorm = enorm
 
     def forward(self, z):
-        v = self.proj(self.ln(z.float()))
-        return (self.enorm * v / v.norm(dim=-1, keepdim=True).clamp_min(1.0))
+        v = F.normalize(self.proj(self.ln(z.float())), dim=-1)
+        return self.alpha.clamp(-1, 1) * self.enorm * v
 
 
 @torch.no_grad()
@@ -77,8 +81,8 @@ def block_logits(t, d, ids, ctx, s, plan_vec):
     blk = torch.full((1, B), d.mask_token_id, dtype=torch.long, device="cuda")
     blk[0, 0] = ids[s]
     emb = t.model.embed_tokens(blk)
-    if plan_vec is not None:
-        emb = emb + plan_vec.to(emb.dtype)[None, None]
+    if plan_vec is not None:   # slot 0 holds the real last token and is left untouched
+        emb = torch.cat([emb[:, :1], emb[:, 1:] + plan_vec.to(emb.dtype)[None, None]], dim=1)
     pos = torch.arange(0, s + B, device="cuda")[None]
     h = d(target_hidden=ctx[None, :s], noise_embedding=emb, position_ids=pos, is_causal=False)
     return t.lm_head(h[:, 1:, :]).float()[0]   # (15, V): slot i predicts token s+i

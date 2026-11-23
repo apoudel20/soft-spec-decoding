@@ -1,0 +1,66 @@
+{
+ "args": {
+  "mode": "eval",
+  "plan": "mid",
+  "plans": [
+   "none",
+   "mid",
+   "oracle"
+  ],
+  "n_train": 600,
+  "epochs": 1,
+  "blocks": 8,
+  "lr": 0.001,
+  "sets": [
+   "math",
+   "code",
+   "chat"
+  ],
+  "stride": 16,
+  "out": "dflash_plan"
+ },
+ "sets": {
+  "math": {
+   "none": {
+    "blocks": 600,
+    "mean_accepted": 7.463333333333333
+   },
+   "mid": {
+    "blocks": 600,
+    "mean_accepted": 7.491666666666666
+   },
+   "oracle": {
+    "blocks": 600,
+    "mean_accepted": 7.4366666666666665
+   }
+  },
+  "code": {
+   "none": {
+    "blocks": 399,
+    "mean_accepted": 6.709273182957394
+   },
+   "mid": {
+    "blocks": 399,
+    "mean_accepted": 6.912280701754386
+   },
+   "oracle": {
+    "blocks": 399,
+    "mean_accepted": 6.829573934837093
+   }
+  },
+  "chat": {
+   "none": {
+    "blocks": 668,
+    "mean_accepted": 2.941616766467066
+   },
+   "mid": {
+    "blocks": 668,
+    "mean_accepted": 2.9520958083832336
+   },
+   "oracle": {
+    "blocks": 668,
+    "mean_accepted": 2.9535928143712575
+   }
+  }
+ }
+}

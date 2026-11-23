@@ -301,15 +301,15 @@ for k, lv in enumerate(order):
         S.A(f'<path class="{cls}"{" hidden" if hid else ""} d="M{x + 60} {yy:.0f} C{x + 200} {yy:.0f},{lx0 - 140} {y + 9},{lx0 - 6} {y + 9}" '
             f'style="fill:none;stroke:{ecol[L]};stroke-width:1.3;stroke-dasharray:3 3" marker-end="url(#sk_k)"/>')
     S.end()
-S.A(f'<text x="{lx0}" y="{lev["fine"] + 50}" font-size="10.5" style="fill:var(--muted)" class="e-cnn">CNN-style: shallow layers steer the whole block, deep layers the details</text>')
-S.A(f'<text x="{lx0}" y="{lev["fine"] + 50}" font-size="10.5" style="fill:var(--muted)" class="e-probe" hidden>Probe-style: deep layers carry the gist, shallow layers the next tokens</text>')
+S.A(f'<text x="{lx0}" y="{lev["fine"] + 50}" font-size="10.5" style="fill:var(--muted)" class="e-cnn">Shallow-first: shallow layers steer the whole block, deep layers the details</text>')
+S.A(f'<text x="{lx0}" y="{lev["fine"] + 50}" font-size="10.5" style="fill:var(--muted)" class="e-probe" hidden>Deep-first (as in a CNN or U-Net, and what our probes suggest): deep layers steer the whole block</text>')
 FIGS.append(("E", "Coarse to fine", [
     ("Taps", "Three layers are tapped: shallow, middle and deep."),
     ("Plan", "The clean plan latent from Sketch D."),
     ("Whole block", "The decoder first produces one code for the whole block, steered by one tapped layer."),
     ("Segments", "Then four segment codes, steered by another."),
     ("Tokens", "Then sixteen tokens, steered by the third. Use the swap button to flip which layer steers which scale."),
-], S.done(), "Coarse-to-fine decoding, like a CNN's receptive fields. Which layer steers which scale is what the layer sweep will decide."))
+], S.done(), "Coarse-to-fine decoding, like a U-Net decoder. In a CNN the deepest layers carry the coarse picture, and our probes found the same ordering here: length and structure mid-network, content gist in the upper layers, next tokens at the top. Both assignments are tested."))
 
 # ================= viewer =================
 tabs = "".join(f'<button type="button" role="tab" class="sktab" data-k="{k}" aria-selected="{"true" if i == 0 else "false"}">'
@@ -325,7 +325,7 @@ html = f'''<div class="skviewer" id="skv">
     <button type="button" id="skPlay">Play</button>
     <button type="button" id="skNext" aria-label="Next phase">›</button>
     <input type="range" id="skRange" min="0" max="5" step="1" value="5" aria-label="Phase">
-    <button type="button" id="eSwap" hidden>Swap to probe-style</button>
+    <button type="button" id="eSwap" hidden>Swap to deep-first</button>
   </div>
   <ol class="phases" id="skSteps"></ol>
   <p class="phasetext" id="skText" aria-live="polite"></p>
@@ -367,7 +367,7 @@ html = f'''<div class="skviewer" id="skv">
     probe = !probe;
     root.querySelectorAll(".e-cnn").forEach(e => e.toggleAttribute("hidden", probe));
     root.querySelectorAll(".e-probe").forEach(e => e.toggleAttribute("hidden", !probe));
-    swap.textContent = probe ? "Swap to CNN-style" : "Swap to probe-style";
+    swap.textContent = probe ? "Swap to shallow-first" : "Swap to deep-first";
   }});
   select("A");
 }})();

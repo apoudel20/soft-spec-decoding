@@ -1882,15 +1882,15 @@ select { font: 13px var(--sans); color: var(--fg); background: var(--panel); bor
 <path class="e-cnn" d="M246.0 263 C386.0 263,380 245,514 245" style="fill:none;stroke:var(--reject);stroke-width:1.3;stroke-dasharray:3 3" marker-end="url(#sk_k)"/>
 <path class="e-probe" hidden d="M246.0 127 C386.0 127,380 245,514 245" style="fill:none;stroke:var(--accent);stroke-width:1.3;stroke-dasharray:3 3" marker-end="url(#sk_k)"/>
 </g>
-<text x="520" y="286" font-size="10.5" style="fill:var(--muted)" class="e-cnn">CNN-style: shallow layers steer the whole block, deep layers the details</text>
-<text x="520" y="286" font-size="10.5" style="fill:var(--muted)" class="e-probe" hidden>Probe-style: deep layers carry the gist, shallow layers the next tokens</text>
-</svg></div><p class="skcap"><b>Sketch E.</b> Coarse-to-fine decoding, like a CNN's receptive fields. Which layer steers which scale is what the layer sweep will decide.</p></div>
+<text x="520" y="286" font-size="10.5" style="fill:var(--muted)" class="e-cnn">Shallow-first: shallow layers steer the whole block, deep layers the details</text>
+<text x="520" y="286" font-size="10.5" style="fill:var(--muted)" class="e-probe" hidden>Deep-first (as in a CNN or U-Net, and what our probes suggest): deep layers steer the whole block</text>
+</svg></div><p class="skcap"><b>Sketch E.</b> Coarse-to-fine decoding, like a U-Net decoder. In a CNN the deepest layers carry the coarse picture, and our probes found the same ordering here: length and structure mid-network, content gist in the upper layers, next tokens at the top. Both assignments are tested.</p></div>
   <div class="scrubbar">
     <button type="button" id="skPrev" aria-label="Previous phase">‹</button>
     <button type="button" id="skPlay">Play</button>
     <button type="button" id="skNext" aria-label="Next phase">›</button>
     <input type="range" id="skRange" min="0" max="5" step="1" value="5" aria-label="Phase">
-    <button type="button" id="eSwap" hidden>Swap to probe-style</button>
+    <button type="button" id="eSwap" hidden>Swap to deep-first</button>
   </div>
   <ol class="phases" id="skSteps"></ol>
   <p class="phasetext" id="skText" aria-live="polite"></p>
@@ -1932,7 +1932,7 @@ select { font: 13px var(--sans); color: var(--fg); background: var(--panel); bor
     probe = !probe;
     root.querySelectorAll(".e-cnn").forEach(e => e.toggleAttribute("hidden", probe));
     root.querySelectorAll(".e-probe").forEach(e => e.toggleAttribute("hidden", !probe));
-    swap.textContent = probe ? "Swap to CNN-style" : "Swap to probe-style";
+    swap.textContent = probe ? "Swap to shallow-first" : "Swap to deep-first";
   });
   select("A");
 })();
@@ -1950,6 +1950,7 @@ select { font: 13px var(--sans); color: var(--fg); background: var(--panel); bor
         <tr><td>Drafter learns target's distribution</td><td><span class="pill ok">Sampling only</span>+6 to +21% at T=1</td><td>Expected from DistillSpec</td></tr>
         <tr><td>Parallel block drafter</td><td><span class="pill ok">Works</span>1.51× vs 1.37× on GSM8K</td><td>DFlash, PARD do more at 8B</td></tr>
         <tr><td>Target plan vector to drafter</td><td><span class="pill no">No valid result</span>three implementation failures</td><td>ConFu, SD², NextLat, ChainFlow</td></tr>
+        <tr><td>Plan vector added to DFlash inputs</td><td><span class="pill no">No effect</span>±3%, oracle included</td><td>ConFu (different pathway)</td></tr>
         <tr><td>Better tree selection, ceiling</td><td><span class="pill ok">Room to gain</span>up to +36% at 32 nodes (chat)</td><td>None found that uses the target</td></tr>
       </tbody>
     </table></div>
@@ -2072,13 +2073,19 @@ select { font: 13px var(--sans); color: var(--fg); background: var(--panel); bor
       <p>The edge on content is small and consistent (+0.02 to +0.03 R&sup2;). The edge on length and structure is larger (up to +0.08 on code) and sits at layer 18 of 36. Content information peaks later, at layers 24 to 36. So the target does know more about its own future, and the layers to tap differ by what is being predicted: middle layers for how long and what shape, upper layers for what it will say.</p>
       <p class="muted">Figure 5 shows the first, underpowered sweep across every second layer; the table is the fair rerun on six layers per model. Linear probes only see what is linearly readable.</p>
     </div>
+    <div class="live" id="sketchAResults">
+      <div class="state">Done · Sketch A on DFlash · Qwen3-8B (4-bit) target · z-lab DFlash drafter, frozen · held-out dev answers</div>
+      <div class="scroll"><table class="gaptable"><thead><tr><th>Set</th><th>Blocks</th><th>Plain DFlash</th><th>+ plan from layers 18, 20</th><th>+ oracle plan (true future)</th></tr></thead><tbody><tr><td><span class="dotk" style="background:#008a72"></span>Math</td><td>600</td><td>7.46</td><td>7.49 (+0.4%)</td><td>7.44 (-0.4%)</td></tr><tr><td><span class="dotk" style="background:#c25a17"></span>Code</td><td>399</td><td>6.71</td><td>6.91 (+3.0%)</td><td>6.83 (+1.8%)</td></tr><tr><td><span class="dotk" style="background:#6a4fc0"></span>Chat</td><td>668</td><td>2.94</td><td>2.95 (+0.4%)</td><td>2.95 (+0.4%)</td></tr></tbody></table></div>
+      <p>Accepted tokens per 16-token block. A learned plan vector added to the block&#8217;s input embeddings changes almost nothing. Code&#8217;s +3% is within about one standard error. Even the oracle, built from the target&#8217;s actual next 64 positions, does not help, which points at the injection rather than the idea: DFlash was trained to read the target through its context keys and values, not through its input embeddings.</p>
+      <p class="muted">Next: a no-training test that appends the target&#8217;s true future states as one extra context position, DFlash&#8217;s own channel. If DFlash can use future information there, the follow-up is learning to predict that position.</p>
+    </div>
   </section>
 
   <section class="sec" id="prior" aria-labelledby="priorT">
     <div class="eyebrow">05</div>
     <h2 id="priorT">Related work</h2>
     <div class="cards">
-      <div class="card2"><div class="id"><a href="https://arxiv.org/abs/2611.08669">2611.08669</a></div><h3>ChainFlow</h3><p>Drafter predicts the target's next 8 compressed hidden states and picks 8,192 candidate tokens.</p><div class="gap">Not covered: a multi-token summary, tree shaping</div></div>
+      <div class="card2"><div class="id"><a href="https://arxiv.org/abs/2611.08669">2611.08669</a></div><h3>ChainFlow</h3><p>Drafter predicts the target's next 8 compressed hidden states and picks 8,192 candidate tokens. Its DFlash baseline (2.35 accepted per pass on Qwen3.5-4B) is far below DFlash's own published 5.9 to 7.7 on the same model, so its comparison is unverified.</p><div class="gap">Not covered: a multi-token summary, tree shaping</div></div>
       <div class="card2"><div class="id"><a href="https://arxiv.org/abs/2610.11750">2610.11750</a></div><h3>Exit-Guided SD</h3><p>Uses the target to weight tree nodes while training the drafter. About 13% longer accepted blocks.</p><div class="gap">Not covered: target guidance at inference</div></div>
       <div class="card2"><div class="id"><a href="https://arxiv.org/abs/2603.08899">2603.08899</a></div><h3>ConFu</h3><p>Target emits a future vector per draft node that conditions an EAGLE-3 drafter. +8 to 13%.</p><div class="gap">Not covered: using the vector to choose nodes</div></div>
       <div class="card2"><div class="id"><a href="https://arxiv.org/abs/2603.03251">2603.03251</a></div><h3>Speculative Speculative Decoding</h3><p>Pre-drafts for several likely verification outcomes while verification runs. About 30% over EAGLE-3.</p><div class="gap">Not covered: target-side information</div></div>
