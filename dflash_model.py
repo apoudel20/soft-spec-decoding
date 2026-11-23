@@ -45,6 +45,13 @@ def extract_context_feature(
     target_hidden = torch.cat(selected_states, dim=-1)
     return target_hidden
 
+def crop_to(cache, n):
+    """Keep the first n positions of a DynamicCache (newer transformers want a negative count to remove)."""
+    extra = cache.get_seq_length() - n
+    if extra > 0:
+        cache.crop(-extra)
+
+
 def sample(logits: torch.Tensor, temperature: float = 0.0) -> torch.Tensor:
     if temperature < 1e-5:
         return torch.argmax(logits, dim=-1)
@@ -279,7 +286,7 @@ class DFlashDraftModel(Qwen3PreTrainedModel):
                 use_cache=True,
                 is_causal=False,
             )[:, -block_size+1:, :])
-            past_key_values_draft.crop(start)
+            crop_to(past_key_values_draft, start)
             block_output_ids[:, 1:] = sample(draft_logits)
 
             output = target(
@@ -295,7 +302,7 @@ class DFlashDraftModel(Qwen3PreTrainedModel):
             output_ids[:, start : start + acceptance_length + 1] = block_output_ids[:, : acceptance_length + 1]
             output_ids[:, start + acceptance_length + 1] = posterior[:, acceptance_length]
             start += acceptance_length + 1
-            past_key_values_target.crop(start)
+            crop_to(past_key_values_target, start)
             target_hidden = extract_context_feature(output.hidden_states, self.target_layer_ids)[:, :acceptance_length + 1, :]
             acceptance_lengths.append(acceptance_length+1)
             if stop_token_ids is not None and any(

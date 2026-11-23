@@ -2,8 +2,8 @@
 
 All variants add learned vectors to the 16 slot embeddings of a DFlash block. Each vector is produced from the
 target's hidden states at the last verified position (or, for D, from a latent generated out of noise), with
-zero-initialised projections and a per-slot norm cap at the median token-embedding norm, so training starts
-exactly at plain DFlash. Only the new heads are trained; target and drafter are frozen.
+a unit direction from a learned projection times a learned strength that starts at 5% of the median
+token-embedding norm, so training starts close to plain DFlash. Slot 0 (the real last token) is never changed. Only the new heads are trained; target and drafter are frozen.
 
   B        three heads read layers 9, 18 and 28 and steer slots 1-5, 6-10 and 11-15 respectively.
   C        four alternative plans from layers 18 and 20; trained winner-take-all (loss of the best plan);
@@ -40,8 +40,13 @@ K_C = 4
 SEGS = [(1, 5), (5, 9), (9, 13), (13, 16)]
 
 
-def cap(v, enorm):
-    return enorm * v / v.norm(dim=-1, keepdim=True).clamp_min(1.0)
+def cap(v, enorm, alpha):
+    """Unit direction times a learned strength (starts at 5% of a token-embedding norm)."""
+    return alpha.clamp(-1, 1) * enorm * F.normalize(v, dim=-1)
+
+
+def strength():
+    return nn.Parameter(torch.tensor(0.05))
 
 
 def zero_linear(i, o):
@@ -57,7 +62,7 @@ class Head(nn.Module):
     def __init__(self, din, dout):
         super().__init__()
         self.ln = nn.LayerNorm(din, elementwise_affine=False)
-        self.proj = zero_linear(din, dout)
+        self.proj = nn.Linear(din, dout)
 
     def forward(self, z):
         return self.proj(self.ln(z.float()))
@@ -68,11 +73,12 @@ class SketchB(nn.Module):
         super().__init__()
         self.enorm = enorm
         self.heads = nn.ModuleDict({str(L): Head(H, H) for L in (9, 18, 28)})
+        self.alpha = nn.ParameterDict({str(L): strength() for L in (9, 18, 28)})
 
     def forward(self, st, s):
         out = torch.zeros(1, B, self.heads["9"].proj.out_features, device=st[9].device)
         for L, (a, b) in ((9, (1, 6)), (18, (6, 11)), (28, (11, 16))):
-            out[0, a:b] = cap(self.heads[str(L)](st[L][s - 1]), self.enorm)
+            out[0, a:b] = cap(self.heads[str(L)](st[L][s - 1]), self.enorm, self.alpha[str(L)])
         return out, None
 
 
@@ -81,11 +87,11 @@ class SketchC(nn.Module):
         super().__init__()
         self.enorm, self.H = enorm, H
         self.head = Head(2 * H, K_C * H)
-        nn.init.normal_(self.head.proj.weight, std=1e-3)  # break symmetry between the K plans
+        self.alpha = strength()
 
     def forward(self, st, s):
         z = torch.cat([st[18][s - 1], st[20][s - 1]])
-        v = cap(self.head(z).view(K_C, self.H), self.enorm)
+        v = cap(self.head(z).view(K_C, self.H), self.enorm, self.alpha)
         return v[:, None, :].expand(K_C, B, self.H), None
 
 
@@ -97,6 +103,7 @@ class SketchD(nn.Module):
         self.den = nn.Sequential(nn.Linear(H + hid + 1, hid), nn.GELU(), nn.Linear(hid, hid), nn.GELU(), nn.Linear(hid, H))
         self.ln_t = nn.LayerNorm(H, elementwise_affine=False)
         self.plan = Head(H, H)
+        self.alpha = strength()
 
     def velocity(self, zt, tt, c):
         return self.den(torch.cat([zt, c, tt[..., None]], -1))
@@ -120,7 +127,7 @@ class SketchD(nn.Module):
             z = z1                            # teacher-forced latent for the plan head during training
         else:
             z = self.sample(c)
-        v = cap(self.plan(z), self.enorm)
+        v = cap(self.plan(z), self.enorm, self.alpha)
         return v[None, None, :].expand(1, B, self.H), aux
 
 
@@ -132,17 +139,17 @@ class SketchE(nn.Module):
         self.coarse = Head(H, H)
         self.seg = nn.ModuleList([Head(H, H) for _ in SEGS])
         self.tok = Head(H, H)
-        self.slot_scale = nn.Parameter(torch.ones(B, H) * 0.0)   # per-slot modulation of the token-level code
+        self.slot_scale = nn.Parameter(torch.zeros(B, H))   # per-slot modulation of the token-level code
+        self.a_c, self.a_s, self.a_t = strength(), strength(), strength()
 
     def forward(self, st, s):
-        out = self.coarse(st[self.L["coarse"]][s - 1])[None].expand(B, self.H).clone()
+        out = cap(self.coarse(st[self.L["coarse"]][s - 1]), self.enorm, self.a_c)[None].expand(B, self.H).clone()
         segv = torch.zeros(B, self.H, device=out.device)
         for (a, b), h in zip(SEGS, self.seg):
-            segv[a:b] = h(st[self.L["seg"]][s - 1])
-        tokv = self.tok(st[self.L["tok"]][s - 1])[None] * (1 + self.slot_scale)
+            segv[a:b] = cap(h(st[self.L["seg"]][s - 1]), self.enorm, self.a_s)
+        tokv = cap(self.tok(st[self.L["tok"]][s - 1])[None] * (1 + self.slot_scale), self.enorm, self.a_t)
         out = out + segv + tokv
-        out[0] = 0
-        return cap(out, self.enorm)[None], None
+        return out[None], None
 
 
 def build(name, H, enorm):
@@ -164,8 +171,8 @@ def block_logits(t, d, ids, ctx, s, add):
     blk = torch.full((K, B), d.mask_token_id, dtype=torch.long, device=ids.device)
     blk[:, 0] = ids[s]
     emb = t.model.embed_tokens(blk)
-    if add is not None:
-        emb = emb + add.to(emb.dtype)
+    if add is not None:   # slot 0 holds the real last token and is left untouched
+        emb = torch.cat([emb[:, :1], emb[:, 1:] + add[:, 1:].to(emb.dtype)], dim=1)
     pos = torch.arange(0, s + B, device=ids.device)[None].expand(K, -1)
     h = d(target_hidden=ctx[None, :s].expand(K, -1, -1), noise_embedding=emb, position_ids=pos, is_causal=False)
     return t.lm_head(h[:, 1:, :]).float()

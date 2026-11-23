@@ -2,7 +2,7 @@
 # Sketch A step 1: DFlash baseline + exactness on Qwen3-8B, after the fair probe frees the GPU.
 cd "$(dirname "$0")"
 P=./.venv/Scripts/python
-until grep -q "^wrote" logs/probes_q3_fair.log 2>/dev/null || grep -q "Traceback" logs/probes_q3_fair.log 2>/dev/null; do sleep 20; done
+until grep -q "=== plan done" logs/run_plan.log 2>/dev/null; do sleep 30; done
 until grep -q "^exit" logs/dflash_download.log 2>/dev/null; do sleep 10; done
 grep -q "^exit 0" logs/dflash_download.log || { echo "DFLASH DOWNLOAD FAILED"; exit 1; }
 echo "=== dflash smoke $(date +%H:%M)"
