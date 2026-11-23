@@ -215,7 +215,8 @@ of the eval references.
 | Drafter 0.5B, HumanEval | 0.80 | 0.34 | 0.12 | 0.07 | 0.06 | 0.05 |
 
 The most-common-token baseline is 0.04 on GSM8K and MT-Bench, and 0.01 on HumanEval. The target's edge over the
-drafter is 2 to 5 points at k=2 to 4 and gone by k=8. Middle layers are worse than last layers at every k.
+drafter is 2 to 5 points at k=2 to 4 and gone by k=8. Middle layers are much worse than last layers at k ≤ 4. At k ≥ 8 they are about equal and sometimes
+slightly better (MT-Bench k=16, 0.075 vs 0.064), all close to the baseline.
 Specific tokens beyond a few positions are not linearly readable from either model, so a useful plan at this
 scale has to be a summary of the future rather than its tokens.
 
