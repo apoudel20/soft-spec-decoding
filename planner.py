@@ -41,12 +41,26 @@ from train import batch_iter, gather_rows, loss_rows, pack_mask, sample_starts, 
 
 
 class PlanMods(nn.Module):
+    """Maps a plan vector z to an input offset for the drafter's block slots.
+
+    The offset has a fixed direction-only projection and a learned scalar gate, and its norm is capped at
+    the drafter's median token-embedding norm: e_plan = tanh(gate) * enorm * unit(proj(LN(z))).
+    gate starts at 0, so training starts exactly at the plain drafter. (The first version used an
+    unbounded zero-init projection; Adam grew it to 4-10x the embedding norm, which drowned the token
+    inputs and invalidated that run.)"""
+
     def __init__(self, dt, dd, pred, dev):
         super().__init__()
         self.proj = nn.Linear(dt, dd).to(dev)
-        nn.init.zeros_(self.proj.weight)
-        nn.init.zeros_(self.proj.bias)
+        self.gate = nn.Parameter(torch.zeros((), device=dev))
         self.head = nn.Sequential(nn.Linear(dt, dt), nn.GELU(), nn.Linear(dt, dt)).to(dev) if pred else None
+
+    def forward(self, z, enorm):
+        return torch.tanh(self.gate) * enorm * F.normalize(self.proj(nrm(z)), dim=-1)
+
+
+def emb_norm(m):
+    return m.E.float().norm(dim=1).median().item()
 
 
 def nrm(x):
@@ -93,10 +107,13 @@ def train(args):
     t.use_graphs = False
     d.plan = PlanMods(t.d, d.d, args.plan == "pred", d.dev)
     params = [p for p in d.parameters() if p.requires_grad]
+    enorm = emb_norm(d)
     B, nb, N = 16, 8, 8
     rng = random.Random(0)
     torch.manual_seed(0)
-    opt = torch.optim.AdamW(params, lr=2e-4, weight_decay=0.0)
+    # the scalar gate gets a larger step so it can open within the run; everything else as in train.py
+    opt = torch.optim.AdamW([{"params": [p for p in params if p is not d.plan.gate]},
+                             {"params": [d.plan.gate], "lr": 2e-3}], lr=2e-4, weight_decay=0.0)
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: min(1, (s + 1) / 100) * 0.5 * (1 + math.cos(math.pi * min(1, s / args.steps))))
     it = batch_iter(items, N, 0)
     M = nb * B
@@ -114,7 +131,7 @@ def train(args):
         lab = lambda idx: t.logits(lab_h[idx])
         feat, near, far = plan_vectors(args.plan, hn_t, starts, B, args.N)
         z, aux = z_for(args.plan, d.plan, feat, near, far)
-        e_plan = d.plan.proj(nrm(z)).repeat_interleave(B, 1)  # (N, M, dd)
+        e_plan = d.plan(z, enorm).repeat_interleave(B, 1)  # (N, M, dd)
         x0 = d.rows32(gather_rows(ids, starts))
         first = (torch.arange(M, device="cuda") % B == 0)[None, :, None]
         e1 = torch.where(first, x0.repeat_interleave(B, 1), d.e_mask.expand(N, M, -1)) + e_plan
@@ -138,7 +155,7 @@ def train(args):
         if step % 50 == 0 or step == args.steps - 1:
             el = time.time() - t0
             a = [sum(x[i] for x in log[-50:]) / len(log[-50:]) for i in range(3)]
-            print(f"step {step} loss1 {a[0]:.4f} loss2 {a[1]:.4f} aux {a[2]:.4f}  {el / 60:.1f} min, eta {el / (step + 1) * (args.steps - step - 1) / 60:.1f} min", flush=True)
+            print(f"step {step} loss1 {a[0]:.4f} loss2 {a[1]:.4f} aux {a[2]:.4f} gate {torch.tanh(d.plan.gate).item():+.3f}  {el / 60:.1f} min, eta {el / (step + 1) * (args.steps - step - 1) / 60:.1f} min", flush=True)
     sd = d.trainable_state()
     sd["__meta__"] = {"r": 32, "alpha": 64, "inp": "soft", "label": "d4", "plan": args.plan, "N": args.N, "steps": args.steps}
     torch.save(sd, os.path.join(CKPT, args.name + ".pt"))
@@ -190,7 +207,7 @@ def evaluate(args):
                 if plan != "none":
                     feat, near, far = plan_vectors(plan, tgt_h[name][si][None], st, B, N)
                     z, _ = z_for(plan, d.plan, feat, near, far)
-                    e_plan = d.plan.proj(nrm(z)).repeat_interleave(B, 1)
+                    e_plan = d.plan(z, emb_norm(d)).repeat_interleave(B, 1)
                 else:
                     e_plan = 0.0
                 e_tf = torch.where(first, x_in, x_in + d.e_flag) + e_plan
