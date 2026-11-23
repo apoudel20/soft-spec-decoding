@@ -1,0 +1,92 @@
+{
+ "args": {
+  "K": 4,
+  "sets": [
+   "math",
+   "code",
+   "chat"
+  ],
+  "stride": 16,
+  "out": "dflash_tree_gap"
+ },
+ "sets": {
+  "math": {
+   "chain": {
+    "blocks": 600,
+    "mean_accepted": 7.461666666666667
+   },
+   "tree32": {
+    "blocks": 600,
+    "mean_accepted": 8.625
+   },
+   "tree64": {
+    "blocks": 600,
+    "mean_accepted": 9.026666666666667
+   },
+   "tree128": {
+    "blocks": 600,
+    "mean_accepted": 9.305
+   },
+   "tree256": {
+    "blocks": 600,
+    "mean_accepted": 9.518333333333333
+   },
+   "oracle": {
+    "blocks": 600,
+    "mean_accepted": 10.491666666666667
+   }
+  },
+  "code": {
+   "chain": {
+    "blocks": 399,
+    "mean_accepted": 6.7669172932330826
+   },
+   "tree32": {
+    "blocks": 399,
+    "mean_accepted": 8.208020050125313
+   },
+   "tree64": {
+    "blocks": 399,
+    "mean_accepted": 8.676691729323307
+   },
+   "tree128": {
+    "blocks": 399,
+    "mean_accepted": 9.097744360902256
+   },
+   "tree256": {
+    "blocks": 399,
+    "mean_accepted": 9.3734335839599
+   },
+   "oracle": {
+    "blocks": 399,
+    "mean_accepted": 10.721804511278195
+   }
+  },
+  "chat": {
+   "chain": {
+    "blocks": 668,
+    "mean_accepted": 2.9565868263473054
+   },
+   "tree32": {
+    "blocks": 668,
+    "mean_accepted": 3.8473053892215567
+   },
+   "tree64": {
+    "blocks": 668,
+    "mean_accepted": 4.002994011976048
+   },
+   "tree128": {
+    "blocks": 668,
+    "mean_accepted": 4.127245508982036
+   },
+   "tree256": {
+    "blocks": 668,
+    "mean_accepted": 4.200598802395209
+   },
+   "oracle": {
+    "blocks": 668,
+    "mean_accepted": 4.426646706586826
+   }
+  }
+ }
+}
