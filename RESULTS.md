@@ -327,6 +327,27 @@ inside the forest). Accepted length is out of 8.
   for anything from 1 to 128 new tokens, because dequantisation dominates. Which budget column applies in practice
   needs a measurement with real inference kernels.
 
+## Layer sweep (Qwen3-8B vs Qwen3-0.6B)
+
+`gen_q3.py`, `probes_q3.py`, results in `results/probes_q3.json`. The 8B's own greedy answers (Ollama Q4_K_M,
+thinking off) to 600 training prompts and 40 held-out dev prompts per set (math, code, chat, never the eval sets).
+Linear probes on every second layer of Qwen3-8B (4-bit NF4) and Qwen3-0.6B, 24 positions per training answer.
+Ridge R² for the mean embedding of the next 16, 64 or 128 tokens and for log remaining length.
+
+| Probe (best layer, its depth) | Math 8B | Math 0.6B | Code 8B | Code 0.6B | Chat 8B | Chat 0.6B |
+|---|---|---|---|---|---|---|
+| Next 64 tokens summary | 0.32 (78%) | 0.33 (64%) | 0.16 (94%) | 0.20 (79%) | 0.07 (100%) | 0.19 (71%) |
+| Remaining length | 0.72 (50%) | 0.68 (64%) | 0.45 (50%) | 0.38 (57%) | 0.46 (56%) | 0.44 (64%) |
+| Next token (top-1 acc.) | 0.82 | 0.77 | 0.77 | 0.69 | 0.62 | 0.53 |
+
+Embedding-only baseline for the 64-token summary: math 0.12, code 0.04, chat 0.04.
+
+- The 8B knows more than the 0.6B about the length and structure of the rest of its answer, with that
+  information peaking at layers 18 to 20 of 36.
+- It shows no edge on the content of the next 64 tokens at this probe strength.
+- On chat the 8B summary probe is below zero at most layers. A 4,096-wide state with about 14,000 training rows
+  likely overfits, so chat is inconclusive. A fair comparison needs more data or equal-width projections.
+
 ## What the results say
 
 1. **Refinement works, softness doesn't (target side).** Arm C turns the spare width of the verification
