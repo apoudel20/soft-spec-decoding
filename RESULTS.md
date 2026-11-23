@@ -302,6 +302,31 @@ The best Arm D recipe (TV labels, soft feedback) gets a vector added to its bloc
 comes from target features, from a plan head trained to predict a summary of the next 64 tokens, or from oracle
 summaries of the true future (near, and skipping the drafted block). All runs use the same steps and data as d4_soft.
 
+## Selection gap (Qwen3-8B target, Qwen3-0.6B drafter)
+
+How much could a better choice of which drafted nodes the target checks be worth? `selection_gap.py`, results in
+`results/selection_gap.json`. Target Qwen3-8B in 4-bit NF4, drafter Qwen3-0.6B in bf16, greedy, 30 held-out dev
+prompts each for math (GSM8K train holdout), code (MBPP validation) and chat (UltraChat test_sft), 160 new tokens.
+At every 8th position of the target's own continuation the drafter grows a beam forest (top-8 children, 64 paths
+kept per depth, depth 8, 456 nodes). We compare checking the B nodes with the highest cumulative drafter
+log-probability against the best any choice could do from the same forest (the depth of the target's true path
+inside the forest). Accepted length is out of 8.
+
+| Set | Positions | Best possible | Drafter, 8 nodes | 16 | 32 | 64 | 128 |
+|---|---|---|---|---|---|---|---|
+| Chat | 540 | 5.21 | 2.62 (+99%) | 3.28 (+59%) | 3.83 (+36%) | 4.30 (+21%) | 4.70 (+11%) |
+| Code | 494 | 7.24 | 3.95 (+83%) | 5.15 (+41%) | 6.05 (+20%) | 6.59 (+10%) | 6.90 (+5%) |
+| Math | 569 | 7.67 | 5.03 (+52%) | 6.11 (+26%) | 6.79 (+13%) | 7.17 (+7%) | 7.43 (+3%) |
+
+95% bootstrap intervals for the gap at 32 nodes: chat 31 to 41%, code 17 to 23%, math 11 to 16%.
+
+- The ceiling clears the pre-set go line (20% at 32 nodes) on chat and code, and sits between the go and kill lines on
+  math. These are upper bounds on what any selector could recover, not what a gist-guided one will.
+- On chat the forest misses the target's path often (best possible 5.2 of 8), so how the forest is grown matters too.
+- Stage 0 (hardware knee) was not informative: with bitsandbytes 4-bit weights a target forward costs about 100 ms
+  for anything from 1 to 128 new tokens, because dequantisation dominates. Which budget column applies in practice
+  needs a measurement with real inference kernels.
+
 ## What the results say
 
 1. **Refinement works, softness doesn't (target side).** Arm C turns the spare width of the verification

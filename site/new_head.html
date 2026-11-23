@@ -1,0 +1,217 @@
+<title>Soft speculative decoding</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: an academic project page. Narrow column, serif display, numbered sections, figures carry the story. */
+:root {
+  --bg: #f7f7f4; --panel: #ffffff; --fg: #1b1f24; --muted: #5f6771; --line: #e2e3df;
+  --ours: #008a72; --ours-bg: #e0f2ee; --self: #c25a17; --self-bg: #fbeadf; --base: #a7b1bb;
+  --accent: #2f5fa7; --accent-bg: #e6eefa; --accept: #0f7b6c; --accept-bg: #e3f3f0; --reject: #b54a2e; --reject-bg: #fbe9e3; --bar: #c9d3dd;
+  --btn: #1b1f24; --btn-fg: #ffffff;
+  --display: "Fraunces", Georgia, "Times New Roman", serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121417; --panel: #191c20; --fg: #e8eaed; --muted: #9aa3ad; --line: #2a2f35;
+  --ours: #1fa78c; --ours-bg: #14302a; --self: #d9702e; --self-bg: #36241a; --base: #56616c;
+  --accent: #8db4f0; --accent-bg: #1d2a3d; --accept: #4cc3ae; --accept-bg: #16342f; --reject: #f08a6c; --reject-bg: #3a221b; --bar: #3a4550;
+  --btn: #e8eaed; --btn-fg: #121417; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #121417; --panel: #191c20; --fg: #e8eaed; --muted: #9aa3ad; --line: #2a2f35;
+  --ours: #1fa78c; --ours-bg: #14302a; --self: #d9702e; --self-bg: #36241a; --base: #56616c;
+  --accent: #8db4f0; --accent-bg: #1d2a3d; --accept: #4cc3ae; --accept-bg: #16342f; --reject: #f08a6c; --reject-bg: #3a221b; --bar: #3a4550;
+  --btn: #e8eaed; --btn-fg: #121417; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 16px/1.65 var(--sans); }
+a { color: var(--accent); }
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.nav .in { max-width: 860px; margin: 0 auto; padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; gap: 6px 22px; flex-wrap: wrap; justify-content: flex-end; font-size: 13.5px; }
+.nav a { color: var(--muted); text-decoration: none; }
+.nav a:hover, .nav a:focus-visible { color: var(--fg); }
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 56px 96px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 88px; }
+.wrap > *, .exbody > * { min-width: 0; }
+.hero { display: grid; gap: 18px; }
+.hero h1 { font: 600 clamp(40px, 7vw, 64px)/1.02 var(--display); letter-spacing: -.015em; margin: 0; }
+.hero .q { font-size: 19px; margin: 0; color: var(--muted); }
+.hero .q em { font-style: normal; color: var(--ours); font-weight: 600; }
+.hero .sum { margin: 0; color: var(--muted); max-width: 62ch; }
+.kicker { font: 12.5px var(--mono); color: var(--muted); }
+.btns { display: flex; flex-wrap: wrap; gap: 10px; }
+.btns a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 8px; background: var(--btn); color: var(--btn-fg); text-decoration: none; font-weight: 500; font-size: 14.5px; }
+.btns a.alt { background: none; color: var(--fg); border: 1px solid var(--line); }
+.btns a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sec { display: grid; gap: 18px; scroll-margin-top: 64px; }
+.eyebrow { font: 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.sec h2 { font: 600 clamp(26px, 4vw, 32px)/1.15 var(--display); margin: 0; }
+.sec p { margin: 0; max-width: 64ch; }
+.sec p.muted { color: var(--muted); }
+.fig1 { margin: 0; display: grid; gap: 10px; }
+.figscroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 14px; }
+.figscroll svg { min-width: 760px; display: block; }
+.fig1 figcaption { font-size: 13.5px; color: var(--muted); max-width: 76ch; line-height: 1.55; }
+.fig1 figcaption b { color: var(--fg); }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 14px; }
+th, td { text-align: left; padding: 10px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 500 11.5px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+table.status { min-width: 600px; }
+table.status td:first-child { font-weight: 500; width: 34%; }
+table.status td:last-child { color: var(--muted); font-size: 13px; width: 30%; }
+.pill { display: inline-block; font: 500 11px var(--mono); letter-spacing: .04em; text-transform: uppercase; border-radius: 999px; padding: 2px 9px; margin-right: 8px; border: 1px solid; white-space: nowrap; }
+.pill.ok { color: var(--ours); border-color: var(--ours); }
+.pill.no { color: var(--muted); border-color: var(--line); }
+.pill.run { color: var(--accent); border-color: var(--accent); }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.card2 { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 6px; align-content: start; }
+.card2 .id { font: 12px var(--mono); color: var(--muted); }
+.card2 .id a { color: var(--muted); }
+.card2 h3 { margin: 0; font-size: 16px; font-weight: 600; }
+.card2 p { margin: 0; font-size: 14px; color: var(--muted); }
+.card2 .gap { font-size: 13.5px; color: var(--fg); }
+.card2 .gap b { color: var(--ours); font-weight: 600; }
+.live { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 22px; display: grid; gap: 16px; }
+.live .state { font: 12.5px var(--mono); color: var(--accent); }
+.plain { margin: 0; padding-left: 20px; display: grid; gap: 8px; color: var(--muted); max-width: 66ch; }
+.foot { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 20px; }
+details.explorer { border-top: 1px solid var(--line); padding-top: 22px; }
+details.explorer > summary { cursor: pointer; list-style: none; display: grid; gap: 4px; }
+details.explorer > summary::-webkit-details-marker { display: none; }
+details.explorer > summary .t { font: 600 22px var(--display); }
+details.explorer > summary .t::before { content: "▸ "; color: var(--muted); }
+details.explorer[open] > summary .t::before { content: "▾ "; }
+details.explorer > summary .s { font-size: 14px; color: var(--muted); }
+details.explorer > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+.exbody { display: grid; gap: 24px; margin-top: 20px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); flex-wrap: wrap; justify-self: start; }
+.seg button { font: 500 13px var(--sans); color: var(--muted); background: none; border: 0; padding: 7px 12px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent-bg); color: var(--accent); }
+.seg button:focus-visible, select:focus-visible, .more:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.findings { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.find { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.find .big { font: 600 24px var(--sans); font-variant-numeric: tabular-nums; }
+.find .lab { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.find p { margin: 6px 0 0; font-size: 13.5px; color: var(--muted); }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+.panel h2 { font-size: 17px; font-weight: 600; margin: 0 0 10px; }
+.barcell { display: flex; align-items: center; gap: 8px; min-width: 130px; }
+.bar { height: 8px; border-radius: 2px; background: var(--bar); }
+.bar.r { background: var(--reject); } .bar.a { background: var(--accept); }
+.note { font-size: 12.5px; color: var(--muted); margin: 10px 0 0; max-width: 80ch; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.flav { display: grid; gap: 10px; }
+.flav .row { display: grid; grid-template-columns: 1fr; gap: 3px; }
+.flav .k { font-size: 13px; }
+.flav .bars { display: grid; gap: 3px; }
+.flav .b { display: grid; grid-template-columns: 112px 1fr 44px; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hist { display: flex; align-items: flex-end; gap: 6px; height: 110px; padding-top: 6px; }
+.hist .col { flex: 1; display: grid; justify-items: center; gap: 4px; font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hist .col .bar { width: 100%; background: var(--reject); }
+.filters { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+.filters label { font-size: 12.5px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
+select { font: 13px var(--sans); color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+.count { font-size: 13px; color: var(--muted); }
+.list { display: grid; gap: 10px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 8px; min-width: 0; }
+.ctx { font: 13px/1.6 var(--mono); white-space: pre-wrap; word-break: break-word; color: var(--muted); }
+.ctx .gap { color: var(--fg); background: var(--accent-bg); border-radius: 3px; padding: 0 3px; }
+.toks { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12.5px; }
+.tok { font: 500 13px var(--mono); padding: 2px 7px; border-radius: 5px; white-space: pre; }
+.tok.t { background: var(--accept-bg); color: var(--accept); }
+.tok.d { background: var(--reject-bg); color: var(--reject); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.chip { border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; font-size: 11.5px; color: var(--muted); }
+.chip.hot { border-color: var(--reject); color: var(--reject); }
+.chip.tie { border-color: var(--accent); color: var(--accent); }
+.more { justify-self: start; font: 500 13px var(--sans); color: var(--accent); background: var(--accent-bg); border: 0; border-radius: 6px; padding: 8px 14px; cursor: pointer; }
+.empty { color: var(--muted); font-size: 13.5px; }
+@media (max-width: 520px) { .flav .b { grid-template-columns: 90px 1fr 40px; } .wrap { gap: 64px; } }
+</style>
+
+<nav class="nav" aria-label="Sections"><div class="in">
+  <a href="#idea">Idea</a><a href="#trees">Two trees</a><a href="#measured">Results</a><a href="#live">Selection test</a><a href="#prior">Related work</a><a href="https://github.com/apoudel20/soft-spec-decoding">Code</a>
+</div></nav>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="kicker">Work in progress · speculative decoding · updated 23 Nov 2026</div>
+    <h1>Soft speculative decoding</h1>
+    <p class="q">Target-guided draft trees for lossless speculative decoding</p>
+    <p class="sum">A small model drafts tokens and a large model checks them, so the output stays exactly the large model's. This project asks whether the large model's internal view of its upcoming text can decide which drafts are worth checking. Most results so far reproduce known work. The selection question in section 4 is open.</p>
+    <div class="btns">
+      <a href="https://github.com/apoudel20/soft-spec-decoding">Code</a>
+      <a class="alt" href="https://github.com/apoudel20/soft-spec-decoding/blob/main/RESULTS.md">Results</a>
+      <a class="alt" href="https://github.com/apoudel20/soft-spec-decoding/blob/main/reports/Guided%20draft%20trees%20and%20branched%20caches.md">Literature review</a>
+    </div>
+  </header>
+
+  __FIG2__
+
+  <section class="sec" id="idea" aria-labelledby="ideaT">
+    <div class="eyebrow">01</div>
+    <h2 id="ideaT">The idea</h2>
+    <p class="muted">Speculative decoding checks a tree of drafted tokens in one forward pass of the target. In current methods the drafter's own confidence decides how that tree grows. Here a summary read from the target's middle layers decides it instead.</p>
+    __FIG1__
+  </section>
+
+  <section class="sec" id="trees" aria-labelledby="treesT">
+    <div class="eyebrow">02</div>
+    <h2 id="treesT">Two trees</h2>
+    <p class="muted">The drafter can afford hundreds of candidates. The target can check only a few dozen per pass, at about the cost of one decode step. We found no published method that uses information from the target to choose which nodes go into its KV-cache tree (Figure 2, top). Branches the target doesn't take can't be reused later: under exact verification the next round always starts outside the checked tree.</p>
+  </section>
+
+  <section class="sec" id="measured" aria-labelledby="measT">
+    <div class="eyebrow">03</div>
+    <h2 id="measT">Results so far</h2>
+    <div class="scroll"><table class="status">
+      <thead><tr><th>Idea</th><th>Result</th><th>Prior work</th></tr></thead>
+      <tbody>
+        <tr><td>Target refines its own guesses</td><td><span class="pill ok">Works</span>1.07 → 2.33 tokens per pass</td><td>Apple 2507.11851, bigger gains</td></tr>
+        <tr><td>Soft inputs to the target</td><td><span class="pill no">No effect</span>ties hard guesses</td><td>Matches EmbeddingSuperPosition</td></tr>
+        <tr><td>Drafter learns target's distribution</td><td><span class="pill ok">Sampling only</span>+6 to +21% at T=1</td><td>Expected from DistillSpec</td></tr>
+        <tr><td>Parallel block drafter</td><td><span class="pill ok">Works</span>1.51× vs 1.37× on GSM8K</td><td>DFlash, PARD do more at 8B</td></tr>
+        <tr><td>Target plan vector to drafter</td><td><span class="pill no">No valid result</span>three implementation failures</td><td>ConFu, SD², NextLat, ChainFlow</td></tr>
+        <tr><td>Target gist chooses the tree</td><td><span class="pill run">Testing</span>selection gap, below</td><td>None found</td></tr>
+      </tbody>
+    </table></div>
+    <p class="muted" style="font-size:13.5px">Qwen2.5-1.5B target, 0.5B drafter, 30 prompts per set, one RTX 4070 Ti. Every method keeps the output exact.</p>
+  </section>
+
+  <section class="sec" id="live" aria-labelledby="liveT">
+    <div class="eyebrow">04</div>
+    <h2 id="liveT">Selection test</h2>
+    <div class="live" id="gapResults">
+      <div class="state">Running · Qwen3-8B (4-bit) target · Qwen3-0.6B drafter · 30 held-out prompts each for math, code, chat</div>
+      <p class="muted">At each position the drafter grows about 460 candidate nodes. We compare picking the best 8 to 128 of them by the drafter's own confidence against the best any selection could do. That ceiling bounds what a target-guided choice could add. Results appear here when the run finishes.</p>
+    </div>
+  </section>
+
+  <section class="sec" id="prior" aria-labelledby="priorT">
+    <div class="eyebrow">05</div>
+    <h2 id="priorT">Related work</h2>
+    <div class="cards">
+      <div class="card2"><div class="id"><a href="https://arxiv.org/abs/2611.08669">2611.08669</a></div><h3>ChainFlow</h3><p>Drafter predicts the target's next 8 compressed hidden states and picks 8,192 candidate tokens.</p><div class="gap">Not covered: a multi-token summary, tree shaping</div></div>
+      <div class="card2"><div class="id"><a href="https://arxiv.org/abs/2610.11750">2610.11750</a></div><h3>Exit-Guided SD</h3><p>Uses the target to weight tree nodes while training the drafter. About 13% longer accepted blocks.</p><div class="gap">Not covered: target guidance at inference</div></div>
+      <div class="card2"><div class="id"><a href="https://arxiv.org/abs/2603.08899">2603.08899</a></div><h3>ConFu</h3><p>Target emits a future vector per draft node that conditions an EAGLE-3 drafter. +8 to 13%.</p><div class="gap">Not covered: using the vector to choose nodes</div></div>
+      <div class="card2"><div class="id"><a href="https://arxiv.org/abs/2603.03251">2603.03251</a></div><h3>Speculative Speculative Decoding</h3><p>Pre-drafts for several likely verification outcomes while verification runs. About 30% over EAGLE-3.</p><div class="gap">Not covered: target-side information</div></div>
+      <div class="card2"><div class="id"><a href="https://arxiv.org/abs/2510.13847">2510.13847</a></div><h3>DynaSpec</h3><p>Per-step learned vocabulary shortlist for the drafter. Keeps 98% of full-vocabulary acceptance.</p><div class="gap">Not covered: a forecast of upcoming text</div></div>
+      <div class="card2"><div class="id"><a href="https://arxiv.org/abs/2605.07984">2605.07984</a></div><h3>Where's the Plan?</h3><p>Plans are readable in Qwen3 at every size and used causally from 4B up. Qwen publishes SAEs for Qwen3.5-9B.</p><div class="gap">Useful for: where to read the summary</div></div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="limT">
+    <div class="eyebrow">06</div>
+    <h2 id="limT">Limitations</h2>
+    <ul class="plain">
+      <li>Most results use a 1.5B target, where any speculative method gains little.</li>
+      <li>30 prompts per set. Differences under about 3% are noise.</li>
+      <li>Baselines are our own, not released EAGLE-3 or DFlash checkpoints.</li>
+      <li>The figures illustrate the design. They are not measurements.</li>
+    </ul>
+  </section>
+
+  <details class="explorer" id="explorer">
+    <summary><span class="t">Drafter failure explorer</span><span class="s">Every miss and hit of the Qwen2.5 drafters, token by token.</span></summary>
+    <div class="exbody">

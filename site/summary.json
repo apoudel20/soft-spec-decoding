@@ -1,0 +1,544 @@
+{
+"sets": {
+"gsm8k": {
+"temp": {
+"0.3": 0.9377564124442662,
+"0.5": 0.9369905345021613,
+"0.7": 0.93593996910556,
+"1.0": 0.9329159488233846,
+"1.3": 0.9266798823430562
+},
+"views": {
+"base_tf": {
+"acc": 0.9383326604763828,
+"flav": {
+"same_word_diff_spacing_or_case": 0.03273322422258593,
+"draft_has_target_prob_ge_0.2": 0.48117839607201307,
+"target_near_tie_margin_lt_0.2": 0.3158756137479542,
+"target_confident_top1_ge_0.9": 0.09656301145662848
+},
+"cats": {
+"content word": {
+"share_of_tokens": 0.34174404521598706,
+"accuracy": 0.9128765505020673,
+"share_of_failures": 0.4828150572831424,
+"n": 3386
+},
+"function word": {
+"share_of_tokens": 0.17702866370609607,
+"accuracy": 0.8996579247434435,
+"share_of_failures": 0.28805237315875615,
+"n": 1754
+},
+"number": {
+"share_of_tokens": 0.13433589018974565,
+"accuracy": 0.9789631855747558,
+"share_of_failures": 0.04582651391162029,
+"n": 1331
+},
+"punctuation": {
+"share_of_tokens": 0.17157852240613647,
+"accuracy": 0.9629411764705882,
+"share_of_failures": 0.10310965630114566,
+"n": 1700
+},
+"markdown/latex": {
+"share_of_tokens": 0.09144125958821155,
+"accuracy": 0.9713024282560706,
+"share_of_failures": 0.0425531914893617,
+"n": 906
+},
+"newline": {
+"share_of_tokens": 0.004743641501816714,
+"accuracy": 0.9361702127659575,
+"share_of_failures": 0.004909983633387889,
+"n": 47
+},
+"whitespace": {
+"share_of_tokens": 0.07912797739200646,
+"accuracy": 0.9744897959183674,
+"share_of_failures": 0.03273322422258593,
+"n": 784
+}
+}
+},
+"block_tf": {
+"acc": 0.9275240888144114,
+"flav": {
+"same_word_diff_spacing_or_case": 0.03468208092485549,
+"draft_has_target_prob_ge_0.2": 0.4407514450867052,
+"target_near_tie_margin_lt_0.2": 0.2904624277456647,
+"target_confident_top1_ge_0.9": 0.11416184971098266
+},
+"cats": {
+"content word": {
+"share_of_tokens": 0.34708839547549225,
+"accuracy": 0.8949909474954738,
+"share_of_failures": 0.5028901734104047,
+"n": 3314
+},
+"function word": {
+"share_of_tokens": 0.17658148303309593,
+"accuracy": 0.8873072360616845,
+"share_of_failures": 0.2745664739884393,
+"n": 1686
+},
+"number": {
+"share_of_tokens": 0.1330121491411814,
+"accuracy": 0.9755905511811024,
+"share_of_failures": 0.044797687861271675,
+"n": 1270
+},
+"punctuation": {
+"share_of_tokens": 0.1692501047339757,
+"accuracy": 0.9585396039603961,
+"share_of_failures": 0.0968208092485549,
+"n": 1616
+},
+"markdown/latex": {
+"share_of_tokens": 0.0902806870548806,
+"accuracy": 0.9663573085846868,
+"share_of_failures": 0.04190751445086705,
+"n": 862
+},
+"newline": {
+"share_of_tokens": 0.004398826979472141,
+"accuracy": 0.9523809523809523,
+"share_of_failures": 0.002890173410404624,
+"n": 42
+},
+"whitespace": {
+"share_of_tokens": 0.07938835358190197,
+"accuracy": 0.9670184696569921,
+"share_of_failures": 0.036127167630057806,
+"n": 758
+}
+}
+},
+"block_free": {
+"acc": 0.0,
+"flav": {
+"same_word_diff_spacing_or_case": 0.020555487581059587,
+"draft_has_target_prob_ge_0.2": 0.14107426893429587,
+"target_near_tie_margin_lt_0.2": 0.12467882050654594,
+"target_confident_top1_ge_0.9": 0.5589134956564297
+},
+"cats": {
+"content word": {
+"share_of_tokens": 0.4563807659366206,
+"accuracy": 0.0,
+"share_of_failures": 0.4563807659366206,
+"n": 3730
+},
+"function word": {
+"share_of_tokens": 0.192830050165178,
+"accuracy": 0.0,
+"share_of_failures": 0.192830050165178,
+"n": 1576
+},
+"number": {
+"share_of_tokens": 0.08356784534442677,
+"accuracy": 0.0,
+"share_of_failures": 0.08356784534442677,
+"n": 683
+},
+"punctuation": {
+"share_of_tokens": 0.13960601982136303,
+"accuracy": 0.0,
+"share_of_failures": 0.13960601982136303,
+"n": 1141
+},
+"markdown/latex": {
+"share_of_tokens": 0.06484766915453322,
+"accuracy": 0.0,
+"share_of_failures": 0.06484766915453322,
+"n": 530
+},
+"newline": {
+"share_of_tokens": 0.0035482686895876667,
+"accuracy": 0.0,
+"share_of_failures": 0.0035482686895876667,
+"n": 29
+},
+"whitespace": {
+"share_of_tokens": 0.059219380888290714,
+"accuracy": 0.0,
+"share_of_failures": 0.059219380888290714,
+"n": 484
+}
+}
+}
+},
+"offsets": {
+"1": 692,
+"2": 763,
+"3": 1112,
+"4": 1270,
+"5": 1360,
+"6": 1242,
+"7": 994,
+"8": 740
+}
+},
+"mtbench": {
+"temp": {
+"0.3": 0.8269043942213219,
+"0.5": 0.8288320494639645,
+"0.7": 0.8296881909660672,
+"1.0": 0.8267234169404242,
+"1.3": 0.8166989826964408
+},
+"views": {
+"base_tf": {
+"acc": 0.824404030474318,
+"flav": {
+"same_word_diff_spacing_or_case": 0.016794961511546535,
+"draft_has_target_prob_ge_0.2": 0.3449965010496851,
+"target_near_tie_margin_lt_0.2": 0.5178446466060181,
+"target_confident_top1_ge_0.9": 0.03568929321203639
+},
+"cats": {
+"content word": {
+"share_of_tokens": 0.43130990415335463,
+"accuracy": 0.7584045584045584,
+"share_of_failures": 0.5934219734079776,
+"n": 3510
+},
+"function word": {
+"share_of_tokens": 0.2714426148930941,
+"accuracy": 0.8184698958804889,
+"share_of_failures": 0.2806158152554234,
+"n": 2209
+},
+"number": {
+"share_of_tokens": 0.05935119193905136,
+"accuracy": 0.9772256728778468,
+"share_of_failures": 0.007697690692792162,
+"n": 483
+},
+"punctuation": {
+"share_of_tokens": 0.13996067829933645,
+"accuracy": 0.8893766461808604,
+"share_of_failures": 0.08817354793561931,
+"n": 1139
+},
+"markdown/latex": {
+"share_of_tokens": 0.06389776357827476,
+"accuracy": 0.9384615384615385,
+"share_of_failures": 0.02239328201539538,
+"n": 520
+},
+"newline": {
+"share_of_tokens": 0.007618579503563529,
+"accuracy": 0.9032258064516129,
+"share_of_failures": 0.004198740377886634,
+"n": 62
+},
+"whitespace": {
+"share_of_tokens": 0.026419267633325142,
+"accuracy": 0.9767441860465116,
+"share_of_failures": 0.0034989503149055285,
+"n": 215
+}
+}
+},
+"block_tf": {
+"acc": 0.8018249582315897,
+"flav": {
+"same_word_diff_spacing_or_case": 0.01556420233463035,
+"draft_has_target_prob_ge_0.2": 0.3236057068741894,
+"target_near_tie_margin_lt_0.2": 0.4695201037613489,
+"target_confident_top1_ge_0.9": 0.057068741893644616
+},
+"cats": {
+"content word": {
+"share_of_tokens": 0.43284924816861586,
+"accuracy": 0.7289192399049882,
+"share_of_failures": 0.5920881971465629,
+"n": 3368
+},
+"function word": {
+"share_of_tokens": 0.2695026346227991,
+"accuracy": 0.7958989031950405,
+"share_of_failures": 0.2775616083009079,
+"n": 2097
+},
+"number": {
+"share_of_tokens": 0.06001799254594525,
+"accuracy": 0.961456102783726,
+"share_of_failures": 0.011673151750972763,
+"n": 467
+},
+"punctuation": {
+"share_of_tokens": 0.14124148567022235,
+"accuracy": 0.8771610555050046,
+"share_of_failures": 0.08754863813229571,
+"n": 1099
+},
+"markdown/latex": {
+"share_of_tokens": 0.06181724714047038,
+"accuracy": 0.9272349272349272,
+"share_of_failures": 0.022697795071335927,
+"n": 481
+},
+"newline": {
+"share_of_tokens": 0.007454054748746948,
+"accuracy": 0.896551724137931,
+"share_of_failures": 0.0038910505836575876,
+"n": 58
+},
+"whitespace": {
+"share_of_tokens": 0.027117337103200103,
+"accuracy": 0.966824644549763,
+"share_of_failures": 0.004539559014267186,
+"n": 211
+}
+}
+},
+"block_free": {
+"acc": 0.0,
+"flav": {
+"same_word_diff_spacing_or_case": 0.018700143847260365,
+"draft_has_target_prob_ge_0.2": 0.15574735190270694,
+"target_near_tie_margin_lt_0.2": 0.2935791813783183,
+"target_confident_top1_ge_0.9": 0.333987184516804
+},
+"cats": {
+"content word": {
+"share_of_tokens": 0.5391656858898914,
+"accuracy": 0.0,
+"share_of_failures": 0.5391656858898914,
+"n": 4123
+},
+"function word": {
+"share_of_tokens": 0.2420557081208317,
+"accuracy": 0.0,
+"share_of_failures": 0.2420557081208317,
+"n": 1851
+},
+"number": {
+"share_of_tokens": 0.04812344710343926,
+"accuracy": 0.0,
+"share_of_failures": 0.04812344710343926,
+"n": 368
+},
+"punctuation": {
+"share_of_tokens": 0.09637766444357264,
+"accuracy": 0.0,
+"share_of_failures": 0.09637766444357264,
+"n": 737
+},
+"markdown/latex": {
+"share_of_tokens": 0.04289263763567412,
+"accuracy": 0.0,
+"share_of_failures": 0.04289263763567412,
+"n": 328
+},
+"newline": {
+"share_of_tokens": 0.00745390349156532,
+"accuracy": 0.0,
+"share_of_failures": 0.00745390349156532,
+"n": 57
+},
+"whitespace": {
+"share_of_tokens": 0.0239309533150255,
+"accuracy": 0.0,
+"share_of_failures": 0.0239309533150255,
+"n": 183
+}
+}
+}
+},
+"offsets": {
+"1": 1542,
+"2": 1430,
+"3": 1672,
+"4": 1310,
+"5": 860,
+"6": 455,
+"7": 260,
+"8": 118
+}
+},
+"humaneval": {
+"temp": {
+"0.3": 0.9694007612358625,
+"0.5": 0.9687143028069275,
+"0.7": 0.96727061095556,
+"1.0": 0.963071744387686,
+"1.3": 0.9551275294030351
+},
+"views": {
+"base_tf": {
+"acc": 0.9692307692307692,
+"flav": {
+"same_word_diff_spacing_or_case": 0.17222222222222222,
+"draft_has_target_prob_ge_0.2": 0.49444444444444446,
+"target_near_tie_margin_lt_0.2": 0.35,
+"target_confident_top1_ge_0.9": 0.08888888888888889
+},
+"cats": {
+"content word": {
+"share_of_tokens": 0.3124786324786325,
+"accuracy": 0.9562363238512035,
+"share_of_failures": 0.4444444444444444,
+"n": 1828
+},
+"function word": {
+"share_of_tokens": 0.11282051282051282,
+"accuracy": 0.9803030303030303,
+"share_of_failures": 0.07222222222222222,
+"n": 660
+},
+"number": {
+"share_of_tokens": 0.08512820512820513,
+"accuracy": 0.9919678714859438,
+"share_of_failures": 0.022222222222222223,
+"n": 498
+},
+"punctuation": {
+"share_of_tokens": 0.2294017094017094,
+"accuracy": 0.9731743666169895,
+"share_of_failures": 0.2,
+"n": 1342
+},
+"markdown/latex": {
+"share_of_tokens": 0.09418803418803419,
+"accuracy": 0.956442831215971,
+"share_of_failures": 0.13333333333333333,
+"n": 551
+},
+"newline": {
+"share_of_tokens": 0.03606837606837607,
+"accuracy": 0.909952606635071,
+"share_of_failures": 0.10555555555555556,
+"n": 211
+},
+"whitespace": {
+"share_of_tokens": 0.12991452991452992,
+"accuracy": 0.9947368421052631,
+"share_of_failures": 0.022222222222222223,
+"n": 760
+}
+}
+},
+"block_tf": {
+"acc": 0.9646630236794171,
+"flav": {
+"same_word_diff_spacing_or_case": 0.08762886597938144,
+"draft_has_target_prob_ge_0.2": 0.3711340206185567,
+"target_near_tie_margin_lt_0.2": 0.31958762886597936,
+"target_confident_top1_ge_0.9": 0.17010309278350516
+},
+"cats": {
+"content word": {
+"share_of_tokens": 0.3162112932604736,
+"accuracy": 0.9441244239631337,
+"share_of_failures": 0.5,
+"n": 1736
+},
+"function word": {
+"share_of_tokens": 0.11785063752276867,
+"accuracy": 0.9706336939721792,
+"share_of_failures": 0.0979381443298969,
+"n": 647
+},
+"number": {
+"share_of_tokens": 0.08816029143897997,
+"accuracy": 0.9917355371900827,
+"share_of_failures": 0.020618556701030927,
+"n": 484
+},
+"punctuation": {
+"share_of_tokens": 0.23406193078324225,
+"accuracy": 0.9758754863813229,
+"share_of_failures": 0.15979381443298968,
+"n": 1285
+},
+"markdown/latex": {
+"share_of_tokens": 0.07704918032786885,
+"accuracy": 0.9432624113475178,
+"share_of_failures": 0.12371134020618557,
+"n": 423
+},
+"newline": {
+"share_of_tokens": 0.03351548269581057,
+"accuracy": 0.9184782608695652,
+"share_of_failures": 0.07731958762886598,
+"n": 184
+},
+"whitespace": {
+"share_of_tokens": 0.1331511839708561,
+"accuracy": 0.9945280437756499,
+"share_of_failures": 0.020618556701030927,
+"n": 731
+}
+}
+},
+"block_free": {
+"acc": 0.0,
+"flav": {
+"same_word_diff_spacing_or_case": 0.04798233286488657,
+"draft_has_target_prob_ge_0.2": 0.04376631198554507,
+"target_near_tie_margin_lt_0.2": 0.05480827143143947,
+"target_confident_top1_ge_0.9": 0.8267416181489661
+},
+"cats": {
+"content word": {
+"share_of_tokens": 0.3920899417787593,
+"accuracy": 0.0,
+"share_of_failures": 0.3920899417787593,
+"n": 1953
+},
+"function word": {
+"share_of_tokens": 0.11965468781369203,
+"accuracy": 0.0,
+"share_of_failures": 0.11965468781369203,
+"n": 596
+},
+"number": {
+"share_of_tokens": 0.07689219032322826,
+"accuracy": 0.0,
+"share_of_failures": 0.07689219032322826,
+"n": 383
+},
+"punctuation": {
+"share_of_tokens": 0.22766512748444087,
+"accuracy": 0.0,
+"share_of_failures": 0.22766512748444087,
+"n": 1134
+},
+"markdown/latex": {
+"share_of_tokens": 0.07006625175667537,
+"accuracy": 0.0,
+"share_of_failures": 0.07006625175667537,
+"n": 349
+},
+"newline": {
+"share_of_tokens": 0.0357357960248946,
+"accuracy": 0.0,
+"share_of_failures": 0.0357357960248946,
+"n": 178
+},
+"whitespace": {
+"share_of_tokens": 0.07789600481830958,
+"accuracy": 0.0,
+"share_of_failures": 0.07789600481830958,
+"n": 388
+}
+}
+}
+},
+"offsets": {
+"1": 194,
+"2": 213,
+"3": 621,
+"4": 1027,
+"5": 1171,
+"6": 832,
+"7": 560,
+"8": 363
+}
+}
+}
+}
