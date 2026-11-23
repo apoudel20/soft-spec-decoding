@@ -6,6 +6,30 @@ All numbers come from `results/*.json` and the tables below are printed by `make
 **Status.** Arms 0, A, C, C-hard, D and C+D are done, greedy and T=1. Two follow-ups are still running and their
 sections are marked pending. They are the corrected future-summary probes and the latent planner experiment.
 
+## Relation to prior work
+
+This is a small-scale study (1.5B target, 30 prompts per set), and most positive results here reproduce known
+findings. The literature review in `reports/` was done after the experiments started. It should have come first.
+
+| Finding here | Prior work |
+|---|---|
+| The target refining guesses for its own future (Arm C) beats frozen-target Jacobi | Shown at larger scale with bigger gains by Samragh et al. 2025 (arXiv 2507.11851) |
+| A parallel block drafter beats classic SD on math | Known. DFlash, PARD and Medusa-style drafters do this at 7B to 8B scale |
+| Target-distribution labels (TV) raise acceptance under sampling | Expected from DistillSpec (2023) |
+| Block-drafter acceptance decays with offset | Known problem in parallel and non-autoregressive decoding |
+| Specific future tokens are not linearly decodable beyond a few positions | Consistent with Future Lens and later probing work |
+| Soft (distribution) inputs give the target nothing over hard guesses | Agrees with bijmuj/EmbeddingSuperPosition (drafter inputs) |
+
+The only untested idea with a possible novelty claim is the latent planner. It is a target-produced, long-horizon
+plan trained with an explicit future-prediction objective and fed to a block drafter. ConFu (arXiv 2603.08899),
+SD² and FSP already pass target-derived future vectors to drafters, so the open question is narrow. Does an
+explicit plan objective beat passing the target's hidden state? Decision rules, fixed before the results:
+
+1. If the oracle (true future summary) doesn't raise acceptance, plans can't help at this scale. Stop.
+2. If the oracle helps but the predicted plan only matches target features, prior work covers it. Stop.
+3. Only if the predicted plan clearly beats target features is it worth scaling to a 4B to 8B target, Spec-Bench,
+   and released EAGLE-3 and DFlash baselines.
+
 ## Summary
 
 | Question (PLAN.md decision row) | Answer at this scale |

@@ -4,10 +4,10 @@ Can a target LLM and its drafter cooperate on distributions ("soft tokens") inst
 guesses, while the output stays exactly the target's? Code for the experiments in
 [PLAN.md](PLAN.md). Results are in [RESULTS.md](RESULTS.md).
 
-**Status.** All planned arms are evaluated, greedy and T=1, on 30 prompts per set. In short, the target
-refining its own future guesses works (τ 1.07 to 2.33 over frozen Jacobi), soft inputs add nothing over hard
-guesses on the target side, and target TV labels help the block drafter under sampling. The planner probe and
-the latent planner experiment are still running.
+**Status: work in progress, small scale.** All planned arms are evaluated (greedy and T=1, 30 prompts per set).
+Most positive results reproduce known findings at small scale, and soft inputs gave nothing over hard guesses.
+The one open question is whether a latent plan from the target helps a block drafter more than its hidden
+state does. See "Relation to prior work" in RESULTS.md for positioning and the decision rules.
 
 - A drafter failure analysis is in `results/failures_summary.json`, with examples in `results/failure_examples_sample.json`.
 - A literature review is in [reports/](reports/Latent%20planning%20for%20speculative%20decoding.md).
