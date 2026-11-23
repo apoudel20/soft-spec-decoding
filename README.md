@@ -4,8 +4,15 @@ Can a target LLM and its drafter cooperate on distributions ("soft tokens") inst
 guesses, while the output stays exactly the target's? Code for the experiments in
 [PLAN.md](PLAN.md). Results will be in RESULTS.md.
 
-**Status: work in progress.** The harness, exactness tests and training code are done, and
-training runs are in progress. No conclusions yet.
+**Status: work in progress.** Done so far:
+
+- The harness and exactness tests pass, including bitwise exactness of the gated LoRA.
+- Arm C and Arm D training is finished.
+- Arm 0 diagnostics are in [results/](results/).
+- A drafter failure analysis is in `results/failures_summary.json`, with examples in `results/failure_examples_sample.json`.
+- A literature review is in [reports/](reports/Latent%20planning%20for%20speculative%20decoding.md).
+
+The full evaluation is running, and RESULTS.md will follow. Nothing here is a final conclusion yet.
 
 Related negative result: [bijmuj/EmbeddingSuperPosition](https://github.com/bijmuj/EmbeddingSuperPosition)
 found that soft-prior (embedding superposition) inputs to DFlash and EAGLE-3 drafters did not raise
