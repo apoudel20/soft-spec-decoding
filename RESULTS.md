@@ -409,6 +409,24 @@ budget, frozen or fine-tuned. Fed raw without training they hurt. Together with 
 for conditioning a strong block drafter on a single plan vector. Much longer training or a richer plan (per-position
 rather than averaged) could still behave differently; neither was tested.
 
+## Tree headroom on DFlash
+
+`dflash_tree_gap.py`, results in `results/dflash_tree_gap.json`. One DFlash pass gives a distribution per slot; a tree
+keeps the top 4 tokens per slot and checks the most probable prefixes (product of per-slot probabilities). Accepted
+tokens per pass on held-out dev answers, teacher-forced context.
+
+| Set | Chain | Tree 32 | Tree 64 | Tree 128 | Tree 256 | Best possible (top 4 per slot) |
+|---|---|---|---|---|---|---|
+| Math | 7.46 | 8.63 | 9.03 | 9.31 | 9.52 | 10.49 |
+| Code | 6.77 | 8.21 | 8.68 | 9.10 | 9.37 | 10.72 |
+| Chat | 2.96 | 3.85 | 4.00 | 4.13 | 4.20 | 4.43 |
+
+- A tree adds 16 to 35% accepted tokens over the single chain at 32 to 64 nodes. Known: DDTree.
+- Room left for a better selector at 64 nodes: +16% math, +24% code, +11% chat (chat is limited by the candidates).
+- Closest prior work for a learned selector: GRAFT (2608.20375) re-scores DDTree edges on DFlash with a scorer that
+  sees only the parent token, child token and depth (frozen target embeddings), distilled from target traces, and
+  reports +19% throughput over DDTree on Qwen3-8B. It uses no target hidden state or forecast at scoring time.
+
 ## What the results say
 
 1. **Refinement works, softness doesn't (target side).** Arm C turns the spare width of the verification
