@@ -1,0 +1,427 @@
+{
+ "cap": 320,
+ "sets": {
+  "train": {
+   "chat": {
+    "count": 300,
+    "prompt_tokens": {
+     "n": 300,
+     "mean": 68.67666666666666,
+     "median": 73.5,
+     "p10": 25.900000000000002,
+     "p90": 112.10000000000002,
+     "min": 21,
+     "max": 148
+    },
+    "answer_tokens": {
+     "n": 300,
+     "mean": 301.46,
+     "median": 320.0,
+     "p10": 278.8,
+     "p90": 320.0,
+     "min": 19,
+     "max": 321
+    },
+    "total_answer_tokens": 90438,
+    "frac_at_cap": 0.8666666666666667,
+    "hist": [
+     2,
+     1,
+     1,
+     3,
+     6,
+     3,
+     0,
+     0,
+     4,
+     2,
+     1,
+     4,
+     0,
+     4,
+     3,
+     266
+    ],
+    "types": {
+     "Explain or describe": 34,
+     "Other (context first, then a request)": 65,
+     "Write or create": 126,
+     "Question": 75
+    },
+    "examples": [
+     {
+      "prompt": "Describe a specific art therapy technique and how it is used to achieve therapeutic goals.",
+      "answer": "One specific art therapy technique is **\"Guided Imagery and Drawing\"**, which is often used to help clients explore emotions, reduce anxiety, and enhance self-awareness.\n\n### Description of the Technique:\nIn **Guided Imagery and Drawing**, the therapist guides",
+      "answer_tokens": 320
+     },
+     {
+      "prompt": "In a 500-word essay, critically analyze the effectiveness of renewable energy in reducing water scarcity and improving sanitation, providing specific examples of successful projects implemented in different parts of the ",
+      "answer": "**The Effectiveness of Renewable Energy in Reducing Water Scarcity and Improving Sanitation**\n\n**Introduction**\n\nWater scarcity and poor sanitation are pressing global challenges, particularly in arid and semi-arid regions. Renewable energy has emerged as a pr",
+      "answer_tokens": 320
+     },
+     {
+      "prompt": "Provide a detailed recipe with instructions on how to make the vegan acorn squash stuffed with quinoa and veggies, including a list of ingredients and their measurements. Additionally, include cooking times and temperatu",
+      "answer": "**Vegan Acorn Squash Stuffed with Quinoa and Veggies**  \nA delicious, hearty, and colorful vegan dish that\u2019s perfect for fall or any time you want to enjoy a nutrient-packed meal. This recipe is easy to follow, even for beginners, and includes a list of ingred",
+      "answer_tokens": 320
+     },
+     {
+      "prompt": "In what ways do Customer Success Managers work to maintain and enhance customer satisfaction, and what techniques do they use to retain customers and promote loyalty?",
+      "answer": "Customer Success Managers (CSMs) play a crucial role in maintaining and enhancing customer satisfaction, as well as retaining customers and promoting loyalty. Their work is centered around ensuring that customers achieve their desired outcomes through the use ",
+      "answer_tokens": 320
+     }
+    ]
+   },
+   "math": {
+    "count": 150,
+    "prompt_tokens": {
+     "n": 150,
+     "mean": 83.44666666666667,
+     "median": 79.0,
+     "p10": 65.0,
+     "p90": 113.0,
+     "min": 50,
+     "max": 139
+    },
+    "answer_tokens": {
+     "n": 150,
+     "mean": 249.47333333333333,
+     "median": 249.0,
+     "p10": 164.9,
+     "p90": 320.0,
+     "min": 89,
+     "max": 320
+    },
+    "total_answer_tokens": 37421,
+    "frac_at_cap": 0.24666666666666667,
+    "hist": [
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     2,
+     10,
+     9,
+     11,
+     18,
+     14,
+     15,
+     13,
+     12,
+     45
+    ],
+    "types": {},
+    "examples": [
+     {
+      "prompt": "Quinton brought 40 cupcakes to school on his birthday. He gave a cupcake to each of the 18 students in Ms. Delmont's class. He also gave a cupcake to each of the 16 students in Mrs. Donnelly's class. He also gave a cupca",
+      "answer": "Let's solve this step by step.\n\n---\n\n### **Step 1: Total cupcakes Quinton brought**\nQuinton brought **40 cupcakes** to school.\n\n---\n\n### **Step 2: Cupcakes given to students in Ms. Delmont's class**\n- There are **18 students** in Ms. Delmont's class.\n- He gave",
+      "answer_tokens": 320
+     },
+     {
+      "prompt": "Jorge has an equal number of baseball cards as Matias, who has 6 fewer cards than Carlos. If Carlos has 20 baseball cards, what is the total number of baseball cards the three have?",
+      "answer": "We are given the following information:\n\n1. **Carlos has 20 baseball cards.**\n2. **Matias has 6 fewer cards than Carlos.**\n3. **Jorge has the same number of cards as Matias.**\n\n---\n\n### Step 1: Find how many cards Matias has\n\nSince Matias has 6 fewer cards tha",
+      "answer_tokens": 229
+     },
+     {
+      "prompt": "There were 20 fishermen in the lake who had cast their net to catch fish. If they caught 10000 fish in total, and 19 of them caught 400 fish each with their own net, calculate the number of fish the twentieth fisherman c",
+      "answer": "We are given the following information:\n\n- There are **20 fishermen** in total.\n- They caught a **total of 10,000 fish**.\n- **19 of them** caught **400 fish each**.\n- We are to find how many fish the **20th fisherman** caught.\n\n---\n\n### Step 1: Calculate the t",
+      "answer_tokens": 210
+     },
+     {
+      "prompt": "There are 40 more buyers in the grocery store today than yesterday. There were half the number of buyers yesterday as there were the day before, and the day before had 50 buyers. Nobody visited the store on more than one",
+      "answer": "We are given the following information:\n\n1. **The day before** had **50 buyers**.\n2. **Yesterday** had **half the number** of buyers as the day before.\n3. **Today** has **40 more buyers** than yesterday.\n4. **Nobody visited the store on more than one day** (so",
+      "answer_tokens": 231
+     }
+    ]
+   },
+   "code": {
+    "count": 150,
+    "prompt_tokens": {
+     "n": 150,
+     "mean": 44.96,
+     "median": 44.0,
+     "p10": 40.0,
+     "p90": 50.0,
+     "min": 37,
+     "max": 77
+    },
+    "answer_tokens": {
+     "n": 150,
+     "mean": 156.63333333333333,
+     "median": 140.5,
+     "p10": 30.300000000000004,
+     "p90": 320.0,
+     "min": 14,
+     "max": 320
+    },
+    "total_answer_tokens": 23495,
+    "frac_at_cap": 0.12666666666666668,
+    "hist": [
+     8,
+     12,
+     12,
+     11,
+     16,
+     6,
+     9,
+     11,
+     7,
+     2,
+     8,
+     12,
+     1,
+     9,
+     6,
+     20
+    ],
+    "types": {},
+    "examples": [
+     {
+      "prompt": "Write a function to convert rgb color to hsv color.",
+      "answer": "Here's a Python function that converts an RGB color to HSV color space:\n\n```python\ndef rgb_to_hsv(r, g, b):\n    \"\"\"\n    Convert RGB color to HSV color.\n    \n    Parameters:\n    r (float): Red component (0.0 to 1.0)\n    g (float): Green component (0.0 to 1.0)\n ",
+      "answer_tokens": 320
+     },
+     {
+      "prompt": "Write a function to find length of the string.",
+      "answer": "```python\ndef string_length(s):\n    return len(s)\n```",
+      "answer_tokens": 14
+     },
+     {
+      "prompt": "Write a function to find m number of multiples of n.",
+      "answer": "```python\ndef find_multiples(n, m):\n    \"\"\"\n    Returns a list of the first m multiples of n.\n    \n    Parameters:\n    n (int): The number to find multiples of.\n    m (int): The number of multiples to return.\n    \n    Returns:\n    list: A list containing the f",
+      "answer_tokens": 91
+     },
+     {
+      "prompt": "Write a python function to count number of non-empty substrings of a given string.",
+      "answer": "```python\ndef count_non_empty_substrings(s):\n    n = len(s)\n    return n * (n + 1) // 2\n\n# Example usage:\n# print(count_non_empty_substrings(\"abc\"))  # Output: 6\n```",
+      "answer_tokens": 53
+     }
+    ]
+   }
+  },
+  "train_more": null,
+  "dev_math": {
+   "math": {
+    "count": 40,
+    "prompt_tokens": {
+     "n": 40,
+     "mean": 88.725,
+     "median": 81.5,
+     "p10": 64.7,
+     "p90": 118.2,
+     "min": 53,
+     "max": 160
+    },
+    "answer_tokens": {
+     "n": 40,
+     "mean": 267.2,
+     "median": 286.0,
+     "p10": 194.8,
+     "p90": 320.0,
+     "min": 148,
+     "max": 320
+    },
+    "total_answer_tokens": 10688,
+    "frac_at_cap": 0.35,
+    "hist": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     8,
+     0,
+     5,
+     2,
+     3,
+     5,
+     16
+    ],
+    "types": {},
+    "examples": [
+     {
+      "prompt": "A water tank has a capacity of 4000 gallons. Mack connects a pipe to the tank that fills the tank with water at the rate of 10 gallons per hour. How long will it take to fill the tank to 3/4 of its capacity?",
+      "answer": "We are given:\n\n- **Tank capacity** = 4000 gallons  \n- **Filling rate** = 10 gallons per hour  \n- We want to fill the tank to **3/4 of its capacity**\n\n---\n\n### Step 1: Find 3/4 of the tank's capacity\n\n$$\n\\frac{3}{4} \\times 4000 = 3000 \\text{ gallons}\n$$\n\n---\n\n#",
+      "answer_tokens": 186
+     },
+     {
+      "prompt": "There are four members in one household. Each member consumes 3 slices of bread during breakfast and 2 slices of bread for snacks. A loaf of bread has 12 slices. How many days will five loaves of bread last in this famil",
+      "answer": "We are given:\n\n- **Number of family members**: 4  \n- **Slices of bread per person per day**:\n  - **Breakfast**: 3 slices\n  - **Snacks**: 2 slices  \n  - **Total per person per day**: $3 + 2 = 5$ slices  \n- **Total per day for the family**: $4 \\times 5 = 20$ sli",
+      "answer_tokens": 267
+     },
+     {
+      "prompt": "To make 3 km, Ben walked for 2 hours. Continuing at the same speed, how much time in minutes would it take him to travel 12 km?",
+      "answer": "We are told that Ben walks **3 km in 2 hours**. We need to find how long it would take him to walk **12 km**, assuming he continues at the same speed.\n\n---\n\n### **Step 1: Find Ben's walking speed**\n\nSpeed is calculated as:\n\n$$\n\\text{Speed} = \\frac{\\text{Distan",
+      "answer_tokens": 287
+     },
+     {
+      "prompt": "Each week Carina puts 20 more seashells in a jar than she did the week before. If there are 50 seashells in the jar this week, how many will there be in a month?",
+      "answer": "We are told:\n\n- Carina **adds 20 more seashells each week** than she did the week before.\n- This week, there are **50 seashells** in the jar.\n- We are to find how many seashells will be in the jar **in a month**.\n\n---\n\n### Step 1: Understand the pattern\n\nCarin",
+      "answer_tokens": 320
+     }
+    ]
+   }
+  },
+  "dev_code": {
+   "code": {
+    "count": 40,
+    "prompt_tokens": {
+     "n": 40,
+     "mean": 45.525,
+     "median": 44.5,
+     "p10": 42.0,
+     "p90": 50.400000000000006,
+     "min": 41,
+     "max": 57
+    },
+    "answer_tokens": {
+     "n": 40,
+     "mean": 186.775,
+     "median": 188.5,
+     "p10": 27.8,
+     "p90": 320.0,
+     "min": 18,
+     "max": 320
+    },
+    "total_answer_tokens": 7471,
+    "frac_at_cap": 0.15,
+    "hist": [
+     1,
+     4,
+     2,
+     1,
+     2,
+     1,
+     2,
+     4,
+     2,
+     2,
+     1,
+     3,
+     2,
+     4,
+     2,
+     7
+    ],
+    "types": {},
+    "examples": [
+     {
+      "prompt": "Write a python function to find minimum sum of factors of a given number.",
+      "answer": "Here's a Python function that finds the **minimum sum of factors** of a given number. The idea is to find the pair of factors of the number that have the minimum sum.\n\n```python\ndef min_sum_of_factors(n):\n    if n < 2:\n        return 0  # No factors for number",
+      "answer_tokens": 250
+     },
+     {
+      "prompt": "Write a function to count the element frequency in the mixed nested tuple.",
+      "answer": "Sure! Here's a Python function that counts the frequency of each element in a **mixed nested tuple** (i.e., a tuple that may contain other tuples, lists, or other elements). The function will recursively traverse through all levels of nesting and count the occ",
+      "answer_tokens": 275
+     },
+     {
+      "prompt": "Write a function to convert tuple into list by adding the given string after every element.",
+      "answer": "```python\ndef tuple_to_list_with_string(tup, string):\n    return [str(element) + string for element in tup]\n```",
+      "answer_tokens": 28
+     },
+     {
+      "prompt": "Write a function to find the summation of tuple elements in the given tuple list.",
+      "answer": "```python\ndef sum_tuple_elements(tuple_list):\n    return sum(element for sublist in tuple_list for element in sublist)\n```",
+      "answer_tokens": 25
+     }
+    ]
+   }
+  },
+  "dev_chat": {
+   "chat": {
+    "count": 40,
+    "prompt_tokens": {
+     "n": 40,
+     "mean": 74.975,
+     "median": 85.0,
+     "p10": 27.0,
+     "p90": 114.1,
+     "min": 24,
+     "max": 138
+    },
+    "answer_tokens": {
+     "n": 40,
+     "mean": 298.675,
+     "median": 320.0,
+     "p10": 307.80000000000007,
+     "p90": 320.0,
+     "min": 46,
+     "max": 320
+    },
+    "total_answer_tokens": 11947,
+    "frac_at_cap": 0.9,
+    "hist": [
+     0,
+     0,
+     1,
+     1,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     36
+    ],
+    "types": {
+     "Write or create": 19,
+     "Other (context first, then a request)": 8,
+     "Question": 8,
+     "Explain or describe": 5
+    },
+    "examples": [
+     {
+      "prompt": "Write a free verse poem about the power of the human spirit to overcome adversity, using vivid imagery and sensory language to depict a specific moment or event where someone has faced a major challenge and risen above i",
+      "answer": "In the hush before dawn, when the world is still  \nand the sky wears a bruise of gray,  \na single breath stirs the silence\u2014  \na whisper of will, a spark in the dark.  \n\nThe storm had come with a fury of fists,  \na tempest that clawed at the bones  \nand left th",
+      "answer_tokens": 320
+     },
+     {
+      "prompt": "Compose a speech about the need for more affordable dental care.",
+      "answer": "**Speech: The Need for More Affordable Dental Care**\n\nLadies and gentlemen, esteemed guests, and fellow advocates for health and equity,\n\nToday, I stand before you to address an issue that affects millions of people across our nation \u2014 the urgent need for more",
+      "answer_tokens": 320
+     },
+     {
+      "prompt": "Write a historical fiction story that is set during the World War II, emphasizing the individuals and their experiences. Consider including themes such as bravery, sacrifice, and perseverance. Ensure that your story cont",
+      "answer": "**Title: \"The Lantern of Leningrad\"**\n\n---\n\n**Chapter One: The Cold Wind of December**\n\nThe wind howled through the streets of Leningrad like a wounded beast, biting through the thin fabric of the coats worn by the city\u2019s weary citizens. It was December 1941, ",
+      "answer_tokens": 320
+     },
+     {
+      "prompt": "Create a t-shirt design that raises awareness for animal rights by including a bold statement or message advocating for animal welfare, using animal prints or illustrations, or portraying animals in a positive way. Incor",
+      "answer": "**T-Shirt Design Concept: \"Voice for the Voiceless\"**\n\n---\n\n### **Design Overview:**\nThis t-shirt design is a powerful visual statement in support of animal rights, combining bold typography, vibrant animal prints, and a strong, memorable message to raise awar",
+      "answer_tokens": 320
+     }
+    ]
+   }
+  }
+ },
+ "bins": [
+  0,
+  20,
+  40,
+  60,
+  80,
+  100,
+  120,
+  140,
+  160,
+  180,
+  200,
+  220,
+  240,
+  260,
+  280,
+  300,
+  320
+ ]
+}
