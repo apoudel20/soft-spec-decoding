@@ -201,8 +201,27 @@ From `failures.py` on the base and block drafters (`results/failures_summary.jso
 
 ## Planner go/no-go probe
 
-**Pending.** Linear probes for token t+k (k up to 32) and ridge probes for bag-of-future summaries on target
-vs drafter hidden states, against unigram and embedding-only baselines.
+Linear probes on hidden states at the middle and last layer predict token t+k over a 4096-token vocabulary
+plus "other". They were trained on 71,955 positions from training sequences and tested on all response positions
+of the eval references.
+
+| Probe (last layer) | k=1 | k=2 | k=4 | k=8 | k=16 | k=32 |
+|---|---|---|---|---|---|---|
+| Target 1.5B, GSM8K | 0.87 | 0.56 | 0.23 | 0.08 | 0.05 | 0.03 |
+| Drafter 0.5B, GSM8K | 0.85 | 0.51 | 0.21 | 0.07 | 0.05 | 0.04 |
+| Target 1.5B, MT-Bench | 0.68 | 0.30 | 0.12 | 0.07 | 0.06 | 0.06 |
+| Drafter 0.5B, MT-Bench | 0.63 | 0.27 | 0.11 | 0.08 | 0.06 | 0.06 |
+| Target 1.5B, HumanEval | 0.82 | 0.39 | 0.15 | 0.08 | 0.06 | 0.05 |
+| Drafter 0.5B, HumanEval | 0.80 | 0.34 | 0.12 | 0.07 | 0.06 | 0.05 |
+
+The most-common-token baseline is 0.04 on GSM8K and MT-Bench, and 0.01 on HumanEval. The target's edge over the
+drafter is 2 to 5 points at k=2 to 4 and gone by k=8. Middle layers are worse than last layers at every k.
+Specific tokens beyond a few positions are not linearly readable from either model, so a useful plan at this
+scale has to be a summary of the future rather than its tokens.
+
+**Pending.** The ridge probes for bag-of-future summaries (next 32 and 128 tokens) and remaining length. The
+first run penalised the intercept, so its R² and cosine numbers are invalid and are not reported. A corrected
+rerun is queued after the planner.
 
 ## Latent planner
 
