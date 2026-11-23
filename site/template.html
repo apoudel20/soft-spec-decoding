@@ -1952,6 +1952,7 @@ select { font: 13px var(--sans); color: var(--fg); background: var(--panel); bor
         <tr><td>Parallel block drafter</td><td><span class="pill ok">Works</span>1.51× vs 1.37× on GSM8K</td><td>DFlash, PARD do more at 8B</td></tr>
         <tr><td>Target plan vector to drafter</td><td><span class="pill no">No valid result</span>three implementation failures</td><td>ConFu, SD², NextLat, ChainFlow</td></tr>
         <tr><td>Plan vector added to DFlash inputs</td><td><span class="pill no">No effect</span>±3%, oracle included</td><td>ConFu (different pathway)</td></tr>
+        <tr><td>True future fed to DFlash, frozen or fine-tuned</td><td><span class="pill no">No effect</span>within ±0.06 tokens</td><td>None found</td></tr>
         <tr><td>Better tree selection, ceiling</td><td><span class="pill ok">Room to gain</span>up to +36% at 32 nodes (chat)</td><td>None found that uses the target</td></tr>
       </tbody>
     </table></div>
@@ -2090,8 +2091,22 @@ select { font: 13px var(--sans); color: var(--fg); background: var(--panel); bor
       <p>Accepted tokens per 16-token block. A learned plan vector added to the block&#8217;s input embeddings changes almost nothing. Code&#8217;s +3% is within about one standard error. Even the oracle, built from the target&#8217;s actual next 64 positions, does not help, which points at the injection rather than the idea: DFlash was trained to read the target through its context keys and values, not through its input embeddings.</p>
       <p class="muted">Next: a no-training test that appends the target&#8217;s true future states as one extra context position, DFlash&#8217;s own channel. If DFlash can use future information there, the follow-up is learning to predict that position.</p>
     </div>
-    <div class="live" id="nextBuild">
-      <div class="state">Next · a latent-plan drafter</div>
+    <div class="live" id="futureTests">
+      <div class="state">Done · can DFlash use the future? · Qwen3-8B (4-bit) · held-out dev answers · accepted tokens per 16-token block</div>
+      <div class="scroll"><table class="gaptable"><thead><tr><th>What DFlash is given</th><th>Drafter</th><th>Math</th><th>Code</th><th>Chat</th></tr></thead><tbody>
+        <tr><td>Nothing extra</td><td>as released</td><td>7.46</td><td>6.71</td><td>2.94</td></tr>
+        <tr><td>True future (next 16), raw, one extra context position</td><td>frozen</td><td>5.44</td><td>4.11</td><td>2.04</td></tr>
+        <tr><td>True future (next 16), through a trained adapter</td><td>frozen</td><td>7.43</td><td>6.71</td><td>2.94</td></tr>
+        <tr><td>Nothing extra, LoRA fine-tune (control)</td><td>fine-tuned</td><td>7.44</td><td>6.87</td><td>2.97</td></tr>
+        <tr><td>True future (next 16), LoRA fine-tune</td><td>fine-tuned</td><td>7.48</td><td>6.81</td><td>2.95</td></tr>
+      </tbody></table></div>
+      <p>Even a summary of the target&#8217;s true states for the very block being drafted does not help DFlash, whether the drafter is frozen or fine-tuned alongside it. Against the matched fine-tune, the difference is +0.04, &minus;0.06 and &minus;0.02 tokens, with 95% intervals that straddle zero. Fed raw and untrained, it hurts, because DFlash never saw such an input.</p>
+      <p class="muted">With 300 training answers and a single averaged summary, knowing the future does not make this drafter better. Much more training might still find a use for it, but three ways of feeding a plan in have now been flat, oracle included. The remaining route is choosing better which drafted tokens get checked, which does not need the drafter to absorb a plan.</p>
+    </div>
+  <div class="live" id="nextBuild">
+      <div class="state">Next · measuring tree headroom on DFlash</div>
+      <p>A drafter built around a plan would need the plan to carry usable information, and the tests above say a strong block drafter does not use it. What is left is the tree: DFlash gives a distribution for every slot, so many alternative continuations can be checked in one pass. A tree version of DFlash already exists (DDTree); choosing which branches to check using the target&#8217;s own signal does not. The next measurement asks how much a tree on DFlash adds over its single chain, and how much room a perfect selector would still have.</p>
+    </div>
       <p>Bolting a plan onto DFlash does not help, so the next step is a drafter built around the plan: denoise a latent that stands for the next stretch of text (Sketch D), decode it coarse to fine (Sketch E), with each level reading a different tapped layer of the target (Sketch B) and several latent branches becoming a draft tree (Sketch C). It would compete with DFlash rather than ride on it. ChainFlow is the closest prior work, with one latent per token rather than one per stretch.</p>
       <p class="muted">Pending: a no-training test that feeds the target&#8217;s true future states through DFlash&#8217;s own context channel. Its result decides whether the new drafter reads the target through context attention or through the latent alone.</p>
     </div>

@@ -387,6 +387,28 @@ A first version of the head (zero-initialised projection with a norm cap) damage
 (6.96 to 4.82 accepted on the smoke set) because Adam moved all weights at once and the output hit the cap. The
 smoke test caught it before the full run.
 
+## Can DFlash use the target's future?
+
+All on held-out dev answers, Qwen3-8B (4-bit) target, z-lab DFlash, accepted tokens per 16-token block. The "true
+future" is the mean of the target's context features (layers 1, 9, 17, 25, 33) over the next 16 positions, i.e. the
+block being drafted, added as one extra context position.
+
+| What DFlash is given | Drafter | Math | Code | Chat | Script / results |
+|---|---|---|---|---|---|
+| Nothing extra | as released | 7.46 | 6.71 | 2.94 | |
+| True future, raw | frozen | 5.44 | 4.11 | 2.04 | `kv_oracle.py`, `kv_oracle.json` |
+| True future, trained adapter (300 answers) | frozen | 7.43 | 6.71 | 2.94 | `kv_oracle_train.py`, `kv_oracle_trained.json` |
+| Nothing extra, LoRA r16 (control, 300 answers) | fine-tuned | 7.44 | 6.87 | 2.97 | `kv_lora.py`, `kv_lora.json` |
+| True future, LoRA r16 + adapter (300 answers) | fine-tuned | 7.48 | 6.81 | 2.95 | `kv_lora.py`, `kv_lora.json` |
+
+Paired difference, true future minus control (bootstrap 95% CI over blocks): math +0.04 (-0.02 to +0.12), code -0.06
+(-0.16 to +0.03), chat -0.02 (-0.05 to +0.00). Final training losses are identical (2.585 vs 2.586).
+
+Even the true states of the block being drafted, summarised into one vector, do not help DFlash at this training
+budget, frozen or fine-tuned. Fed raw without training they hurt. Together with Sketch A this is a negative result
+for conditioning a strong block drafter on a single plan vector. Much longer training or a richer plan (per-position
+rather than averaged) could still behave differently; neither was tested.
+
 ## What the results say
 
 1. **Refinement works, softness doesn't (target side).** Arm C turns the spare width of the verification
