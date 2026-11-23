@@ -283,7 +283,15 @@ target-provided plan. These are linear probes, so a nonlinear plan head could fi
 
 ## Latent planner
 
-**First run invalid, rerun pending.** In the first run (`results/planner.json` as pushed on 23 Nov at 00:55)
+**No valid result. Paused pending a literature review.** A second run (v2, `results/planner.json` as pushed at
+02:27) bounded the plan input behind a tanh gate initialised at zero. That deadlocked, because at zero the
+projection gets no gradient, so the gate never opened in any variant, including the oracle. Its accepted lengths
+(GSM8K 4.01 to 4.11 vs 4.15) only show seed noise of about ±0.1. A third version (capped zero-init projection)
+was stopped at step 200 of a quick oracle check, where it was slightly worse than no plan. Prior work read
+since then (`research_notes/Prior work read in full.md`) shows the remaining idea is narrower than first
+thought.
+
+**First run invalid.** In the first run (`results/planner.json` as pushed on 23 Nov at 00:55)
 every plan variant, including the oracle, scored far below the plain drafter (GSM8K mean accepted length 1.2
 to 1.7 vs 4.15). The cause was a bug in the plan input. An unbounded, zero-initialised projection grew under
 Adam to 4 to 10 times the norm of a token embedding (1.7 to 4.4 vs 0.45) and drowned the drafter's token inputs.
