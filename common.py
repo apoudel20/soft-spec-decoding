@@ -78,3 +78,20 @@ def train_prompts(n_chat=4000):
         mb = load_dataset("google-research-datasets/mbpp", "full", split=split)
         out += [("code", MBPP_TMPL.format(r["text"])) for r in mb]
     return out
+
+
+TOKENS = os.path.join(HERE, "tokens")
+
+
+def load_items(name):
+    """Token data {"prompt": ids, "resp": ids} from data/<name>.pt, else from the repo's tokens/<name>.jsonl."""
+    import json
+    p = os.path.join(DATA, name + ".pt")
+    if os.path.exists(p):
+        import torch
+        return torch.load(p)
+    j = os.path.join(TOKENS, name + ".jsonl")
+    if os.path.exists(j):
+        with open(j, encoding="utf-8") as f:
+            return [json.loads(line) for line in f]
+    return None
