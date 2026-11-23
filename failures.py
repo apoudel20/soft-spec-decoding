@@ -1,4 +1,8 @@
-"""How exactly does the drafter fail? Token-level failure analysis plus a temperature sweep.
+"""How exactly does the drafter fail?
+
+Also records, per token, the expected acceptance of the base drafter under T=1 rejection sampling
+(sum_v min(p, q) at that position), to compare with greedy exact-match hit rates by category.
+ Token-level failure analysis plus a temperature sweep.
 
 Runs offline on the target's own greedy outputs for the eval prompts (data/ref_<set>_<n>.pt, made by
 arm0.py). The target's greedy token is the truth: a draft is accepted iff it equals it.
@@ -161,8 +165,9 @@ def main():
                 preds = {"base": di[p - 1][0].item()}
                 if bp is not None and p - 1 - r < len(starts) and p - 1 >= r:
                     preds["block_slot0"] = bp[p - 1 - r, 0].item()  # block starting at x_{p-1}
+                rs = overlap(tv[p - 1:p], ti[p - 1:p], dv[p - 1:p], di[p - 1:p], 1.0)[0]  # base drafter, T=1
                 for who, g in preds.items():
-                    rows.append({"set": name, "seq": si, "pos": p - r, "who": who, "view": "teacher_forced",
+                    rows.append({"rs_accept": round(rs, 4) if who == "base" else None,"set": name, "seq": si, "pos": p - r, "who": who, "view": "teacher_forced",
                                  "ok": g == x, "target": dec(x), "draft": dec(g), "cat_target": category(dec(x)),
                                  "cat_draft": category(dec(g)), "p_target_of_draft": round(tmap.get(g, 0.0), 4),
                                  "target_top1_prob": round(pt[0].item(), 4), "target_margin": round(margin, 4),
@@ -198,6 +203,11 @@ def main():
             fails = [r for r in rc if not r["ok"]]
             out[c] = {"share_of_tokens": len(rc) / max(1, n), "n": len(rc), "accuracy": 1 - len(fails) / max(1, len(rc)),
                       "share_of_failures": len(fails) / max(1, sum(not r["ok"] for r in sel))}
+            rsv = [r["rs_accept"] for r in rc if r.get("rs_accept") is not None]
+            if rsv:  # expected acceptance under T=1 rejection sampling vs greedy exact match, same tokens
+                out[c]["rs_accept_T1"] = sum(rsv) / len(rsv)
+                rsf = [r["rs_accept"] for r in fails if r.get("rs_accept") is not None]
+                out[c]["rs_accept_T1_on_greedy_misses"] = sum(rsf) / len(rsf) if rsf else None
         fails = [r for r in sel if not r["ok"]]
         if fails:
             out["_failure_flavour"] = {
