@@ -267,7 +267,14 @@ rerun is queued after the planner.
 
 ## Latent planner
 
-**Pending.** The best Arm D recipe (TV labels, soft feedback) gets a vector added to its block inputs. That vector
+**First run invalid, rerun pending.** In the first run (`results/planner.json` as pushed on 23 Nov at 00:55)
+every plan variant, including the oracle, scored far below the plain drafter (GSM8K mean accepted length 1.2
+to 1.7 vs 4.15). The cause was a bug in the plan input. An unbounded, zero-initialised projection grew under
+Adam to 4 to 10 times the norm of a token embedding (1.7 to 4.4 vs 0.45) and drowned the drafter's token inputs.
+Those numbers say nothing about the idea. The rerun caps the plan offset at the median token-embedding norm
+behind a learned gate that starts at zero, so each variant starts exactly at the plain drafter.
+
+The best Arm D recipe (TV labels, soft feedback) gets a vector added to its block inputs. That vector
 comes from target features, from a plan head trained to predict a summary of the next 64 tokens, or from oracle
 summaries of the true future (near, and skipping the drafted block). All runs use the same steps and data as d4_soft.
 
