@@ -3,9 +3,8 @@
 Target Qwen2.5-1.5B-Instruct, drafter Qwen2.5-0.5B-Instruct, one RTX 4070 Ti, batch size 1, bf16.
 All numbers come from `results/*.json` and the tables below are printed by `make_tables.py`.
 
-**Status.** Arms 0, A, C, C-hard, D and C+D are done, greedy and T=1. Three follow-ups are still running and
-their sections are marked pending. They are the planner go/no-go probe, the rejection-sampling view of the
-failure analysis, and the latent planner experiment.
+**Status.** Arms 0, A, C, C-hard, D and C+D are done, greedy and T=1. Two follow-ups are still running and their
+sections are marked pending. They are the corrected future-summary probes and the latent planner experiment.
 
 ## Summary
 
@@ -197,7 +196,25 @@ From `failures.py` on the base and block drafters (`results/failures_summary.jso
   plain errors on easy tokens caused by the drafter's own earlier guesses.
 - Scaling both models' temperature barely moves expected acceptance (GSM8K 0.938 at T=0.3, 0.927 at T=1.3).
 
-**Pending.** Expected T=1 acceptance of greedy misses per token category (rs_accept_T1).
+**Rejection sampling on the same misses.** For each position on the target's greedy path, this is the expected
+acceptance of the base drafter's token under T=1 speculative sampling, Σ min(p, q). It's split by token category,
+both over all positions and over only the positions where greedy drafting failed.
+
+| Category | GSM8K all | GSM8K greedy misses | MT-Bench all | MT-Bench greedy misses | HumanEval all | HumanEval greedy misses |
+|---|---|---|---|---|---|---|
+| Content word | 0.91 | 0.52 | 0.78 | 0.49 | 0.95 | 0.49 |
+| Function word | 0.89 | 0.52 | 0.81 | 0.54 | 0.97 | 0.45 |
+| Number | 0.98 | 0.39 | 0.96 | 0.40 | 0.99 | 0.42 |
+| Punctuation | 0.95 | 0.53 | 0.88 | 0.56 | 0.97 | 0.54 |
+| Newline | 0.94 | 0.53 | 0.92 | 0.52 | 0.89 | 0.58 |
+| Whitespace | 0.97 | 0.61 | 0.97 | 0.56 | 0.99 | 0.70 |
+| Markdown / LaTeX | 0.97 | 0.59 | 0.93 | 0.58 | 0.94 | 0.53 |
+
+About half of every greedy miss is recovered under sampling, because the drafter and target overlap in
+probability mass even when their argmaxes differ. Whitespace and markdown misses recover the most (0.53 to 0.70).
+Number misses recover the least (about 0.40), since a wrong digit is usually a real error. This only applies to
+sampled decoding. The output then matches the target's T=1 distribution, and greedy output stays defined by
+exact argmax match.
 
 ## Planner go/no-go probe
 
