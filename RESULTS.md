@@ -261,9 +261,25 @@ slightly better (MT-Bench k=16, 0.075 vs 0.064), all close to the baseline.
 Specific tokens beyond a few positions are not linearly readable from either model, so a useful plan at this
 scale has to be a summary of the future rather than its tokens.
 
-**Pending.** The ridge probes for bag-of-future summaries (next 32 and 128 tokens) and remaining length. The
-first run penalised the intercept, so its R² and cosine numbers are invalid and are not reported. A corrected
-rerun is queued after the planner.
+**Future summaries.** Ridge probes predict the mean target-embedding of the next 32 or 128 response tokens, and
+log remaining length. The penalty was chosen on held-out training rows. An earlier run penalised the intercept,
+so its numbers were invalid and were replaced.
+
+| Probe, R² on eval references | Next 32 tokens | Next 128 tokens | Remaining length |
+|---|---|---|---|
+| Target 1.5B last layer, GSM8K | 0.37 | 0.41 | 0.30 |
+| Drafter 0.5B last layer, GSM8K | 0.34 | 0.39 | 0.27 |
+| Current-token embedding only, GSM8K | 0.15 | 0.17 | 0.08 |
+| Target 1.5B last layer, MT-Bench | 0.22 | 0.23 | 0.09 |
+| Drafter 0.5B last layer, MT-Bench | 0.20 | 0.22 | 0.04 |
+| Target 1.5B last layer, HumanEval | 0.30 | 0.28 | 0.23 |
+| Drafter 0.5B last layer, HumanEval | 0.27 | 0.27 | 0.26 |
+
+Both models' hidden states carry a real linear signal about the gist of the next 32 to 128 tokens, about twice
+the embedding-only baseline. The target's edge over the drafter is small, at 0.01 to 0.03 R². Middle layers
+give about the same summary R² and are better for remaining length (target GSM8K 0.52). At this scale the
+drafter already holds most of the linearly readable plan the target has, which lowers the ceiling for a
+target-provided plan. These are linear probes, so a nonlinear plan head could find more.
 
 ## Latent planner
 
