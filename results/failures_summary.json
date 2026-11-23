@@ -24,43 +24,57 @@
      "share_of_tokens": 0.34174404521598706,
      "n": 3386,
      "accuracy": 0.9128765505020673,
-     "share_of_failures": 0.4828150572831424
+     "share_of_failures": 0.4828150572831424,
+     "rs_accept_T1": 0.9075369462492616,
+     "rs_accept_T1_on_greedy_misses": 0.5162061016949152
     },
     "function word": {
      "share_of_tokens": 0.17702866370609607,
      "n": 1754,
      "accuracy": 0.8996579247434435,
-     "share_of_failures": 0.28805237315875615
+     "share_of_failures": 0.28805237315875615,
+     "rs_accept_T1": 0.8944328392246295,
+     "rs_accept_T1_on_greedy_misses": 0.5184204545454546
     },
     "markdown/latex": {
      "share_of_tokens": 0.09144125958821155,
      "n": 906,
      "accuracy": 0.9713024282560706,
-     "share_of_failures": 0.0425531914893617
+     "share_of_failures": 0.0425531914893617,
+     "rs_accept_T1": 0.9660837748344371,
+     "rs_accept_T1_on_greedy_misses": 0.588126923076923
     },
     "newline": {
      "share_of_tokens": 0.004743641501816714,
      "n": 47,
      "accuracy": 0.9361702127659575,
-     "share_of_failures": 0.004909983633387889
+     "share_of_failures": 0.004909983633387889,
+     "rs_accept_T1": 0.9400893617021276,
+     "rs_accept_T1_on_greedy_misses": 0.5309333333333334
     },
     "number": {
      "share_of_tokens": 0.13433589018974565,
      "n": 1331,
      "accuracy": 0.9789631855747558,
-     "share_of_failures": 0.04582651391162029
+     "share_of_failures": 0.04582651391162029,
+     "rs_accept_T1": 0.9774872276483847,
+     "rs_accept_T1_on_greedy_misses": 0.393625
     },
     "punctuation": {
      "share_of_tokens": 0.17157852240613647,
      "n": 1700,
      "accuracy": 0.9629411764705882,
-     "share_of_failures": 0.10310965630114566
+     "share_of_failures": 0.10310965630114566,
+     "rs_accept_T1": 0.9528704705882353,
+     "rs_accept_T1_on_greedy_misses": 0.5261825396825397
     },
     "whitespace": {
      "share_of_tokens": 0.07912797739200646,
      "n": 784,
      "accuracy": 0.9744897959183674,
-     "share_of_failures": 0.03273322422258593
+     "share_of_failures": 0.03273322422258593,
+     "rs_accept_T1": 0.9709502551020408,
+     "rs_accept_T1_on_greedy_misses": 0.607445
     },
     "_failure_flavour": {
      "same_word_diff_spacing_or_case": 0.03273322422258593,
@@ -186,43 +200,57 @@
      "share_of_tokens": 0.43130990415335463,
      "n": 3510,
      "accuracy": 0.7584045584045584,
-     "share_of_failures": 0.5934219734079776
+     "share_of_failures": 0.5934219734079776,
+     "rs_accept_T1": 0.7778270655270656,
+     "rs_accept_T1_on_greedy_misses": 0.48620094339622644
     },
     "function word": {
      "share_of_tokens": 0.2714426148930941,
      "n": 2209,
      "accuracy": 0.8184698958804889,
-     "share_of_failures": 0.2806158152554234
+     "share_of_failures": 0.2806158152554234,
+     "rs_accept_T1": 0.8065218198279764,
+     "rs_accept_T1_on_greedy_misses": 0.5441877805486285
     },
     "markdown/latex": {
      "share_of_tokens": 0.06389776357827476,
      "n": 520,
      "accuracy": 0.9384615384615385,
-     "share_of_failures": 0.02239328201539538
+     "share_of_failures": 0.02239328201539538,
+     "rs_accept_T1": 0.9280628846153846,
+     "rs_accept_T1_on_greedy_misses": 0.577384375
     },
     "newline": {
      "share_of_tokens": 0.007618579503563529,
      "n": 62,
      "accuracy": 0.9032258064516129,
-     "share_of_failures": 0.004198740377886634
+     "share_of_failures": 0.004198740377886634,
+     "rs_accept_T1": 0.9172306451612903,
+     "rs_accept_T1_on_greedy_misses": 0.5193333333333333
     },
     "number": {
      "share_of_tokens": 0.05935119193905136,
      "n": 483,
      "accuracy": 0.9772256728778468,
-     "share_of_failures": 0.007697690692792162
+     "share_of_failures": 0.007697690692792162,
+     "rs_accept_T1": 0.9621583850931678,
+     "rs_accept_T1_on_greedy_misses": 0.4006727272727273
     },
     "punctuation": {
      "share_of_tokens": 0.13996067829933645,
      "n": 1139,
      "accuracy": 0.8893766461808604,
-     "share_of_failures": 0.08817354793561931
+     "share_of_failures": 0.08817354793561931,
+     "rs_accept_T1": 0.8815111501316945,
+     "rs_accept_T1_on_greedy_misses": 0.5618396825396825
     },
     "whitespace": {
      "share_of_tokens": 0.026419267633325142,
      "n": 215,
      "accuracy": 0.9767441860465116,
-     "share_of_failures": 0.0034989503149055285
+     "share_of_failures": 0.0034989503149055285,
+     "rs_accept_T1": 0.9668697674418605,
+     "rs_accept_T1_on_greedy_misses": 0.56152
     },
     "_failure_flavour": {
      "same_word_diff_spacing_or_case": 0.016794961511546535,
@@ -348,43 +376,57 @@
      "share_of_tokens": 0.3124786324786325,
      "n": 1828,
      "accuracy": 0.9562363238512035,
-     "share_of_failures": 0.4444444444444444
+     "share_of_failures": 0.4444444444444444,
+     "rs_accept_T1": 0.952517943107221,
+     "rs_accept_T1_on_greedy_misses": 0.48945625000000004
     },
     "function word": {
      "share_of_tokens": 0.11282051282051282,
      "n": 660,
      "accuracy": 0.9803030303030303,
-     "share_of_failures": 0.07222222222222222
+     "share_of_failures": 0.07222222222222222,
+     "rs_accept_T1": 0.968154393939394,
+     "rs_accept_T1_on_greedy_misses": 0.4525230769230769
     },
     "markdown/latex": {
      "share_of_tokens": 0.09418803418803419,
      "n": 551,
      "accuracy": 0.956442831215971,
-     "share_of_failures": 0.13333333333333333
+     "share_of_failures": 0.13333333333333333,
+     "rs_accept_T1": 0.9437108892921959,
+     "rs_accept_T1_on_greedy_misses": 0.5250875
     },
     "newline": {
      "share_of_tokens": 0.03606837606837607,
      "n": 211,
      "accuracy": 0.909952606635071,
-     "share_of_failures": 0.10555555555555556
+     "share_of_failures": 0.10555555555555556,
+     "rs_accept_T1": 0.8852345971563982,
+     "rs_accept_T1_on_greedy_misses": 0.5796105263157895
     },
     "number": {
      "share_of_tokens": 0.08512820512820513,
      "n": 498,
      "accuracy": 0.9919678714859438,
-     "share_of_failures": 0.022222222222222223
+     "share_of_failures": 0.022222222222222223,
+     "rs_accept_T1": 0.9925514056224899,
+     "rs_accept_T1_on_greedy_misses": 0.41864999999999997
     },
     "punctuation": {
      "share_of_tokens": 0.2294017094017094,
      "n": 1342,
      "accuracy": 0.9731743666169895,
-     "share_of_failures": 0.2
+     "share_of_failures": 0.2,
+     "rs_accept_T1": 0.9675107302533532,
+     "rs_accept_T1_on_greedy_misses": 0.5392972222222222
     },
     "whitespace": {
      "share_of_tokens": 0.12991452991452992,
      "n": 760,
      "accuracy": 0.9947368421052631,
-     "share_of_failures": 0.022222222222222223
+     "share_of_failures": 0.022222222222222223,
+     "rs_accept_T1": 0.9925553947368421,
+     "rs_accept_T1_on_greedy_misses": 0.700475
     },
     "_failure_flavour": {
      "same_word_diff_spacing_or_case": 0.17222222222222222,
