@@ -1,0 +1,386 @@
+{
+"Qwen3-0.6B|k64|math|bag+64_r2": [
+0.2916,
+"layer22of28"
+],
+"Qwen3-0.6B|k64|math|remaining_r2": [
+0.491,
+"layer18of28"
+],
+"Qwen3-0.6B|k64|math|bag+16_r2": [
+0.2661,
+"layer22of28"
+],
+"Qwen3-0.6B|k64|math|bag+128_r2": [
+0.3198,
+"layer22of28"
+],
+"Qwen3-0.6B|k64|code|bag+64_r2": [
+0.1662,
+"layer22of28"
+],
+"Qwen3-0.6B|k64|code|remaining_r2": [
+0.1364,
+"layer18of28"
+],
+"Qwen3-0.6B|k64|code|bag+16_r2": [
+0.1753,
+"layer22of28"
+],
+"Qwen3-0.6B|k64|code|bag+128_r2": [
+0.1523,
+"layer22of28"
+],
+"Qwen3-0.6B|k64|chat|bag+64_r2": [
+0.2191,
+"layer26of28"
+],
+"Qwen3-0.6B|k64|chat|remaining_r2": [
+0.2528,
+"layer18of28"
+],
+"Qwen3-0.6B|k64|chat|bag+16_r2": [
+0.1437,
+"layer22of28"
+],
+"Qwen3-0.6B|k64|chat|bag+128_r2": [
+0.2494,
+"layer22of28"
+],
+"Qwen3-0.6B|k256|math|bag+64_r2": [
+0.3316,
+"layer18of28"
+],
+"Qwen3-0.6B|k256|math|remaining_r2": [
+0.6288,
+"layer18of28"
+],
+"Qwen3-0.6B|k256|math|bag+16_r2": [
+0.3182,
+"layer22of28"
+],
+"Qwen3-0.6B|k256|math|bag+128_r2": [
+0.3588,
+"layer18of28"
+],
+"Qwen3-0.6B|k256|code|bag+64_r2": [
+0.2131,
+"layer22of28"
+],
+"Qwen3-0.6B|k256|code|remaining_r2": [
+0.272,
+"layer18of28"
+],
+"Qwen3-0.6B|k256|code|bag+16_r2": [
+0.2317,
+"layer22of28"
+],
+"Qwen3-0.6B|k256|code|bag+128_r2": [
+0.1941,
+"layer22of28"
+],
+"Qwen3-0.6B|k256|chat|bag+64_r2": [
+0.2232,
+"layer22of28"
+],
+"Qwen3-0.6B|k256|chat|remaining_r2": [
+0.3689,
+"layer18of28"
+],
+"Qwen3-0.6B|k256|chat|bag+16_r2": [
+0.1548,
+"layer22of28"
+],
+"Qwen3-0.6B|k256|chat|bag+128_r2": [
+0.2501,
+"layer22of28"
+],
+"Qwen3-0.6B|k1024|math|bag+64_r2": [
+0.3533,
+"layer18of28"
+],
+"Qwen3-0.6B|k1024|math|remaining_r2": [
+0.686,
+"layer18of28"
+],
+"Qwen3-0.6B|k1024|math|bag+16_r2": [
+0.3462,
+"layer22of28"
+],
+"Qwen3-0.6B|k1024|math|bag+128_r2": [
+0.377,
+"layer18of28"
+],
+"Qwen3-0.6B|k1024|code|bag+64_r2": [
+0.225,
+"layer22of28"
+],
+"Qwen3-0.6B|k1024|code|remaining_r2": [
+0.4076,
+"layer18of28"
+],
+"Qwen3-0.6B|k1024|code|bag+16_r2": [
+0.2598,
+"layer22of28"
+],
+"Qwen3-0.6B|k1024|code|bag+128_r2": [
+0.2012,
+"layer22of28"
+],
+"Qwen3-0.6B|k1024|chat|bag+64_r2": [
+0.2036,
+"layer18of28"
+],
+"Qwen3-0.6B|k1024|chat|remaining_r2": [
+0.472,
+"layer18of28"
+],
+"Qwen3-0.6B|k1024|chat|bag+16_r2": [
+0.1421,
+"layer22of28"
+],
+"Qwen3-0.6B|k1024|chat|bag+128_r2": [
+0.2306,
+"layer18of28"
+],
+"Qwen3-0.6B|kfull|math|bag+64_r2": [
+0.3467,
+"layer18of28"
+],
+"Qwen3-0.6B|kfull|math|remaining_r2": [
+0.6898,
+"layer18of28"
+],
+"Qwen3-0.6B|kfull|math|bag+16_r2": [
+0.349,
+"layer22of28"
+],
+"Qwen3-0.6B|kfull|math|bag+128_r2": [
+0.3729,
+"layer18of28"
+],
+"Qwen3-0.6B|kfull|code|bag+64_r2": [
+0.2186,
+"layer22of28"
+],
+"Qwen3-0.6B|kfull|code|remaining_r2": [
+0.3639,
+"layer18of28"
+],
+"Qwen3-0.6B|kfull|code|bag+16_r2": [
+0.2607,
+"layer22of28"
+],
+"Qwen3-0.6B|kfull|code|bag+128_r2": [
+0.2004,
+"layer22of28"
+],
+"Qwen3-0.6B|kfull|chat|bag+64_r2": [
+0.2362,
+"layer28of28"
+],
+"Qwen3-0.6B|kfull|chat|remaining_r2": [
+0.4558,
+"layer18of28"
+],
+"Qwen3-0.6B|kfull|chat|bag+16_r2": [
+0.1508,
+"layer22of28"
+],
+"Qwen3-0.6B|kfull|chat|bag+128_r2": [
+0.2643,
+"layer22of28"
+],
+"Qwen3-8B|k64|math|bag+64_r2": [
+0.3104,
+"layer24of36"
+],
+"Qwen3-8B|k64|math|remaining_r2": [
+0.5728,
+"layer18of36"
+],
+"Qwen3-8B|k64|math|bag+16_r2": [
+0.2801,
+"layer24of36"
+],
+"Qwen3-8B|k64|math|bag+128_r2": [
+0.3367,
+"layer24of36"
+],
+"Qwen3-8B|k64|code|bag+64_r2": [
+0.1834,
+"layer28of36"
+],
+"Qwen3-8B|k64|code|remaining_r2": [
+0.2146,
+"layer24of36"
+],
+"Qwen3-8B|k64|code|bag+16_r2": [
+0.1945,
+"layer24of36"
+],
+"Qwen3-8B|k64|code|bag+128_r2": [
+0.171,
+"layer28of36"
+],
+"Qwen3-8B|k64|chat|bag+64_r2": [
+0.2282,
+"layer28of36"
+],
+"Qwen3-8B|k64|chat|remaining_r2": [
+0.3128,
+"layer18of36"
+],
+"Qwen3-8B|k64|chat|bag+16_r2": [
+0.1517,
+"layer28of36"
+],
+"Qwen3-8B|k64|chat|bag+128_r2": [
+0.2587,
+"layer32of36"
+],
+"Qwen3-8B|k256|math|bag+64_r2": [
+0.3556,
+"layer24of36"
+],
+"Qwen3-8B|k256|math|remaining_r2": [
+0.6986,
+"layer18of36"
+],
+"Qwen3-8B|k256|math|bag+16_r2": [
+0.3332,
+"layer28of36"
+],
+"Qwen3-8B|k256|math|bag+128_r2": [
+0.3804,
+"layer24of36"
+],
+"Qwen3-8B|k256|code|bag+64_r2": [
+0.2305,
+"layer28of36"
+],
+"Qwen3-8B|k256|code|remaining_r2": [
+0.3936,
+"layer24of36"
+],
+"Qwen3-8B|k256|code|bag+16_r2": [
+0.2513,
+"layer28of36"
+],
+"Qwen3-8B|k256|code|bag+128_r2": [
+0.2101,
+"layer28of36"
+],
+"Qwen3-8B|k256|chat|bag+64_r2": [
+0.2415,
+"layer24of36"
+],
+"Qwen3-8B|k256|chat|remaining_r2": [
+0.4264,
+"layer18of36"
+],
+"Qwen3-8B|k256|chat|bag+16_r2": [
+0.1715,
+"layer28of36"
+],
+"Qwen3-8B|k256|chat|bag+128_r2": [
+0.2689,
+"layer24of36"
+],
+"Qwen3-8B|k1024|math|bag+64_r2": [
+0.3808,
+"layer28of36"
+],
+"Qwen3-8B|k1024|math|remaining_r2": [
+0.7361,
+"layer18of36"
+],
+"Qwen3-8B|k1024|math|bag+16_r2": [
+0.3707,
+"layer28of36"
+],
+"Qwen3-8B|k1024|math|bag+128_r2": [
+0.4032,
+"layer28of36"
+],
+"Qwen3-8B|k1024|code|bag+64_r2": [
+0.2512,
+"layer28of36"
+],
+"Qwen3-8B|k1024|code|remaining_r2": [
+0.4944,
+"layer18of36"
+],
+"Qwen3-8B|k1024|code|bag+16_r2": [
+0.2903,
+"layer28of36"
+],
+"Qwen3-8B|k1024|code|bag+128_r2": [
+0.2247,
+"layer28of36"
+],
+"Qwen3-8B|k1024|chat|bag+64_r2": [
+0.2308,
+"layer36of36"
+],
+"Qwen3-8B|k1024|chat|remaining_r2": [
+0.5037,
+"layer18of36"
+],
+"Qwen3-8B|k1024|chat|bag+16_r2": [
+0.1721,
+"layer36of36"
+],
+"Qwen3-8B|k1024|chat|bag+128_r2": [
+0.2542,
+"layer36of36"
+],
+"Qwen3-8B|kfull|math|bag+64_r2": [
+0.3961,
+"layer24of36"
+],
+"Qwen3-8B|kfull|math|remaining_r2": [
+0.7498,
+"layer18of36"
+],
+"Qwen3-8B|kfull|math|bag+16_r2": [
+0.3831,
+"layer28of36"
+],
+"Qwen3-8B|kfull|math|bag+128_r2": [
+0.42,
+"layer24of36"
+],
+"Qwen3-8B|kfull|code|bag+64_r2": [
+0.2611,
+"layer36of36"
+],
+"Qwen3-8B|kfull|code|remaining_r2": [
+0.491,
+"layer18of36"
+],
+"Qwen3-8B|kfull|code|bag+16_r2": [
+0.2979,
+"layer36of36"
+],
+"Qwen3-8B|kfull|code|bag+128_r2": [
+0.2386,
+"layer36of36"
+],
+"Qwen3-8B|kfull|chat|bag+64_r2": [
+0.251,
+"layer36of36"
+],
+"Qwen3-8B|kfull|chat|remaining_r2": [
+0.5054,
+"layer18of36"
+],
+"Qwen3-8B|kfull|chat|bag+16_r2": [
+0.1858,
+"layer36of36"
+],
+"Qwen3-8B|kfull|chat|bag+128_r2": [
+0.278,
+"layer36of36"
+]
+}

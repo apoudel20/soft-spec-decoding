@@ -48,8 +48,14 @@ html = f'''<div class="live" id="layerResults">
       <figure class="fig1" style="margin:0"><div class="figscroll" style="border:0;padding:0">{svg}</div>
       <div class="legendrow">{legend}</div>
       <figcaption><b>Figure 5.</b> Linear probes on each layer&#8217;s hidden state, trained on the 8B&#8217;s own answers and tested on held-out dev prompts. Solid lines are the 8B, dashed the 0.6B. Higher is better, and 0 means no better than predicting the average.</figcaption></figure>
-      <p>The 8B&#8217;s middle layers (18 to 20 of 36) hold the most about how long and how structured the rest of the answer will be, and there it beats the 0.6B on every set. For the content of the next 64 tokens it does not: its best layers match the 0.6B on math (R² 0.32 vs 0.33) and trail it on code (0.16 vs 0.20).</p>
-      <p class="muted">On chat the 8B probe falls below zero at most layers while the 0.6B reaches 0.18. With a 4,096-wide state and about 14,000 training rows the probe likely overfits, so chat is inconclusive here. A fairer comparison needs more data or both models reduced to the same width. Linear probes also only see what is linearly readable.</p>
+      <p>A first pass suggested the 8B knew no more than the 0.6B about upcoming content, but that probe was underpowered: a 4,096-wide state fit on about 14,000 rows, which went below zero on chat. We reran it fairly, with 2.7 times the training rows, a wider regularisation range, and both models reduced to the same width (1,024) by PCA. The 8B is then ahead on every set:</p>
+      <div class="scroll"><table class="gaptable"><thead><tr><th>Set</th><th>Next 64 tokens, 8B</th><th>0.6B</th><th>Remaining length, 8B</th><th>0.6B</th></tr></thead><tbody>
+        <tr><td><span class="dotk" style="background:#008a72"></span>Math</td><td>0.38</td><td>0.35</td><td>0.74</td><td>0.69</td></tr>
+        <tr><td><span class="dotk" style="background:#c25a17"></span>Code</td><td>0.25</td><td>0.23</td><td>0.49</td><td>0.41</td></tr>
+        <tr><td><span class="dotk" style="background:#6a4fc0"></span>Chat</td><td>0.23</td><td>0.20</td><td>0.50</td><td>0.47</td></tr>
+      </tbody></table></div>
+      <p>The edge on content is small and consistent (+0.02 to +0.03 R&sup2;). The edge on length and structure is larger (up to +0.08 on code) and sits at layer 18 of 36. Content information peaks later, at layers 24 to 36. So the target does know more about its own future, and the layers to tap differ by what is being predicted: middle layers for how long and what shape, upper layers for what it will say.</p>
+      <p class="muted">Figure 5 shows the first, underpowered sweep across every second layer; the table is the fair rerun on six layers per model. Linear probes only see what is linearly readable.</p>
     </div>'''
 open("layers.html", "w", encoding="utf-8").write(html)
 print("ok")

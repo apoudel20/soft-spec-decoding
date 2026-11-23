@@ -342,11 +342,26 @@ Ridge R² for the mean embedding of the next 16, 64 or 128 tokens and for log re
 
 Embedding-only baseline for the 64-token summary: math 0.12, code 0.04, chat 0.04.
 
-- The 8B knows more than the 0.6B about the length and structure of the rest of its answer, with that
-  information peaking at layers 18 to 20 of 36.
-- It shows no edge on the content of the next 64 tokens at this probe strength.
-- On chat the 8B summary probe is below zero at most layers. A 4,096-wide state with about 14,000 training rows
-  likely overfits, so chat is inconclusive. A fair comparison needs more data or equal-width projections.
+This first sweep was underpowered: on chat the 8B summary probe was below zero at most layers, consistent with
+a 4,096-wide state overfitting about 14,000 rows. It is superseded by the fair rerun below.
+
+### Fair rerun
+
+`probes_q3_fair.py`, results in `results/probes_q3_fair.json` (best per cell in `probes_q3_fair_best.json`).
+Same answers, 64 positions per training answer (36,719 rows), ridge penalty grid up to 10 times the row count,
+and each layer reduced by PCA (fit on training rows) to the same width for both models. Six layers per model.
+
+| Equal width 1,024, best layer | Math 8B | Math 0.6B | Code 8B | Code 0.6B | Chat 8B | Chat 0.6B |
+|---|---|---|---|---|---|---|
+| Next 16 tokens | 0.37 | 0.35 | 0.29 | 0.26 | 0.17 | 0.14 |
+| Next 64 tokens | 0.38 | 0.35 | 0.25 | 0.23 | 0.23 | 0.20 |
+| Next 128 tokens | 0.40 | 0.38 | 0.23 | 0.20 | 0.25 | 0.23 |
+| Remaining length | 0.74 | 0.69 | 0.49 | 0.41 | 0.50 | 0.47 |
+
+- The 8B is ahead in every cell, at widths 256 and 1,024 and at full width. The content edge is +0.02 to +0.03 R²,
+  the length edge +0.03 to +0.08 (up to +0.13 at full width on code).
+- Remaining length peaks at layer 18 of 36 in the 8B. Content summaries peak at layers 24 to 36.
+- So the target does know more about its own future, and which layer to tap depends on what is predicted.
 
 ## What the results say
 
