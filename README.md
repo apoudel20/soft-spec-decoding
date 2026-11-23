@@ -1,6 +1,15 @@
 # Soft speculative decoding experiments
 
-Code for the experiments in [PLAN.md](PLAN.md). Results are in [RESULTS.md](RESULTS.md).
+Can a target LLM and its drafter cooperate on distributions ("soft tokens") instead of hard
+guesses, while the output stays exactly the target's? Code for the experiments in
+[PLAN.md](PLAN.md). Results will be in RESULTS.md.
+
+**Status: work in progress.** The harness, exactness tests and training code are done, and
+training runs are in progress. No conclusions yet.
+
+Related negative result: [bijmuj/EmbeddingSuperPosition](https://github.com/bijmuj/EmbeddingSuperPosition)
+found that soft-prior (embedding superposition) inputs to DFlash and EAGLE-3 drafters did not raise
+acceptance length.
 
 Target: Qwen2.5-1.5B-Instruct. Drafter: Qwen2.5-0.5B-Instruct (same tokenizer). One RTX 4070 Ti (12 GB), Windows 11.
 
@@ -20,7 +29,6 @@ Target: Qwen2.5-1.5B-Instruct. Drafter: Qwen2.5-0.5B-Instruct (same tokenizer). 
 ## Reproduce
 
 ```powershell
-cd research\soft-spec-decoding
 py -3.12 -m venv .venv
 .\.venv\Scripts\python -m pip install torch --index-url https://download.pytorch.org/whl/cu128
 .\.venv\Scripts\python -m pip install transformers datasets peft accelerate numpy
@@ -41,6 +49,6 @@ Models and datasets download to the default Hugging Face cache (`~/.cache/huggin
 
 ## Notes
 
-- Run the scripts with the venv's python from this directory (they import each other).
+- Run the scripts with the venv's python from the repo root (they import each other).
 - On Windows without Developer Mode, the HF cache copies files instead of symlinking them. That only costs disk space.
 - At exit, Python 3.12.0 prints a harmless `ResourceTracker ... _recursion_count` traceback from the `multiprocess` package.
