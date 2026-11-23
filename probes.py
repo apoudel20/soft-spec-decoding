@@ -111,15 +111,27 @@ def targets(seqs, order, vocab_map, E):
             torch.tensor(rem), torch.stack(cur))
 
 
-def ridge(Xtr, Ytr, Xte, lam=10.0):
+LAMS = (1e-5, 1e-4, 1e-3, 1e-2, 1e-1)
+
+
+def _ridge_fit(A, Yc, lam):
+    G = A.T @ A + lam * len(A) * torch.eye(A.shape[1], device=A.device, dtype=A.dtype)
+    return torch.linalg.solve(G, A.T @ Yc)
+
+
+def ridge(Xtr, Ytr, Xte, lams=LAMS):
+    """Ridge on standardised features with an unpenalised intercept (Y is centred on the train mean).
+    The penalty is chosen on the last 20% of the train rows (whole sequences, since rows are ordered by
+    sequence), then the model is refit on all train rows. The test rows are never used for selection."""
     mu, sd = Xtr.mean(0), Xtr.std(0) + 1e-6
-    A = (Xtr - mu) / sd
-    B = (Xte - mu) / sd
-    A1 = torch.cat([A, torch.ones(len(A), 1)], 1).double().cuda()
-    B1 = torch.cat([B, torch.ones(len(B), 1)], 1).double().cuda()
-    Yc = Ytr.double().cuda()
-    W = torch.linalg.solve(A1.T @ A1 + lam * len(A1) * torch.eye(A1.shape[1], device="cuda", dtype=torch.float64), A1.T @ Yc)
-    return (B1 @ W).float().cpu()
+    A = ((Xtr - mu) / sd).double().cuda()
+    B = ((Xte - mu) / sd).double().cuda()
+    ym = Ytr.double().mean(0).cuda()
+    Yc = Ytr.double().cuda() - ym
+    cut = int(0.8 * len(A))
+    best = min(lams, key=lambda l: ((A[cut:] @ _ridge_fit(A[:cut], Yc[:cut], l) - Yc[cut:]) ** 2).mean().item())
+    W = _ridge_fit(A, Yc, best)
+    return (B @ W + ym).float().cpu()
 
 
 def r2(pred, y, ytr_mean):
