@@ -2,17 +2,15 @@
 
 Can a target LLM and its drafter cooperate on distributions ("soft tokens") instead of hard
 guesses, while the output stays exactly the target's? Code for the experiments in
-[PLAN.md](PLAN.md). Results will be in RESULTS.md.
+[PLAN.md](PLAN.md). Results are in [RESULTS.md](RESULTS.md).
 
-**Status: work in progress.** Done so far:
+**Status.** All planned arms are evaluated, greedy and T=1, on 30 prompts per set. In short, the target
+refining its own future guesses works (τ 1.07 to 2.33 over frozen Jacobi), soft inputs add nothing over hard
+guesses on the target side, and target TV labels help the block drafter under sampling. The planner probe and
+the latent planner experiment are still running.
 
-- The harness and exactness tests pass, including bitwise exactness of the gated LoRA.
-- Arm C and Arm D training is finished.
-- Arm 0 diagnostics are in [results/](results/).
 - A drafter failure analysis is in `results/failures_summary.json`, with examples in `results/failure_examples_sample.json`.
 - A literature review is in [reports/](reports/Latent%20planning%20for%20speculative%20decoding.md).
-
-The full evaluation is running, and RESULTS.md will follow. Nothing here is a final conclusion yet.
 
 Related negative result: [bijmuj/EmbeddingSuperPosition](https://github.com/bijmuj/EmbeddingSuperPosition)
 found that soft-prior (embedding superposition) inputs to DFlash and EAGLE-3 drafters did not raise
