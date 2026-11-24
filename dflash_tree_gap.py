@@ -57,12 +57,16 @@ def main():
     ap.add_argument("--sets", nargs="+", default=["math", "code", "chat"])
     ap.add_argument("--stride", type=int, default=16)
     ap.add_argument("--out", default="dflash_tree_gap")
+    ap.add_argument("--hf_labels", action="store_true",
+                    help="score against the HF target's own top-1 (as stage2.py does), not the answer text; also report chain capped at 8 drafted")
     args = ap.parse_args()
     t, d = load_target(), load_drafter()
     res = {"args": vars(args), "sets": {}}
     for s_name in args.sets:
         seqs = torch.load(os.path.join(DATA, f"q3_dev_{s_name}_40.pt"))
         acc = {"chain": [], **{f"tree{b}": [] for b in BUDGETS}, "oracle": []}
+        if args.hf_labels:
+            acc["chain_cap8"] = []
         for it in seqs:
             ids = torch.tensor(it["prompt"] + it["resp"], device="cuda")
             n0 = len(it["prompt"])
@@ -70,16 +74,20 @@ def main():
                 continue
             with torch.no_grad():
                 ctx = ctx_feats(t, ids)
+                if args.hf_labels:
+                    hf_top1 = t(ids[None]).logits[0].argmax(-1)
                 for s in range(n0 + 1, len(ids) - B - ORACLE_N // 4, args.stride):
                     lg = logits_with_token(t, d, ids, ctx, s, None)          # (15, V)
                     lp = torch.log_softmax(lg, -1)
                     top = lp.topk(args.K, -1)
-                    lab = ids[s + 1:s + B].tolist()
+                    lab = hf_top1[s:s + B - 1].tolist() if args.hf_labels else ids[s + 1:s + B].tolist()
                     chain = top.indices[:, 0].tolist()
                     n = 0
                     while n < len(lab) and chain[n] == lab[n]:
                         n += 1
                     acc["chain"].append(n + 1)
+                    if args.hf_labels:
+                        acc["chain_cap8"].append(min(n, 8) + 1)
                     lpt, idt = top.values.cpu(), top.indices.cpu()
                     for b in BUDGETS:
                         acc[f"tree{b}"].append(accepted_in(best_prefixes(lpt, idt, b), lab))
