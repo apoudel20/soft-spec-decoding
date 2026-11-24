@@ -125,6 +125,9 @@ def main():
     ap.add_argument("--beta", type=float, default=1e-3)
     ap.add_argument("--floor", type=float, default=0.5)
     ap.add_argument("--zdrop", type=float, default=0.15)
+    ap.add_argument("--d", type=int, default=512)
+    ap.add_argument("--depth", type=int, default=4)
+    ap.add_argument("--det", action="store_true", help="plain autoencoder: decode mu, no sampling noise")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
     cache = os.path.join(DATA, "cache_smoke" if args.smoke else "cache")
@@ -143,7 +146,7 @@ def main():
     W = torch.load(os.path.join(cache, "lm_head.pt")).cuda()
     D, R = W.shape[1], len(layers)
     tr = Data(cache, "train", layers, args.k, stats)
-    model = AE(D, R, args.k, args.zdim).cuda()
+    model = AE(D, R, args.k, args.zdim, d=args.d, depth=args.depth).cuda()
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
     sched = torch.optim.lr_scheduler.LambdaLR(
         opt, lambda s: min(1, (s + 1) / 500) * max(0.1, 0.5 * (1 + np.cos(np.pi * min(1, s / args.steps)))))
@@ -166,7 +169,8 @@ def main():
         x = x.cuda(non_blocking=True)
         with torch.autocast("cuda", torch.bfloat16):
             mu, lv = model.encode(x)
-            z = F.dropout(mu + torch.randn_like(mu) * (0.5 * lv).exp(), args.zdrop)
+            z = mu if args.det else mu + torch.randn_like(mu) * (0.5 * lv).exp()
+            z = F.dropout(z, args.zdrop)
             y = model.decode(z).float()
         fh, ft = unz(y[:, fin]), unz(x[:, fin])
         lq = logp(fh.flatten(0, 1))
