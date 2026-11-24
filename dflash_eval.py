@@ -20,7 +20,7 @@ import torch
 from safetensors.torch import load_file
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, Qwen3Config
 
-from common import RES, dev_prompts
+from common import RES, dev_prompts, eval_prompts
 from dflash_model import DFlashDraftModel
 
 TARGET_ID = "Qwen/Qwen3-8B"
@@ -64,6 +64,7 @@ def main():
     ap.add_argument("--max_new", type=int, default=160)
     ap.add_argument("--sets", nargs="+", default=["math", "code", "chat"])
     ap.add_argument("--out", default="dflash_eval")
+    ap.add_argument("--eval", action="store_true", help="sets are standard eval sets (mtbench, gsm8k, humaneval)")
     args = ap.parse_args()
     tok = AutoTokenizer.from_pretrained(TARGET_ID)
     t = load_target()
@@ -77,7 +78,7 @@ def main():
     d.spec_generate(t, w, 8, stop, 0.0)
     for s in args.sets:
         rows = []
-        for text in dev_prompts(s, args.n):
+        for text in (eval_prompts(s, args.n) if args.eval else dev_prompts(s, args.n)):
             ids = chat(tok, text)
             torch.cuda.synchronize(); a = time.perf_counter()
             ref = t.generate(ids, max_new_tokens=args.max_new, do_sample=False, temperature=None, top_p=None, top_k=None,

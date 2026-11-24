@@ -50,6 +50,45 @@ Nothing is running. The GPU is idle. Both stages are built and run end to end (b
 - Open decision for Aayush: scale stage 2 up, or ship DFlash + draft trees (chat 2.96 to 4.00) as the near-term
   deliverable while the research continues.
 
+## Naming and scope (Aayush, 2026-11-24)
+
+**Gister** (working title) is our design: stage-1 gist VAE over the target's states + stage-2 search network that
+predicts the next gist latent, decoded through the frozen LM head. No DFlash inside it. We are building our own
+drafter, not improving DFlash or EAGLE. DFlash, EAGLE-3/4, DFlash2 and DSpark are baselines only. The DFlash-backed
+heads below are a side experiment. Gister is trained per target (here Qwen3-8B), like EAGLE and DFlash.
+
+## Latest (afternoon of 2026-11-24)
+
+- **Fair DFlash offline row** (`dflash_s2.py`, same rounds and HF top-1 labels as `stage2.py`, chain capped at 8
+  drafted, max 9): 5.88 / 5.59 / 2.68. Gister's best is 2.80 / 2.23 / 1.43.
+- **DFlash-backed side experiment** (`dflash_feats.py` caches DFlash block outputs aligned with the state cache,
+  `dflash_s2.py --head latent` maps them to the gist latent and decodes with stage 1): 5.30 / 4.51 / 2.25, below
+  DFlash's own chain. `--head refine` (control, no latent) is the comparison.
+- **Vocabulary-pruning oracle** (`prune_oracle.py`): restricting DFlash to the true tokens of the next 256 positions
+  lifts chat chain only 2.69 to 3.12. Restricting to anything that can miss a drafted token halves acceptance. Hard
+  pruning is not worth building.
+- **End-to-end loop** (`e2e.py`): one lossless greedy loop for every drafter (Gister, DFlash, DFlash capped at 8,
+  DFlash-backed heads), verified by the target, timed against plain greedy decoding on MT-Bench, GSM8K, HumanEval.
+  `--check_ref` compares the DFlash path with DFlash's own `spec_generate`.
+- **DFlash measured here** (RTX 4070 Ti, nf4 target, `dflash_eval.py`, own dev sets): speedup 4.75x / 3.80x /
+  2.03x, tau 5.41 / 4.71 / 2.37.
+- **Why the 154M predictor overfit**: data. DFlash trained on about 800K target-regenerated conversations (up to
+  3,072 tokens, 6 epochs). Gister had 2,000 answers (512K positions). Next run trains stage 2 on target forward
+  passes over far more on-policy text, computed on the fly (no disk cache needed).
+- **On-policy data found**: `heiheiha798/perfectblend-regen-qwen3-8b-non-thinking` (Qwen3-8B, thinking off, 8
+  shards, about 177K conversations per shard). Shard 0 is in `data/ext/perfectblend/` (not in git).
+  `inference-optimization/Qwen3-8B-Regenerated-Collection` is larger but mixes thinking modes (unchecked).
+
+Published baselines for the comparison table (not apples to apples with our 4-bit, 4070 Ti setup):
+
+| Drafter | Target | Size | tau MT-Bench | Speedup | Source |
+|---|---|---|---|---|---|
+| DFlash b16 | Qwen3-8B | 5 layers (~1B) | 4.24 | 2.75x (H200) | DFlash paper T1 |
+| EAGLE-3 tree 60 | Qwen3-8B | 1 layer | 3.26 | 1.90x (H200) | DFlash paper T1 |
+| DSpark | Qwen3-8B | 5 layers | 3.72 (T=1) | not reported | DSpark paper (2607.05147) |
+| EAGLE-4 | Qwen3.8-27B only | 3B | not reported | 3.59x SPEED-Bench (4x B300) | EAGLE-Corp card |
+| DFlash2 | Qwen3.8-27B (z-lab), Qwen3-8B (RedHatAI) | not reported | not reported | 2.80x (EAGLE-4 card) | |
+
 ## Stage 1 results (capped answers, 512,380 train positions)
 
 Gate fixed before running: top-1 agreement with the target >= 99.5% on math and code, >= 99% on chat.
