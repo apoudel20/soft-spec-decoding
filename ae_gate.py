@@ -17,6 +17,12 @@ and everything before it, so this is the prompt/prefix condition, and the drafte
 With --ctx C, chunks whose C context rows are not in the same answer are skipped (the first C positions of each
 answer). --nocond keeps that same subset but feeds no context, as the matched unconditioned baseline.
 
+Token objective (--ce w): adds w * cross-entropy on the target's top-1 token at each final-row position, so the
+decoder is trained on the quantity the gate scores, not only on the full distribution (KL) and the state (cos).
+Head feature (--headfeat): the encoder also receives, for each final-row position, the frozen LM-head row of that
+state's own top-1 token. This is a deterministic function of the input state (one product with the frozen head), so
+it adds no outside information. It spares the encoder from having to find the argmax over 151,936 tokens itself.
+
 Run:    python ae_gate.py --name z1024_full --zdim 1024 [--rows final] [--smoke]
 Output: results/ae_gate_<name>.json, ckpt/ae_<name>.pt
 """
@@ -44,9 +50,10 @@ def tblock(d, n):
 
 
 class AE(nn.Module):
-    def __init__(self, D, R, k, zdim, d=512, nq=4, depth=4, C=0):
+    def __init__(self, D, R, k, zdim, d=512, nq=4, depth=4, C=0, headfeat=False):
         super().__init__()
         self.C = C
+        self.hf = nn.Sequential(nn.LayerNorm(D), nn.Linear(D, d)) if headfeat else None
         self.ctx_e = nn.Parameter(torch.randn(R * C, d) * 0.02) if C else None
         self.ctx_d = nn.Parameter(torch.randn(R * C, d) * 0.02) if C else None
         self.R, self.k, self.nq, self.zq = R, k, nq, zdim // nq
@@ -62,9 +69,12 @@ class AE(nn.Module):
         self.nout = nn.LayerNorm(d)
         self.out = nn.Linear(d, D)
 
-    def encode(self, x, c=None):               # x (B, R*k, D) z-scored, c (B, R*C, D) context or None
+    def encode(self, x, c=None, hf=None):      # x (B, R*k, D) z-scored, c (B, R*C, D) context, hf (B, k, D) head rows
         B = x.shape[0]
-        parts = [self.q.expand(B, -1, -1), self.inp(x) + self.cell_e]
+        cells = self.inp(x) + self.cell_e
+        if self.hf is not None:
+            cells = torch.cat([cells[:, :-self.k], cells[:, -self.k:] + self.hf(hf)], 1)
+        parts = [self.q.expand(B, -1, -1), cells]
         if self.C:
             parts.append(self.inp(c) + self.ctx_e)
         h = self.enc(torch.cat(parts, 1))[:, :self.nq]
@@ -151,6 +161,10 @@ def main():
     ap.add_argument("--cache", default="cache", help="state cache folder under data/ (cache_long for the 1,024-token answers)")
     ap.add_argument("--ctx", type=int, default=0, help="context positions before the chunk fed to encoder and decoder")
     ap.add_argument("--nocond", action="store_true", help="with --ctx: same chunk subset, but no context fed")
+    ap.add_argument("--cos_w", type=float, default=1.0, help="weight of (1 - cos) on the final row")
+    ap.add_argument("--mid_w", type=float, default=0.1, help="weight of masked MSE on the middle rows")
+    ap.add_argument("--ce", type=float, default=0.0, help="weight of cross-entropy on the target's top-1 token")
+    ap.add_argument("--headfeat", action="store_true", help="encoder also gets the head row of each state's top-1")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
     cache = os.path.join(DATA, "cache_smoke" if args.smoke else args.cache)
@@ -170,7 +184,7 @@ def main():
     D, R = W.shape[1], len(layers)
     tr = Data(cache, "train", layers, args.k, stats, args.ctx)
     Cm = 0 if args.nocond else args.ctx
-    model = AE(D, R, args.k, args.zdim, d=args.d, depth=args.depth, C=Cm).cuda()
+    model = AE(D, R, args.k, args.zdim, d=args.d, depth=args.depth, C=Cm, headfeat=args.headfeat).cuda()
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
     sched = torch.optim.lr_scheduler.LambdaLR(
         opt, lambda s: min(1, (s + 1) / 500) * max(0.1, 0.5 * (1 + np.cos(np.pi * min(1, s / args.steps)))))
@@ -192,22 +206,27 @@ def main():
     for step, (x, _, c) in enumerate(prefetch(tr, args.B, args.steps, np.random.default_rng(0))):
         x = x.cuda(non_blocking=True)
         c = c.cuda(non_blocking=True) if Cm else None
+        ft = unz(x[:, fin])
+        with torch.no_grad():
+            lp = logp(ft.flatten(0, 1))
+            t1 = lp.argmax(-1)
+        hf = W[t1].view(x.shape[0], args.k, -1).float() if args.headfeat else None
         with torch.autocast("cuda", torch.bfloat16):
-            mu, lv = model.encode(x, c)
+            mu, lv = model.encode(x, c, hf)
             z = mu if args.det else mu + torch.randn_like(mu) * (0.5 * lv).exp()
             z = F.dropout(z, args.zdrop)
             y = model.decode(z, c).float()
-        fh, ft = unz(y[:, fin]), unz(x[:, fin])
+        fh = unz(y[:, fin])
         lq = logp(fh.flatten(0, 1))
-        with torch.no_grad():
-            lp = logp(ft.flatten(0, 1))
         kl = (lp.exp() * (lp - lq)).sum(-1).mean()
         cos = 1 - F.cosine_similarity(fh, ft, dim=-1).mean()
-        loss = kl + cos
+        loss = kl + args.cos_w * cos
+        if args.ce:
+            loss = loss + args.ce * F.nll_loss(lq, t1)
         if R > 1:
             e = (y[:, :fin.start] - x[:, :fin.start]).pow(2).view(x.shape[0], R - 1, args.k, D)
             mid = (e * keep[:R - 1, None, :]).sum() / (keep[:R - 1].sum() * args.k * x.shape[0])
-            loss = loss + 0.1 * mid
+            loss = loss + args.mid_w * mid
         mu32, lv32 = mu.float(), lv.float()
         klz = (0.5 * (mu32 ** 2 + lv32.exp() - 1 - lv32)).mean((0, 1)).clamp_min(args.floor).sum()
         loss = loss + args.beta * klz
@@ -237,9 +256,11 @@ def main():
             mus = []
             for i in range(0, len(st_all), 64):
                 x, _, c = dv.get(st_all[i:i + 64])
+                x = x.cuda()
                 c = c.cuda() if Cm else None
+                hf = W[logp(unz(x[:, fin]).flatten(0, 1)).argmax(-1)].view(x.shape[0], args.k, -1).float() if args.headfeat else None
                 with torch.autocast("cuda", torch.bfloat16):
-                    mus.append(model.encode(x.cuda(), c)[0].float())
+                    mus.append(model.encode(x, c, hf)[0].float())
             spread = torch.cat(mus).std(0, keepdim=True)
             A = {"agree": [], "tv": [], "kl": [], "margin": []}
             N = {"0.05": [], "0.1": [], "0.3": [], "posterior": []}
@@ -248,8 +269,9 @@ def main():
                 x = x.cuda()
                 c = c.cuda() if Cm else None
                 lp = logp(unz(x[:, fin]).flatten(0, 1))
+                hf = W[lp.argmax(-1)].view(x.shape[0], args.k, -1).float() if args.headfeat else None
                 with torch.autocast("cuda", torch.bfloat16):
-                    mu, lv = model.encode(x, c)
+                    mu, lv = model.encode(x, c, hf)
                     zs = {"mean": mu, "posterior": mu + torch.randn(mu.shape, device="cuda", generator=g) * (0.5 * lv).exp()}
                     for sg in (0.05, 0.1, 0.3):
                         zs[str(sg)] = mu + sg * spread * torch.randn(mu.shape, device="cuda", generator=g)
