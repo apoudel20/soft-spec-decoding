@@ -11,6 +11,11 @@ re-tokenised with the HF `Qwen/Qwen3-8B` tokenizer. One answer per line: `{"prom
 | `q3_dev_math_40.jsonl` | 40 | dev, GSM8K held-out |
 | `q3_dev_code_40.jsonl` | 40 | dev, MBPP validation |
 | `q3_dev_chat_40.jsonl` | 40 | dev, UltraChat test |
+| `q3_train_long.jsonl` | 600 | training, first 600 (1/2 chat, 1/4 math, 1/4 code), capped answers continued to 1,024 tokens |
+| `q3_train_more_long.jsonl` | 1400 | training, 1,400 more, same mix, disjoint prompts, capped answers continued to 1,024 tokens |
+| `q3_dev_math_40_long.jsonl` | 40 | dev, GSM8K held-out, capped answers continued to 1,024 tokens |
+| `q3_dev_code_40_long.jsonl` | 40 | dev, MBPP validation, capped answers continued to 1,024 tokens |
+| `q3_dev_chat_40_long.jsonl` | 40 | dev, UltraChat test, capped answers continued to 1,024 tokens |
 
 Prompt sources: UltraChat 200k (MIT), GSM8K (MIT), MBPP (CC BY 4.0). Train and dev prompts come from disjoint
 splits (see `common.py`). Answer text is model output from Qwen3-8B (Apache 2.0).
