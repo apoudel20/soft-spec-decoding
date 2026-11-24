@@ -27,16 +27,17 @@ Two stages, trained in order.
 - z_t+1 goes through the stage-1 decoder and the LM head to give draft tokens.
 - It is trained to match the target's true planning latents for the next k tokens.
 
-**Still open, decided by Aayush, not by an agent:**
-1. k per latent: 8 positions, or 64 positions as about 8 blocks.
-2. Whether the prompt is an encoder input.
-3. How strict stage 1 must be: exact next-token agreement (the 99% gate below), or judged end to end by accepted
-   tokens per round.
-4. What the decoder outputs. The LM head only reads final-layer states. Middle-layer states through the head give
-   the logit-lens reading, which usually disagrees with the target. So either (a) the final layer is part of what
-   is encoded and rebuilt, or (b) middle layers go in and the decoder outputs final-layer states.
+**Decided by Aayush (2026-11-24):**
+1. k = 8 positions per latent.
+2. The prompt goes in as a condition. It is implemented as the target's states at the 8 positions before the chunk
+   (all cached layers), fed to both the encoder and the decoder (`ae_gate.py --ctx 8`). The target's state at a
+   position already summarises the prompt and all text before it, and a drafter has these states at drafting time.
+3. Stage-1 bar is exact match: the gate below (>= 99.5% math and code, >= 99% chat top-1 agreement) stays.
+4. The decoder outputs the 8 final-layer states of the chunk (the final row of the grid), and each goes through the
+   frozen LM head. Middle layers are rebuilt too, but only the final row feeds the head.
 
-Do not start stage 2 or change the design until these are settled. Ask Aayush.
+Running now: `run_ctx.sh` (ctx8 z2048, and the matched no-context baseline on the same chunks with `--nocond`).
+Do not start stage 2 until stage 1 passes or Aayush says otherwise.
 
 ## What has been run (all on the capped answers, 512,380 train positions)
 
