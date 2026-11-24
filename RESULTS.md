@@ -453,6 +453,18 @@ top-1, on held-out dev windows. Gate fixed before training: 99.5% math and code,
   / 13% of math / code / chat positions. Earlier offline teacher-forced numbers in this file were scored against the
   Ollama text, which lowers their absolute values, chat most. Comparisons within each table are unaffected.
 
+### Gist autoencoder and stage 2 (later runs)
+
+- Adding the head feature (`--headfeat`, the frozen head row of each final state's own top-1, fed to the encoder)
+  plus a top-1 cross-entropy loss lifts stage 1 to 99.4% / 99.0% / 97.3% (`ae_gate_gist_hf_z2048.json`). Near the
+  gate, not over it on chat. Prefix context (`--ctx 8`) made stage 1 worse (92.5 / 91.0 / 72.9).
+- A token-chunk VAE control (`tok_vae_z128.json`, tokens only) gets 98.4% / 97.4% / 94.8%.
+- Stage 2 (`stage2.py`, deterministic, 6,000 steps) predicts the next chunk latent. Accepted per round out of 9,
+  math / code / chat: gist 2.17 / 1.80 / 1.34, token latent 1.75 / 1.46 / 1.18, true next latent 8.51 / 8.47 /
+  7.63. With 64 positions of history: gist 2.30 / 1.81 / 1.31, token 1.88 / 1.48 / 1.18 (`stage2_*.json`).
+- The gist beats the token latent in every setting. Both are far below DFlash (7.46 / 6.77 / 2.96 out of 16). The
+  predictor is the limit: it explains about 10% of the next latent's variance, and more history does not help.
+
 ## What the results say
 
 1. **Refinement works, softness doesn't (target side).** Arm C turns the spare width of the verification
