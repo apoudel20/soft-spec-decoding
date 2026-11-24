@@ -86,7 +86,7 @@ class GistDrafter:
 
     def observe(self, hs, n):
         x = torch.stack([hs[l][0, :n] for l in self.LAYERS])                 # (R, n, D)
-        self.buf = x if self.buf is None else torch.cat([self.buf, x], 1)[:, -K:]
+        self.buf = (x if self.buf is None else torch.cat([self.buf, x], 1))[:, -K:]
 
     def draft(self, bonus, start):
         b = self.buf
@@ -148,7 +148,7 @@ def main():
     ap.add_argument("--sets", nargs="+", default=["mtbench", "gsm8k", "humaneval"])
     ap.add_argument("--n", type=int, default=20)
     ap.add_argument("--max_new", type=int, default=256)
-    ap.add_argument("--drafters", nargs="+", default=["dflash", "dflash8", "dflash_latent", "dflash_refine", "gist"])
+    ap.add_argument("--drafters", nargs="+", default=["dflash", "dflash8", "dflash_latent", "dflash_refine", "gister"])
     ap.add_argument("--out", default="e2e")
     ap.add_argument("--check_ref", action="store_true", help="also run DFlash's own spec_generate and compare")
     ap.add_argument("--smoke", action="store_true")
@@ -180,8 +180,10 @@ def main():
                     with torch.autocast("cuda", torch.bfloat16):
                         return ae.decode(o * zs + zm).float()[:, -K:] * fs + fm
             dr[name] = DFlashDrafter(t, d, K, head, dec)
-        elif name == "gist":
+        elif name == "gister":
             dr[name] = GistDrafter(t)
+        elif name.startswith("gister_"):                   # e.g. gister_v2 -> ckpt/stage2_gister_v2.pt
+            dr[name] = GistDrafter(t, s2=f"stage2_{name}")
     w = chat(tok, "Say hi.")                                   # warm-up
     t.generate(w, max_new_tokens=8, do_sample=False, temperature=None, top_p=None, top_k=None)
     for x in dr.values():

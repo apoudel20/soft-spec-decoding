@@ -101,6 +101,8 @@ def main():
     ap.add_argument("--hist", type=int, default=1, help="number of past chunk latents the search network reads")
     ap.add_argument("--raw", action="store_true",
                     help="also feed the target's raw states (all cached layers) at the current chunk's positions")
+    ap.add_argument("--train_cache", default="", help="train split from data/<this> (e.g. cache_pb); dev stays on the stage-1 cache")
+    ap.add_argument("--init", default="", help="start from ckpt/<this>.pt (same architecture)")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
     assert not (args.raw and args.tok), "--raw needs a state-cache stage-1 model"
@@ -152,7 +154,8 @@ def main():
     Z, meta = {}, {}
     T1, VAL = {}, {}
     for sp in ["train", "dev_math", "dev_code", "dev_chat"]:
-        mt = np.load(os.path.join(cache, f"{sp}_meta.npz"))
+        cdir = os.path.join(DATA, args.train_cache) if (sp == "train" and args.train_cache) else cache
+        mt = np.load(os.path.join(cdir, f"{sp}_meta.npz"))
         T1[sp] = mt["top1"].astype(np.int64)
         if args.tok:
             from tok_vae import chunks
@@ -160,9 +163,10 @@ def main():
             dt.seq = mt["seq"]
             _, dt.starts = chunks(sp)
         else:
-            dt = Data(cache, sp, layers, k, stats)
+            dt = Data(cdir, sp, layers, k, stats)
         st = dt.starts[:4000] if args.smoke else dt.starts
-        zc_path = os.path.join(DATA, "zcache", f"{args.ae}_{sp}.pt")     # encoded latents, reused across runs
+        zsuf = f"_{args.train_cache}" if (sp == "train" and args.train_cache) else ""
+        zc_path = os.path.join(DATA, "zcache", f"{args.ae}_{sp}{zsuf}.pt")     # encoded latents, reused across runs
         valid = np.zeros(len(dt.seq), bool)
         if not args.smoke and os.path.exists(zc_path):
             mu = torch.load(zc_path)
@@ -191,6 +195,8 @@ def main():
     zm, zs = sub.mean(0).to(dev), sub.std(0).clamp_min(1e-4).to(dev)
 
     net = Search(nq, ae.zq, args.d, args.depth, args.hist, R * k if args.raw else 0, W.shape[1]).to(dev)
+    if args.init:
+        net.load_state_dict(torch.load(os.path.join(CKPT, f"{args.init}.pt"), map_location="cpu")["model"])
 
     def rawx(sp, s):                            # (B, R*k, D) normalised target states of chunk s, or None
         return meta[sp][0].get(s)[0].to(dev) if args.raw else None
@@ -256,7 +262,7 @@ def main():
             print(json.dumps(r), flush=True)
             if not np.isfinite(loss.item()):
                 raise SystemExit("non-finite loss")
-    tag = f"{args.ae}_{args.mode}{'_raw' if args.raw else ''}{f'_lat{args.lat_w:g}' if args.lat_w != 1 else ''}{f'_h{args.hist}' if args.hist > 1 else ''}{f'_d{args.d}x{args.depth}' if (args.d, args.depth) != (512, 6) else ''}{f'_s{args.steps}' if args.steps != 6000 else ''}{'_smoke' if args.smoke else ''}"
+    tag = f"{args.ae}_{args.mode}{'_raw' if args.raw else ''}{f'_{args.train_cache}' if args.train_cache else ''}{f'_lat{args.lat_w:g}' if args.lat_w != 1 else ''}{f'_h{args.hist}' if args.hist > 1 else ''}{f'_d{args.d}x{args.depth}' if (args.d, args.depth) != (512, 6) else ''}{f'_s{args.steps}' if args.steps != 6000 else ''}{'_smoke' if args.smoke else ''}"
     if not args.smoke:
         torch.save({"model": net.state_dict(), "args": vars(args), "zm": zm.cpu(), "zs": zs.cpu()},
                    os.path.join(CKPT, f"stage2_{tag}.pt"))

@@ -40,8 +40,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--long", action="store_true", help="use the answers continued to 1,024 tokens (*_long)")
+    ap.add_argument("--pb_tokens", type=float, default=0,
+                    help="if > 0: train split only, from PerfectBlend Qwen3-8B answers, this many million response tokens")
     args = ap.parse_args()
     out = os.path.join(DATA, ("cache_smoke" if args.smoke else "cache") + ("_long" if args.long else ""))
+    if args.pb_tokens:
+        out = os.path.join(DATA, "cache_pb" + ("_smoke" if args.smoke else ""))
     os.makedirs(out, exist_ok=True)
     t = load_target()
     W = t.lm_head.weight.detach()
@@ -49,7 +53,21 @@ def main():
     torch.save(W.cpu(), os.path.join(out, "lm_head.pt"))
     D = W.shape[1]
     stats = {"layers": LAYERS, "splits": {}}
-    for name, seqs in splits(args.smoke, args.long).items():
+    if args.pb_tokens:
+        from transformers import AutoTokenizer
+        from dflash_eval import TARGET_ID
+        from gister_train import load_convs
+        allc = load_convs(AutoTokenizer.from_pretrained(TARGET_ID), 200 if args.smoke else 60000, own=False)
+        seqs, tot = [], 0
+        for c in allc:
+            seqs.append(c)
+            tot += len(c["resp"])
+            if tot >= args.pb_tokens * 1e6:
+                break
+        todo = {"train": seqs}
+    else:
+        todo = splits(args.smoke, args.long)
+    for name, seqs in todo.items():
         N = sum(len(it["resp"]) for it in seqs)
         mm = {l: np.lib.format.open_memmap(os.path.join(out, f"{name}_L{l}.npy"), "w+", np.float16, (N, D)) for l in LAYERS}
         meta = {k: np.zeros(N, dt) for k, dt in [("seq", np.int32), ("next", np.int32), ("top1", np.int32),
@@ -118,7 +136,7 @@ def main():
         print(name, json.dumps({k: v for k, v in st.items() if k != "layers"}), flush=True)
         if "layers" in st:
             print("layers", json.dumps(st["layers"]), flush=True)
-    if not args.smoke:
+    if not args.smoke and not args.pb_tokens:
         json.dump(stats, open(os.path.join(RES, "state_stats_long.json" if args.long else "state_stats.json"), "w"), indent=1)
     print("=== cache done", flush=True)
 
