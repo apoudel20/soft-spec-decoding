@@ -11,6 +11,12 @@ on the final row, + 0.1 * masked MSE on middle rows, + beta * VAE KL with a per-
 Gate (fixed before running): top-1 agreement with the target >= 99% chat, >= 99.5% math and code. Mean TV <=
 0.01 chat, <= 0.005 math and code. Agreement drop <= 1 point with latent noise at 0.1 x the per-dim spread.
 
+Context (--ctx C): the target's states at the C positions before the chunk (all cached layers) are prepended as
+extra tokens to both the encoder and the decoder. The target's state at a position already summarises the prompt
+and everything before it, so this is the prompt/prefix condition, and the drafter has these states at drafting time.
+With --ctx C, chunks whose C context rows are not in the same answer are skipped (the first C positions of each
+answer). --nocond keeps that same subset but feeds no context, as the matched unconditioned baseline.
+
 Run:    python ae_gate.py --name z1024_full --zdim 1024 [--rows final] [--smoke]
 Output: results/ae_gate_<name>.json, ckpt/ae_<name>.pt
 """
@@ -38,8 +44,11 @@ def tblock(d, n):
 
 
 class AE(nn.Module):
-    def __init__(self, D, R, k, zdim, d=512, nq=4, depth=4):
+    def __init__(self, D, R, k, zdim, d=512, nq=4, depth=4, C=0):
         super().__init__()
+        self.C = C
+        self.ctx_e = nn.Parameter(torch.randn(R * C, d) * 0.02) if C else None
+        self.ctx_d = nn.Parameter(torch.randn(R * C, d) * 0.02) if C else None
         self.R, self.k, self.nq, self.zq = R, k, nq, zdim // nq
         self.inp = nn.Linear(D, d)
         self.cell_e = nn.Parameter(torch.randn(R * k, d) * 0.02)
@@ -53,40 +62,51 @@ class AE(nn.Module):
         self.nout = nn.LayerNorm(d)
         self.out = nn.Linear(d, D)
 
-    def encode(self, x):                       # x (B, R*k, D) z-scored
+    def encode(self, x, c=None):               # x (B, R*k, D) z-scored, c (B, R*C, D) context or None
         B = x.shape[0]
-        h = torch.cat([self.q.expand(B, -1, -1), self.inp(x) + self.cell_e], 1)
-        h = self.enc(h)[:, :self.nq]
+        parts = [self.q.expand(B, -1, -1), self.inp(x) + self.cell_e]
+        if self.C:
+            parts.append(self.inp(c) + self.ctx_e)
+        h = self.enc(torch.cat(parts, 1))[:, :self.nq]
         return self.mu(h), self.lv(h).clamp(-10, 5)
 
-    def decode(self, z):                       # z (B, nq, zq)
+    def decode(self, z, c=None):               # z (B, nq, zq)
         B = z.shape[0]
-        h = torch.cat([self.zin(z) + self.lat_e, self.cell_d.expand(B, -1, -1)], 1)
-        return self.out(self.nout(self.dec(h)[:, self.nq:]))
+        parts = [self.zin(z) + self.lat_e, self.cell_d.expand(B, -1, -1)]
+        if self.C:
+            parts.append(self.inp(c) + self.ctx_d)
+        h = self.dec(torch.cat(parts, 1))[:, self.nq:self.nq + self.R * self.k]
+        return self.out(self.nout(h))
 
 
 class Data:
-    def __init__(self, cache, split, layers, k, stats):
+    def __init__(self, cache, split, layers, k, stats, C=0):
         meta = np.load(os.path.join(cache, f"{split}_meta.npz"))
         self.seq, self.margin = meta["seq"], meta["margin"]
         self.mm = [np.load(os.path.join(cache, f"{split}_L{l}.npy"), mmap_mode="r") for l in layers]
         n = len(self.seq)
         ok = np.zeros(n, bool)
         ok[:n - k + 1] = self.seq[:n - k + 1] == self.seq[k - 1:]
+        if C:                                   # context rows st-C..st-1 must be in the same answer
+            ok[:C] = False
+            ok[C:] &= self.seq[:n - C] == self.seq[C:]
         self.starts = np.nonzero(ok)[0]
-        self.k, self.stats = k, stats
+        self.k, self.stats, self.C = k, stats, C
 
     def get(self, st):
-        idx = (st[:, None] + np.arange(self.k)[None]).reshape(-1)
-        srt = np.argsort(idx)
+        C, k = self.C, self.k
+        rows = (st[:, None] + np.arange(-C, k)[None]).reshape(-1)
+        srt = np.argsort(rows)
         xs = []
         for m, (mean, std, mask) in zip(self.mm, self.stats):
-            a = np.empty((len(idx), m.shape[1]), np.float16)
-            a[srt] = m[idx[srt]]
+            a = np.empty((len(rows), m.shape[1]), np.float16)
+            a[srt] = m[rows[srt]]
             x = (torch.from_numpy(a).float() - mean) / std
             x[:, mask] = 0
-            xs.append(x.view(len(st), self.k, -1))
-        return torch.stack(xs, 1).flatten(1, 2), idx       # (B, R*k, D), row-major
+            xs.append(x.view(len(st), C + k, -1))
+        g = torch.stack(xs, 1)                               # (B, R, C+k, D)
+        idx = (st[:, None] + np.arange(k)[None]).reshape(-1)
+        return g[:, :, C:].flatten(1, 2), idx, g[:, :, :C].flatten(1, 2)   # chunk (B, R*k, D) row-major, context
 
 
 def prefetch(data, B, steps, rng):
@@ -129,6 +149,8 @@ def main():
     ap.add_argument("--depth", type=int, default=4)
     ap.add_argument("--det", action="store_true", help="plain autoencoder: decode mu, no sampling noise")
     ap.add_argument("--cache", default="cache", help="state cache folder under data/ (cache_long for the 1,024-token answers)")
+    ap.add_argument("--ctx", type=int, default=0, help="context positions before the chunk fed to encoder and decoder")
+    ap.add_argument("--nocond", action="store_true", help="with --ctx: same chunk subset, but no context fed")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
     cache = os.path.join(DATA, "cache_smoke" if args.smoke else args.cache)
@@ -146,8 +168,9 @@ def main():
     fstat = [t.cuda() for t in stats[-1]]
     W = torch.load(os.path.join(cache, "lm_head.pt")).cuda()
     D, R = W.shape[1], len(layers)
-    tr = Data(cache, "train", layers, args.k, stats)
-    model = AE(D, R, args.k, args.zdim, d=args.d, depth=args.depth).cuda()
+    tr = Data(cache, "train", layers, args.k, stats, args.ctx)
+    Cm = 0 if args.nocond else args.ctx
+    model = AE(D, R, args.k, args.zdim, d=args.d, depth=args.depth, C=Cm).cuda()
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
     sched = torch.optim.lr_scheduler.LambdaLR(
         opt, lambda s: min(1, (s + 1) / 500) * max(0.1, 0.5 * (1 + np.cos(np.pi * min(1, s / args.steps)))))
@@ -166,13 +189,14 @@ def main():
           f"masked dims {[int(s[2].sum()) for s in stats]}", flush=True)
     t0, log = time.time(), []
     model.train()
-    for step, (x, _) in enumerate(prefetch(tr, args.B, args.steps, np.random.default_rng(0))):
+    for step, (x, _, c) in enumerate(prefetch(tr, args.B, args.steps, np.random.default_rng(0))):
         x = x.cuda(non_blocking=True)
+        c = c.cuda(non_blocking=True) if Cm else None
         with torch.autocast("cuda", torch.bfloat16):
-            mu, lv = model.encode(x)
+            mu, lv = model.encode(x, c)
             z = mu if args.det else mu + torch.randn_like(mu) * (0.5 * lv).exp()
             z = F.dropout(z, args.zdrop)
-            y = model.decode(z).float()
+            y = model.decode(z, c).float()
         fh, ft = unz(y[:, fin]), unz(x[:, fin])
         lq = logp(fh.flatten(0, 1))
         with torch.no_grad():
@@ -207,27 +231,29 @@ def main():
     res = {"args": vars(args), "train_log": log, "sets": {}}
     g = torch.Generator(device="cuda").manual_seed(0)
     for split in ("dev_math", "dev_code", "dev_chat"):
-        dv = Data(cache, split, layers, args.k, stats)
+        dv = Data(cache, split, layers, args.k, stats, args.ctx)
         st_all = nonoverlap(dv.starts, args.k)
         with torch.no_grad():
             mus = []
             for i in range(0, len(st_all), 64):
-                x, _ = dv.get(st_all[i:i + 64])
+                x, _, c = dv.get(st_all[i:i + 64])
+                c = c.cuda() if Cm else None
                 with torch.autocast("cuda", torch.bfloat16):
-                    mus.append(model.encode(x.cuda())[0].float())
+                    mus.append(model.encode(x.cuda(), c)[0].float())
             spread = torch.cat(mus).std(0, keepdim=True)
             A = {"agree": [], "tv": [], "kl": [], "margin": []}
             N = {"0.05": [], "0.1": [], "0.3": [], "posterior": []}
             for i in range(0, len(st_all), 64):
-                x, idx = dv.get(st_all[i:i + 64])
+                x, idx, c = dv.get(st_all[i:i + 64])
                 x = x.cuda()
+                c = c.cuda() if Cm else None
                 lp = logp(unz(x[:, fin]).flatten(0, 1))
                 with torch.autocast("cuda", torch.bfloat16):
-                    mu, lv = model.encode(x)
+                    mu, lv = model.encode(x, c)
                     zs = {"mean": mu, "posterior": mu + torch.randn(mu.shape, device="cuda", generator=g) * (0.5 * lv).exp()}
                     for sg in (0.05, 0.1, 0.3):
                         zs[str(sg)] = mu + sg * spread * torch.randn(mu.shape, device="cuda", generator=g)
-                    outs = {kk: model.decode(v).float() for kk, v in zs.items()}
+                    outs = {kk: model.decode(v, c).float() for kk, v in zs.items()}
                 for kk, y in outs.items():
                     lq = logp(unz(y[:, fin]).flatten(0, 1))
                     ag = (lq.argmax(-1) == lp.argmax(-1)).float().cpu()
