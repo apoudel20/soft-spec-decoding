@@ -427,6 +427,29 @@ tokens per pass on held-out dev answers, teacher-forced context.
   sees only the parent token, child token and depth (frozen target embeddings), distilled from target traces, and
   reports +19% throughput over DDTree on Qwen3-8B. It uses no target hidden state or forecast at scoring time.
 
+## Stage-2 gate: chunk autoencoder over Qwen3-8B states
+
+`cache_states.py`, `ae_gate.py`, results in `results/ae_gate_*.json`. A VAE compresses k=8 consecutive positions of
+Qwen3-8B (4-bit) hidden states (layers 18, 24, 30 and the final normed state, or the final row only) into one latent
+and decodes them back. Score: how often the decoded final state, through the frozen LM head, picks the target's own
+top-1, on held-out dev windows. Gate fixed before training: 99.5% math and code, 99% chat.
+
+| Latent | Rows | Math | Code | Chat | Gate |
+|---|---|---|---|---|---|
+| 512 | full grid | 93.9% | 92.5% | 77.8% | fail |
+| 1024 | full grid | 94.0% | 92.6% | 77.6% | fail |
+| 2048 | full grid | 94.6% | 93.0% | 78.3% | fail |
+| 1024 | final row only | 93.7% | 92.3% | 76.8% | fail |
+
+- All four fail by a wide margin. By the pre-set rule this design does not proceed as is.
+- Latent size and the middle layers barely matter. Training and dev agreement are about equal (underfit), and the
+  decoders ignore latent noise, which points at the recipe (small decoder, 12k steps, VAE noise and latent dropout)
+  more than at a hard limit. Two diagnostics (plain autoencoder, larger decoder trained 3x longer) are queued and
+  do not reopen the gate.
+- Data note: the 4-bit HF target and the Ollama build that wrote the answers pick a different next token at 4% / 6%
+  / 13% of math / code / chat positions. Earlier offline teacher-forced numbers in this file were scored against the
+  Ollama text, which lowers their absolute values, chat most. Comparisons within each table are unaffected.
+
 ## What the results say
 
 1. **Refinement works, softness doesn't (target side).** Arm C turns the spare width of the verification
