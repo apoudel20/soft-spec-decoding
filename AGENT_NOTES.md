@@ -96,13 +96,24 @@ per round (8 drafted + bonus). Teacher-forced, non-overlapping rounds, against t
 | token VAE | 8 chunks (64 positions) | 1.88 | 1.48 | 1.18 |
 | gist_hf | 1 chunk | 2.17 | 1.80 | 1.34 |
 | gist_hf | 8 chunks | 2.30 | 1.81 | 1.31 |
+| gist_hf, 154M (`--d 1024 --depth 12`, 20k steps) | 1 chunk | 2.30 | 2.19 | 1.30 |
+| gist_hf + raw target states (`--raw`) | 1 chunk | **2.80** | **2.23** | **1.43** |
+| gist_hf + raw, token loss only (`--raw --lat_w 0`) | 1 chunk | 2.79 | 2.20 | 1.40 |
+| gist_hf, flow mode (naive, see below) | 1 chunk | 1.21 | 1.13 | 1.06 |
 | oracle (true next gist latent) | | 8.51 | 8.47 | 7.63 |
 | copy baseline | | about 1.0 | about 1.0 | about 1.0 |
 
 - First drafted token correct: 51 to 55% on math, 24 to 26% on chat.
 - Latent MSE (normalised) stays at 0.89 to 0.97, so the predictor explains only about 10% of the next latent.
 - More history barely helps. The predictor (size, data, training length) is the bottleneck.
-- Flow mode (`--mode flow`) is implemented and smoke tested but not run at full length.
+- 154M overfits: train token loss falls from 4.8 to 1.45 while dev stays flat. Size alone does not help on 480k pairs.
+- Raw target states (`--raw`, 4 layers x the 8 current positions) are the one input change that helps: +29% math,
+  +24% code, +7% chat. Slot-1 accuracy rises to 64% math, 32% chat.
+- Dropping the latent MSE changes nothing, so regressing in latent space is not what holds chat back.
+- Flow mode collapsed to the copy floor. Its token loss uses the one-step estimate xt + (1-t)v, which nearly sees the
+  answer at high t, so it is not a fair test of sampling. Needs a proper recipe (loss on sampled outputs, timestep
+  shift for a 2,048-dim latent) before it means anything.
+- Encoded latents are cached in `data/zcache/` after the first run, which saves about 5 minutes per run.
 
 DFlash reference (teacher-forced chain, out of 16): math 7.46, code 6.77, chat 2.96, scored against the Ollama
 text, not the HF top-1. Tree with 64 branches reaches 4.00 on chat. The fair rerun against the HF top-1

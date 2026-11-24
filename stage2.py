@@ -64,19 +64,24 @@ def load_stage1(name, dev):
 
 
 class Search(nn.Module):
-    def __init__(self, nq, zq, d=512, depth=6, H=1):
+    def __init__(self, nq, zq, d=512, depth=6, H=1, raw=0, D=4096):
         super().__init__()
         self.nq = nq
         self.cin, self.xin = nn.Linear(zq, d), nn.Linear(zq, d)
         self.pos = nn.Parameter(torch.randn((H + 1) * nq, d) * 0.02)
         self.temb = nn.Sequential(nn.Linear(64, d), nn.SiLU(), nn.Linear(d, d))
+        if raw:                                 # the target's raw states (layers x positions) of the current chunk
+            self.rin = nn.Sequential(nn.LayerNorm(D), nn.Linear(D, d))
+            self.rpos = nn.Parameter(torch.randn(raw, d) * 0.02)
         self.body = tblock(d, depth)
         self.out = nn.Sequential(nn.LayerNorm(d), nn.Linear(d, zq))
 
-    def forward(self, zc, xt, t):              # zc, xt (B, nq, zq) normalised, t (B,)
+    def forward(self, zc, xt, t, raw=None):    # zc, xt (B, nq, zq) normalised, t (B,), raw (B, R*k, D)
         f = torch.exp(torch.linspace(0, np.log(1000), 32, device=t.device))
         te = torch.cat([torch.sin(t[:, None] * f), torch.cos(t[:, None] * f)], -1)
         h = torch.cat([self.cin(zc), self.xin(xt) + self.temb(te)[:, None]], 1) + self.pos
+        if raw is not None:
+            h = torch.cat([self.rin(raw) + self.rpos, h], 1)
         return self.out(self.body(h)[:, -self.nq:])
 
 
@@ -91,10 +96,14 @@ def main():
     ap.add_argument("--d", type=int, default=512)
     ap.add_argument("--depth", type=int, default=6)
     ap.add_argument("--dec_w", type=float, default=1.0)
+    ap.add_argument("--lat_w", type=float, default=1.0, help="weight of the latent MSE (0 = token loss only)")
     ap.add_argument("--nfe", type=int, default=8)
     ap.add_argument("--hist", type=int, default=1, help="number of past chunk latents the search network reads")
+    ap.add_argument("--raw", action="store_true",
+                    help="also feed the target's raw states (all cached layers) at the current chunk's positions")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
+    assert not (args.raw and args.tok), "--raw needs a state-cache stage-1 model"
     dev = "cuda"
     if args.smoke:
         args.steps, args.B = 30, 16
@@ -153,16 +162,23 @@ def main():
         else:
             dt = Data(cache, sp, layers, k, stats)
         st = dt.starts[:4000] if args.smoke else dt.starts
-        mu = torch.zeros(len(dt.seq), nq, ae.zq, dtype=torch.float16)
+        zc_path = os.path.join(DATA, "zcache", f"{args.ae}_{sp}.pt")     # encoded latents, reused across runs
         valid = np.zeros(len(dt.seq), bool)
-        with torch.no_grad():
-            for i in range(0, len(st), 512):
-                b = st[i:i + 512]
-                if args.tok:
-                    x = torch.from_numpy(T1[sp][b[:, None] + np.arange(k)[None]])
-                else:
-                    x, _, _ = dt.get(b)
-                mu[b] = encode(x.to(dev)).half().cpu()
+        if not args.smoke and os.path.exists(zc_path):
+            mu = torch.load(zc_path)
+        else:
+            mu = torch.zeros(len(dt.seq), nq, ae.zq, dtype=torch.float16)
+            with torch.no_grad():
+                for i in range(0, len(st), 512):
+                    b = st[i:i + 512]
+                    if args.tok:
+                        x = torch.from_numpy(T1[sp][b[:, None] + np.arange(k)[None]])
+                    else:
+                        x, _, _ = dt.get(b)
+                    mu[b] = encode(x.to(dev)).half().cpu()
+            if not args.smoke:
+                os.makedirs(os.path.dirname(zc_path), exist_ok=True)
+                torch.save(mu, zc_path)
         valid[st] = True
         n = len(dt.seq)
         pair = np.zeros(n, bool)
@@ -174,7 +190,10 @@ def main():
     sub = tr_mu[np.random.default_rng(1).choice(tr_pairs, min(50000, len(tr_pairs)), replace=False)].float()
     zm, zs = sub.mean(0).to(dev), sub.std(0).clamp_min(1e-4).to(dev)
 
-    net = Search(nq, ae.zq, args.d, args.depth, args.hist).to(dev)
+    net = Search(nq, ae.zq, args.d, args.depth, args.hist, R * k if args.raw else 0, W.shape[1]).to(dev)
+
+    def rawx(sp, s):                            # (B, R*k, D) normalised target states of chunk s, or None
+        return meta[sp][0].get(s)[0].to(dev) if args.raw else None
 
     def ctx(sp, s):                             # (B, hist*nq, zq) normalised, oldest first, zeros where missing
         seq = meta[sp][0].seq
@@ -188,15 +207,16 @@ def main():
         opt, lambda s: min(1, (s + 1) / 500) * max(0.1, 0.5 * (1 + np.cos(np.pi * min(1, s / args.steps)))))
     print(f"search params {sum(p.numel() for p in net.parameters()) / 1e6:.1f}M", flush=True)
 
-    def predict(zc_n, g=None):                  # normalised z_t -> normalised z_t+1
+    def predict(zc_n, g=None, raw=None):        # normalised z_t -> normalised z_t+1
         B = zc_n.shape[0]
         shp = (B, nq, ae.zq)
+        raw = raw.float() if raw is not None else None
         if args.mode == "det":
-            return net(zc_n, torch.zeros(shp, device=dev), torch.zeros(B, device=dev))
+            return net(zc_n, torch.zeros(shp, device=dev), torch.zeros(B, device=dev), raw)
         x = torch.randn(shp, device=dev, generator=g)
         for i in range(args.nfe):
             t = torch.full((B,), i / args.nfe, device=dev)
-            x = x + net(zc_n, x, t) / args.nfe
+            x = x + net(zc_n, x, t, raw) / args.nfe
         return x
 
     rng = np.random.default_rng(0)
@@ -205,20 +225,21 @@ def main():
     for step in range(args.steps):
         s = rng.choice(tr_pairs, args.B)
         zc = ctx("train", s)
+        rx = rawx("train", s)
         z1 = (tr_mu[s + k].float().to(dev) - zm) / zs
         lab = torch.from_numpy(T1["train"][(s + k)[:, None] + np.arange(k)[None]]).to(dev)
         with torch.autocast("cuda", torch.bfloat16):
             if args.mode == "det":
-                z1h = net(zc, torch.zeros_like(z1), torch.zeros(args.B, device=dev)).float()
+                z1h = net(zc, torch.zeros_like(z1), torch.zeros(args.B, device=dev), rx).float()
                 lat = F.mse_loss(z1h, z1)
             else:
                 x0 = torch.randn_like(z1)
                 t = torch.rand(args.B, device=dev)
                 xt = (1 - t)[:, None, None] * x0 + t[:, None, None] * z1
-                v = net(zc, xt, t).float()
+                v = net(zc, xt, t, rx).float()
                 lat = F.mse_loss(v, z1 - x0)
                 z1h = xt + (1 - t)[:, None, None] * v
-        loss = lat
+        loss = args.lat_w * lat
         kl = torch.zeros((), device=dev)
         if args.dec_w:                          # decoded next chunk must give the target's own next 8 tokens
             lq = logp(dec_final(z1h * zs + zm).flatten(0, 1))
@@ -235,7 +256,7 @@ def main():
             print(json.dumps(r), flush=True)
             if not np.isfinite(loss.item()):
                 raise SystemExit("non-finite loss")
-    tag = f"{args.ae}_{args.mode}{f'_h{args.hist}' if args.hist > 1 else ''}{'_smoke' if args.smoke else ''}"
+    tag = f"{args.ae}_{args.mode}{'_raw' if args.raw else ''}{f'_lat{args.lat_w:g}' if args.lat_w != 1 else ''}{f'_h{args.hist}' if args.hist > 1 else ''}{f'_d{args.d}x{args.depth}' if (args.d, args.depth) != (512, 6) else ''}{f'_s{args.steps}' if args.steps != 6000 else ''}{'_smoke' if args.smoke else ''}"
     if not args.smoke:
         torch.save({"model": net.state_dict(), "args": vars(args), "zm": zm.cpu(), "zs": zs.cpu()},
                    os.path.join(CKPT, f"stage2_{tag}.pt"))
@@ -260,7 +281,7 @@ def main():
                 zc = Z[sp][s].float().to(dev)
                 zh = ctx(sp, s)
                 lab = torch.from_numpy(top1[(s + k)[:, None] + np.arange(k)[None]].astype(np.int64))
-                zp = predict(zh, g) * zs + zm
+                zp = predict(zh, g, rawx(sp, s)) * zs + zm
                 for kind, z in (("pred", zp), ("oracle", Z[sp][s + k].float().to(dev)), ("copy", zc)):
                     tok = logp(dec_final(z).flatten(0, 1)).argmax(-1).view(len(s), k).cpu()
                     eq = (tok == lab).int()
