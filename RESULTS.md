@@ -465,6 +465,40 @@ top-1, on held-out dev windows. Gate fixed before training: 99.5% math and code,
 - The gist beats the token latent in every setting. Both are far below DFlash (7.46 / 6.77 / 2.96 out of 16). The
   predictor is the limit: it explains about 10% of the next latent's variance, and more history does not help.
 
+## Gister (the two-stage design, named 2026-11-24)
+
+Offline, accepted per round out of 9 (8 drafted + bonus), same dev rounds, labels = the HF target's own top-1:
+
+| Stage 2 | Math | Code | Chat |
+|---|---|---|---|
+| gist only, 20M | 2.17 | 1.80 | 1.34 |
+| gist only, 154M, 20k steps (overfits: train CE 1.45, dev flat) | 2.30 | 2.19 | 1.30 |
+| gist + raw target states (`--raw`), 20M = **Gister v1** | **2.80** | **2.23** | **1.43** |
+| same, token loss only (`--lat_w 0`) | 2.79 | 2.20 | 1.40 |
+| flow mode, naive token loss (collapsed) | 1.21 | 1.13 | 1.06 |
+| DFlash chain capped at 8 (`dflash_s2.py`) | 5.88 | 5.59 | 2.68 |
+| stage-1 ceiling (true next gist) | 8.51 | 8.47 | 7.63 |
+
+Side experiments on DFlash (not Gister):
+- DFlash block outputs mapped to the gist latent and decoded by stage 1 (`dflash_s2.py --head latent`): 5.30 / 4.51 /
+  2.25. A refine head without the latent: 5.61 / 5.27 / 2.45. Both lose to DFlash's own chain.
+- Vocabulary pruning (`prune_oracle.py`): restricting DFlash to the true tokens of the next 256 positions lifts chat
+  chain 2.69 to 3.12 and tree-64 3.69 to 4.30. Any bag that can miss a drafted token roughly halves acceptance.
+
+End to end (`e2e.py`, one lossless loop for every drafter, reproduces DFlash's `spec_generate` round for round;
+Qwen3-8B nf4, RTX 4070 Ti, greedy). Smoke test, 2 prompts, 48 new tokens:
+
+| | MT-Bench tau | speedup | GSM8K tau | speedup |
+|---|---|---|---|---|
+| Gister v1 | 1.45 | 1.38x | 1.90 | 1.74x |
+| DFlash | 2.65 | 2.28x | 4.71 | 3.79x |
+
+DFlash on our own dev sets (`dflash_eval.py`, 10 prompts, 160 tokens): tau 5.41 / 4.71 / 2.37, speedup 4.75x /
+3.80x / 2.03x. The full benchmark (20 prompts per set, 256 tokens, with Gister v2) is in `results/e2e.json` once run.
+
+Gister v2: stage 2 at 154M trained on 2M positions of Qwen3-8B's own non-thinking PerfectBlend answers
+(`cache_states.py --pb_tokens 2.0`, `stage2.py --train_cache cache_pb`), 4x v1's data. Results pending.
+
 ## What the results say
 
 1. **Refinement works, softness doesn't (target side).** Arm C turns the spare width of the verification

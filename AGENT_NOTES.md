@@ -1,6 +1,6 @@
 # Agent notes: where the project is and what to do next
 
-Last updated 2026-11-24 (after the stage-2 history runs). Read this first. RESULTS.md has the earlier experiments.
+Last updated 2026-11-24 evening. Read this first, then TWO_GPU_PLAN.md (what each GPU is doing next). RESULTS.md has every number.
 
 ## Goal
 
