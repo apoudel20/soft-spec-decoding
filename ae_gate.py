@@ -128,9 +128,10 @@ def main():
     ap.add_argument("--d", type=int, default=512)
     ap.add_argument("--depth", type=int, default=4)
     ap.add_argument("--det", action="store_true", help="plain autoencoder: decode mu, no sampling noise")
+    ap.add_argument("--cache", default="cache", help="state cache folder under data/ (cache_long for the 1,024-token answers)")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
-    cache = os.path.join(DATA, "cache_smoke" if args.smoke else "cache")
+    cache = os.path.join(DATA, "cache_smoke" if args.smoke else args.cache)
     if args.smoke:
         args.steps, args.B = 30, 8
     layers = [18, 24, 30, 36] if args.rows == "full" else [36]

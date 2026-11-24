@@ -1,5 +1,7 @@
 # Soft speculative decoding experiments
 
+**Current state and next tasks: [AGENT_NOTES.md](AGENT_NOTES.md).** The Qwen2.5 sections below describe the first phase.
+
 Can a target LLM and its drafter cooperate on distributions ("soft tokens") instead of hard
 guesses, while the output stays exactly the target's? Code for the experiments in
 [PLAN.md](PLAN.md). Results are in [RESULTS.md](RESULTS.md).

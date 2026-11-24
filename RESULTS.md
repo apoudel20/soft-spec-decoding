@@ -444,8 +444,11 @@ top-1, on held-out dev windows. Gate fixed before training: 99.5% math and code,
 - All four fail by a wide margin. By the pre-set rule this design does not proceed as is.
 - Latent size and the middle layers barely matter. Training and dev agreement are about equal (underfit), and the
   decoders ignore latent noise, which points at the recipe (small decoder, 12k steps, VAE noise and latent dropout)
-  more than at a hard limit. Two diagnostics (plain autoencoder, larger decoder trained 3x longer) are queued and
-  do not reopen the gate.
+  more than at a hard limit.
+- Diagnostics (do not reopen the gate). A plain autoencoder (z2048, no sampling noise, no KL) gets 93.3% / 92.6% /
+  75.0%, so the VAE noise was not what held it back. A larger decoder (161M parameters, 36k steps) reaches 94.5% on
+  train but only 86.0% / 84.6% / 61.6% on dev, so it overfits. More data looks more useful than more parameters,
+  which is why the answers were continued to 1,024 tokens (`tokens/*_long.jsonl`, `cache_states.py --long`).
 - Data note: the 4-bit HF target and the Ollama build that wrote the answers pick a different next token at 4% / 6%
   / 13% of math / code / chat positions. Earlier offline teacher-forced numbers in this file were scored against the
   Ollama text, which lowers their absolute values, chat most. Comparisons within each table are unaffected.
