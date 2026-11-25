@@ -31,9 +31,13 @@ def main():
     ids = out[:, :ids.shape[1] + 200]                           # a realistic context of prompt + 200 tokens
     start = ids.shape[1]
     for name, kw in [("chain v2", dict(s2="stage2_gister_v2")),
-                     ("flow K=4 nfe8", dict(s2="stage2_gister_flow", k_samples=4)),
-                     ("flow K=8+det nfe8", dict(s2="stage2_gister_flow", k_samples=8, det_s2="stage2_gister_v2"))]:
+                     ("flow K=4 nfe2", dict(s2="stage2_gister_flow", k_samples=4)),
+                     ("flow K=8+det nfe2", dict(s2="stage2_gister_flow", k_samples=8, det_s2="stage2_gister_v2")),
+                     ("big K=8+det", dict(s2="stage2_gister_flow_big", k_samples=8, det_s2="stage2_gister_v2")),
+                     ("big K=16+det", dict(s2="stage2_gister_flow_big", k_samples=16, det_s2="stage2_gister_v2"))]:
         dr = GistDrafter(t, **kw)
+        if dr.main["mode"] == "flow":
+            dr.main = dict(dr.main, nfe=2)
         dr.reset()
         cache = DynamicCache()
         o = t(ids, past_key_values=cache, use_cache=True, logits_to_keep=1, output_hidden_states=True)
@@ -61,6 +65,7 @@ def main():
         t(x, attention_mask=mask, position_ids=pos, past_key_values=cache, use_cache=True)
         idx = torch.tensor([0, 1, 2], device="cuda")
         ms_k, _ = timed(lambda: keep_path(cache, start, idx), reps=1)
+        crop_to(cache, start)
         print(f"{name:20s} nodes {n:3d}  draft {ms_d:6.1f} ms  verify {ms_v:6.1f} ms  keep_path {ms_k:5.1f} ms", flush=True)
     one = DynamicCache()
     t(ids, past_key_values=one, use_cache=True, logits_to_keep=1)

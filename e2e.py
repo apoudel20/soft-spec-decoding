@@ -107,6 +107,7 @@ class GistDrafter:
         net = Search(self.ae.nq, self.ae.zq, sa["d"], sa["depth"], sa.get("hist", 1),
                      R * K if sa.get("raw") else 0, D).cuda().eval()
         net.load_state_dict(ck["model"])
+        net = net.to(torch.bfloat16)                    # drafting in bf16, same as DFlash
         return {"net": net, "raw": sa.get("raw", False), "zm": ck["zm"].cuda(), "zs": ck["zs"].cuda(),
                 "mode": sa.get("mode", "det"), "shift": sa.get("t_shift", 1.0), "nfe": sa.get("nfe", 8)}
 
@@ -120,13 +121,14 @@ class GistDrafter:
     def _sample(self, m, zc, x, n):              # n latents (normalised) from one stage-2 net
         net, raw = m["net"], (x.expand(n, -1, -1) if m["raw"] else None)
         zc = zc.expand(n, -1, -1)
-        if m["mode"] == "det":
-            return net(zc, torch.zeros_like(zc), torch.zeros(n, device="cuda"), raw)
-        u = torch.linspace(0, 1, m["nfe"] + 1, device="cuda")
-        grid = 1 - m["shift"] * (1 - u) / (1 + (m["shift"] - 1) * (1 - u))
-        y = torch.randn(zc.shape, device="cuda", generator=self.g)
-        for i in range(m["nfe"]):
-            y = y + net(zc, y, grid[i].expand(n), raw) * (grid[i + 1] - grid[i])
+        with torch.autocast("cuda", torch.bfloat16):
+            if m["mode"] == "det":
+                return net(zc, torch.zeros_like(zc), torch.zeros(n, device="cuda"), raw).float()
+            u = torch.linspace(0, 1, m["nfe"] + 1, device="cuda")
+            grid = 1 - m["shift"] * (1 - u) / (1 + (m["shift"] - 1) * (1 - u))
+            y = torch.randn(zc.shape, device="cuda", generator=self.g)
+            for i in range(m["nfe"]):
+                y = y + net(zc, y, grid[i].expand(n), raw).float() * (grid[i + 1] - grid[i])
         return y
 
     def draft(self, bonus, start):
@@ -158,11 +160,14 @@ class GistDrafter:
 
 
 def keep_path(cache, start, idx):
-    """Keep cache positions [0, start) plus start + idx (the accepted tree path), drop the rest of the tree."""
-    keep = torch.cat([torch.arange(start, device="cuda"), start + idx])
+    """Keep cache positions [0, start) plus start + idx (the accepted tree path), drop the rest of the tree.
+    Moves only the accepted entries into place, then crops: no copy of the whole cache."""
+    n = len(idx)
+    src = start + idx
     for layer in cache.layers:
-        layer.keys = layer.keys[:, :, keep]
-        layer.values = layer.values[:, :, keep]
+        layer.keys[:, :, start:start + n] = layer.keys[:, :, src]      # RHS is gathered first, so overlap is safe
+        layer.values[:, :, start:start + n] = layer.values[:, :, src]
+    crop_to(cache, start + n)
 
 
 def build_tree(bonus, drafts):
@@ -189,6 +194,8 @@ def spec(t, drafter, ids, max_new, stop):
     drafter.observe(o.hidden_states, n0)
     bonus = o.logits[0, -1].argmax()
     out, taus, start = [], [], n0
+    if int(bonus) in stop or max_new <= 1:
+        return [int(bonus)], []
     while len(out) < max_new:
         dr = drafter.draft(bonus, start)
         if dr.dim() == 2:                                       # K drafts: verify them as one tree
@@ -220,7 +227,10 @@ def spec(t, drafter, ids, max_new, stop):
             keep_path(cache, start, idx)
             start += len(path)
             drafter.observe(o.hidden_states, None, idx)
-            if any(s in new for s in stop):
+            if any(s in new for s in stop) or len(out) >= max_new:
+                break
+            if int(bonus) in stop or len(out) + 1 >= max_new:   # the target's own next token ends it
+                out.append(int(bonus))
                 break
             continue
         blk = torch.cat([bonus[None], dr])[None]
@@ -235,7 +245,10 @@ def spec(t, drafter, ids, max_new, stop):
         start += acc + 1
         crop_to(cache, start)
         drafter.observe(o.hidden_states, acc + 1)
-        if any(s in new for s in stop):
+        if any(s in new for s in stop) or len(out) >= max_new:
+            break
+        if int(bonus) in stop or len(out) + 1 >= max_new:
+            out.append(int(bonus))
             break
     out = out[:max_new]
     for i, x in enumerate(out):
@@ -320,8 +333,8 @@ def main():
                 torch.cuda.synchronize()
                 n = min(len(out), len(ref))
                 row["d"][name] = {"s": time.perf_counter() - a, "len": len(out), "taus": taus,
-                                  "identical": out[:n] == ref[:n],
-                                  "first_diff": next((i for i in range(n) if out[i] != ref[i]), None),
+                                  "identical": out == ref,
+                                  "first_diff": next((i for i in range(n) if out[i] != ref[i]), None if len(out) == len(ref) else n),
                                   "nodes": list(getattr(x, "nodes", []))}
                 if hasattr(x, "nodes"):
                     x.nodes.clear()
