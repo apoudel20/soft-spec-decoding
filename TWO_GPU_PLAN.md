@@ -35,6 +35,16 @@ Stage 1 is fine. Stage 2 (forecasting the next gist) is the bottleneck.
 3. `e2e.py --sets mtbench gsm8k humaneval --n 20 --max_new 256 --drafters dflash dflash8 gister gister_...`: τ
    and wall-clock speedup for Gister v1, v2 and DFlash on one loop.
 
+## Update, 2026-11-24 19:45
+
+Bijin's PC crashed, so task A (the sampler) moves to Aayush's machine. It runs after the end-to-end benchmark:
+flow-matching stage 2 initialised from the v2 weights, trained on `data/cache_pb`, then an offline best-of-K test
+(K = 4, 8, 16 sampled gists per round, accepted for the best one). Task B is still open for Bijin once his machine
+is back.
+
+Gister v2 (deterministic, 154M, 2M positions) was at step 16,500 of 20,000 at 19:30 with training loss 4.00 on
+mostly unseen text, down from a plateau near 5.0. v1's 154M run only got lower by memorising.
+
 ## Suggested for Bijin's GPU (independent of the above, no shared files)
 
 Pick one. Each ends in a results JSON and a checkpoint. Push code and `results/*.json` to a branch
