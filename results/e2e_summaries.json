@@ -296,6 +296,244 @@
    }
   }
  },
+ "e2e_tree_big": {
+  "args": {
+   "sets": [
+    "mtbench",
+    "gsm8k",
+    "humaneval"
+   ],
+   "n": 20,
+   "max_new": 256,
+   "drafters": [
+    "gister_v2",
+    "gister_tree16d_n2",
+    "gister_tree16d_n2@stage2_gister_flow_big",
+    "gister_tree8d_n2@stage2_gister_flow_big"
+   ],
+   "out": "e2e_tree_big",
+   "check_ref": false,
+   "smoke": false
+  },
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "sets": {
+   "mtbench": {
+    "n": 20,
+    "ar_tok_s": 21.778073217135095,
+    "gister_v2": {
+     "tau": 1.604491126403477,
+     "tok_s": 31.62590432643426,
+     "speedup": 1.4521901919932403,
+     "identical": 5,
+     "tree_nodes": null
+    },
+    "gister_tree16d_n2": {
+     "tau": 2.005366726296959,
+     "tok_s": 18.052585559763212,
+     "speedup": 0.8289340098994318,
+     "identical": 5,
+     "tree_nodes": 112.1532293986637
+    },
+    "gister_tree16d_n2@stage2_gister_flow_big": {
+     "tau": 2.0923656927426957,
+     "tok_s": 16.1979300773951,
+     "speedup": 0.7437724134681708,
+     "identical": 4,
+     "tree_nodes": 110.54976525821596
+    },
+    "gister_tree8d_n2@stage2_gister_flow_big": {
+     "tau": 1.9554585152838428,
+     "tok_s": 22.13026756443124,
+     "speedup": 1.0161719700262113,
+     "identical": 5,
+     "tree_nodes": 62.11009573542211
+    }
+   },
+   "gsm8k": {
+    "n": 20,
+    "ar_tok_s": 22.02461933901931,
+    "gister_v2": {
+     "tau": 2.3869249394673124,
+     "tok_s": 46.48339435351691,
+     "speedup": 2.1105197614546682,
+     "identical": 11,
+     "tree_nodes": null
+    },
+    "gister_tree16d_n2": {
+     "tau": 3.1176096630642087,
+     "tok_s": 29.186094932071082,
+     "speedup": 1.3251577465570241,
+     "identical": 7,
+     "tree_nodes": 96.60203432930706
+    },
+    "gister_tree16d_n2@stage2_gister_flow_big": {
+     "tau": 3.2775183455637094,
+     "tok_s": 26.52763552073237,
+     "speedup": 1.2044537575155916,
+     "identical": 11,
+     "tree_nodes": 92.77918612408273
+    },
+    "gister_tree8d_n2@stage2_gister_flow_big": {
+     "tau": 3.1298535964353915,
+     "tok_s": 36.032249920231656,
+     "speedup": 1.6359987596424022,
+     "identical": 10,
+     "tree_nodes": 54.1413112667091
+    }
+   },
+   "humaneval": {
+    "n": 20,
+    "ar_tok_s": 21.72771069983044,
+    "gister_v2": {
+     "tau": 1.6589473684210527,
+     "tok_s": 31.780383386735636,
+     "speedup": 1.4626659856523057,
+     "identical": 15,
+     "tree_nodes": null
+    },
+    "gister_tree16d_n2": {
+     "tau": 2.0760079312623927,
+     "tok_s": 18.276938413297827,
+     "speedup": 0.8411810459829281,
+     "identical": 18,
+     "tree_nodes": 112.86715135492399
+    },
+    "gister_tree16d_n2@stage2_gister_flow_big": {
+     "tau": 2.1720801658604008,
+     "tok_s": 16.694496324765993,
+     "speedup": 0.7683504514304986,
+     "identical": 18,
+     "tree_nodes": 109.59295093296475
+    },
+    "gister_tree8d_n2@stage2_gister_flow_big": {
+     "tau": 2.0867549668874172,
+     "tok_s": 23.41897954415594,
+     "speedup": 1.0778392564081174,
+     "identical": 17,
+     "tree_nodes": 61.52185430463576
+    }
+   }
+  }
+ },
+ "e2e_final": {
+  "args": {
+   "sets": [
+    "mtbench",
+    "gsm8k",
+    "humaneval"
+   ],
+   "n": 20,
+   "max_new": 256,
+   "drafters": [
+    "dflash",
+    "gister_v2",
+    "gister_tree4d_n2@stage2_gister_flow_big",
+    "gister_tree8d_n2@stage2_gister_flow_big"
+   ],
+   "out": "e2e_final",
+   "check_ref": false,
+   "smoke": false
+  },
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "sets": {
+   "mtbench": {
+    "n": 20,
+    "ar_tok_s": 22.48291889005235,
+    "dflash": {
+     "tau": 3.1543762922122673,
+     "tok_s": 60.40807145124443,
+     "speedup": 2.686842920470269,
+     "identical": 4,
+     "tree_nodes": null
+    },
+    "gister_v2": {
+     "tau": 1.6048709560159942,
+     "tok_s": 30.232822735516883,
+     "speedup": 1.3447018549221164,
+     "identical": 5,
+     "tree_nodes": null
+    },
+    "gister_tree4d_n2@stage2_gister_flow_big": {
+     "tau": 1.8857504215851602,
+     "tok_s": 24.25054342971273,
+     "speedup": 1.0786207764349705,
+     "identical": 4,
+     "tree_nodes": 36.56428571428572
+    },
+    "gister_tree8d_n2@stage2_gister_flow_big": {
+     "tau": 1.9853195164075994,
+     "tok_s": 24.04834037198383,
+     "speedup": 1.0696271462609825,
+     "identical": 4,
+     "tree_nodes": 62.42082616179002
+    }
+   },
+   "gsm8k": {
+    "n": 20,
+    "ar_tok_s": 21.62574247559008,
+    "dflash": {
+     "tau": 5.518394648829432,
+     "tok_s": 102.2530963114181,
+     "speedup": 4.728304539223827,
+     "identical": 7,
+     "tree_nodes": null
+    },
+    "gister_v2": {
+     "tau": 2.3843537414965987,
+     "tok_s": 44.343504231248815,
+     "speedup": 2.0504962676449727,
+     "identical": 11,
+     "tree_nodes": null
+    },
+    "gister_tree4d_n2@stage2_gister_flow_big": {
+     "tau": 2.957047791893527,
+     "tok_s": 37.81775598719166,
+     "speedup": 1.748737923328099,
+     "identical": 8,
+     "tree_nodes": 32.90078644888082
+    },
+    "gister_tree8d_n2@stage2_gister_flow_big": {
+     "tau": 3.131713554987212,
+     "tok_s": 38.19169445748524,
+     "speedup": 1.7660292820278367,
+     "identical": 7,
+     "tree_nodes": 54.05562659846547
+    }
+   },
+   "humaneval": {
+    "n": 20,
+    "ar_tok_s": 22.33004892903092,
+    "dflash": {
+     "tau": 10.006309148264984,
+     "tok_s": 176.25293448157655,
+     "speedup": 7.89308321901763,
+     "identical": 15,
+     "tree_nodes": null
+    },
+    "gister_v2": {
+     "tau": 1.6657810839532412,
+     "tok_s": 31.165440507000465,
+     "speedup": 1.395672737039228,
+     "identical": 15,
+     "tree_nodes": null
+    },
+    "gister_tree4d_n2@stage2_gister_flow_big": {
+     "tau": 2.0012812299807816,
+     "tok_s": 25.81863328680189,
+     "speedup": 1.1562282451264816,
+     "identical": 18,
+     "tree_nodes": 36.28635490070468
+    },
+    "gister_tree8d_n2@stage2_gister_flow_big": {
+     "tau": 2.1069266980497647,
+     "tok_s": 25.48246795207648,
+     "speedup": 1.1411738520172767,
+     "identical": 17,
+     "tree_nodes": 61.65299260255548
+    }
+   }
+  }
+ },
  "dflash_eval": {
   "args": {
    "n": 10,

@@ -15,7 +15,7 @@ same dev rounds:
 | DFlash chain, capped at 8 | 5.88 | 5.59 | 2.68 |
 | Stage-1 ceiling (true next gist decoded) | 8.51 | 8.47 | 7.63 |
 
-Stage 1 is fine. Stage 2 (forecasting the next gist) is the bottleneck.
+Stage 1 fails its gate on both top-1 agreement and distribution match (greedy scope only), but its ceiling is high. Stage 2 (forecasting the next gist) is the bottleneck.
 
 ## What we learned about the hardware (12 GB card)
 

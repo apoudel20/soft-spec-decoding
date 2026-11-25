@@ -16,8 +16,8 @@ Scope and caveats for every Gister number:
   with up to 8 drafted (max 9). Compare within a convention.
 - **Wall-clock runs share one consumer GPU.** Plain greedy speed varies between runs (21 / 16 / 19 tok/s in
   `e2e.json`, 12 / 9 tok/s in `e2e_tree_fast.json` when desktop apps shared the GPU). Speedups are only compared
-  within a run. The tree's +12% on GSM8K comes from the throttled run and is re-measured on an idle GPU in
-  `e2e_final.json`.
+  within a run. An earlier "+12% tree speedup on GSM8K" came from a throttled run and is withdrawn: on an idle GPU
+  (`e2e_final.json`) every tree is slower than the chain.
 - **Draft latency is unoptimised.** Gister drafts in eager PyTorch (27 ms chain, 35 to 67 ms trees) against a
   4-bit target step of about 96 ms. On an optimised bf16 engine a Qwen3-8B step is far shorter, so the drafter would
   need CUDA graphs, fewer layers or a one-step sampler to keep any speedup.
@@ -514,8 +514,9 @@ DFlash on our own dev sets (`dflash_eval.py`, 10 prompts, 160 tokens): tau 5.41 
 
 Gister v2: stage 2 at 154M trained on 2M positions of Qwen3-8B's own non-thinking PerfectBlend answers
 (`cache_states.py --pb_tokens 2.0`, `stage2.py --train_cache cache_pb`), 4x v1's data. Offline 3.08 / 2.22 / 1.45
-(v1 2.80 / 2.23 / 1.43). Training loss levelled near 4.0 on unseen text, so data helps math only: the deterministic
-predictor sits on the averaging floor. The sampler (flow matching from v2) is next.
+(v1 2.80 / 2.23 / 1.43). Training loss levelled at about 3.8 to 4.1 nats after more than one pass over the 2M
+PerfectBlend positions; data helped math only. That fits a deterministic predictor averaging over futures, but the flat
+code and chat results are also confounded with PerfectBlend's domain mix. The sampler (flow matching from v2) is next.
 
 Full end-to-end benchmark (`e2e.py`, 20 prompts per set, 256 new tokens, `results/e2e.json`):
 
@@ -527,7 +528,9 @@ Full end-to-end benchmark (`e2e.py`, 20 prompts per set, 256 new tokens, `result
 | DFlash (15 drafted) | 3.15 | 2.49x | 5.51 | 5.17x | 10.01 | 8.26x |
 
 Plain greedy ran at 21.2 / 15.9 / 19.2 tok/s. The low GSM8K baseline inflates every GSM8K speedup by the same factor.
-All drafters give identical text on every prompt. Differences from plain greedy (15 / 9 / 5 prompts) are 4-bit
+Drafters with the same verification width give identical text (dflash8, gister, gister_v2 in
+`e2e.json`). Wider verification (DFlash's 16 tokens, trees of 30 to 120 nodes) diverges differently at near-ties
+under 4-bit batched numerics, so the identical counts differ by drafter. Differences from plain greedy (15 / 9 / 5 prompts) are 4-bit
 batched-verify numerics, the same for every drafter.
 
 Gister sampler (`stage2.py --mode flow --raw --train_cache cache_pb --d 1024 --depth 12 --dec_w 0 --t_shift 3
@@ -542,7 +545,7 @@ Gister sampler (`stage2.py --mode flow --raw --train_cache cache_pb --d 1024 --d
 | sampler, best of 16 | 4.00 | 2.86 | 1.84 |
 
 Samples are distinct (8 draws give 7.6 to 8 different drafts). Best-of-K beats the deterministic predictor from K=4
-and grows about +0.3 tokens per doubling of K, in every domain. Best-of-K is the ceiling of a K-branch tree, not a
+and grows per doubling of K (8 to 16, 2 flow steps) by +0.31 math, +0.25 code, +0.13 chat. Best-of-K is the ceiling of a K-branch tree, not a
 speedup: verification of the tree is not built yet. Still far below DFlash's single chain (5.88 / 5.59 / 2.68).
 
 Flow steps at sampling time (offline, best of 8, out of 9): 8 steps 3.67 / 2.59 / 1.70, 2 steps 3.72 / 2.64 / 1.72,
@@ -560,10 +563,80 @@ target pass with a tree attention mask; a one-branch tree reproduces the chain p
 | tree, 8 samples + chain, 1 step | 1.80 | 1.36x | 2.79 | 2.29x | 1.90 | 1.62x |
 
 Trees raise tau 18% to 31%, as predicted offline, with no net speedup yet: a tree round costs 122 to 146 ms
-against 100 to 104 ms for the chain. Verifying up to 112 nodes costs the same as one decode step
+against 100 to 104 ms for the chain. Under desktop GPU contention verifying up to 112 nodes cost about the same as one decode step;
+on an idle GPU it does not (see the audited section below)
 (`profile_tree.py`), so the overhead is drafting and tree bookkeeping, being cut. Desktop apps shared the GPU during
 this run (plain greedy 10 tok/s against 21 earlier), which lowers absolute speeds but not the comparison. On a
 larger target the fixed draft cost is a smaller share of each round.
+
+## Gister, audited state (25 Nov)
+
+This section supersedes earlier Gister statements where they differ. It reflects three adversarial reviews
+(`deck/neon_audit_b1_code.md`, `deck/neon_audit_b2_claims.md`, `deck/neon_audit_b3_novelty.md`) and the fixes made
+in response. All results are greedy decoding on the Qwen3-8B 4-bit target, one RTX 4070 Ti.
+
+**Stage 1 fails its gate on both checks.** Top-1 agreement 99.41 / 99.01 / 97.32% is below the 99.5 / 99.5 / 99.0%
+bar on all three sets, and total variation 0.060 / 0.064 / 0.202 is far above 0.005 / 0.005 / 0.01
+(`ae_gate_gist_hf_z2048.json`, `agree_ok` and `tv_ok` false everywhere). Everything below is scoped to greedy
+decoding. Stage 1 only reached this level once the encoder was given the LM-head row of each state's own top-1
+token (`--headfeat`), and the middle layers barely mattered (z1024 final row only 93.7 / 92.3 / 76.8 vs full grid
+94.0 / 92.6 / 77.6). So the latent is closer to "token chunk plus the final-layer state" than to a multi-layer plan.
+
+**Stage 2, offline (accepted per round out of 9, HF top-1 labels, same dev rounds):**
+
+| Stage 2 | Math | Code | Chat |
+|---|---|---|---|
+| deterministic, 154M, 2M positions (v2) | 3.08 | 2.22 | 1.45 |
+| same, plus 64 positions of gist history (`_h8`, 20M, old cache) | 2.81 | 2.15 | 1.39 |
+| flow sampler 158M / 2M positions, warm-started from v2, 2 steps: one sample | 2.85 | 1.95 | 1.41 |
+| best of 8 | 3.72 (+21%) | 2.64 (+19%) | 1.72 (+18%) |
+| best of 16 | 4.04 (+31%) | 2.89 (+30%) | 1.85 (+27%) |
+| flow sampler 285M / 6M positions, from scratch, 2 steps: one sample | 3.04 | 2.08 | 1.46 |
+| best of 8 | 3.94 (+28%) | 2.73 (+23%) | 1.77 (+22%) |
+| best of 16 | 4.18 (+36%) | 3.06 (+38%) | 1.92 (+32%) |
+| DFlash chain, capped at 8 drafted (`dflash_s2_latent.json`, `accepted_chain`) | 5.88 | 5.59 | 2.68 |
+| DFlash tree, 64 nodes (`prune_oracle.json`, `none.tree64`) | 7.00 | 6.94 | 3.69 |
+| stage-1 reconstruction ceiling (true next gist decoded, not a drafter) | 8.51 | 8.47 | 7.63 |
+
+Percentages are against the deterministic v2. Per doubling of K (8 to 16): +0.31 / +0.25 / +0.13 (158M),
++0.24 / +0.33 / +0.15 (285M). Distinct drafts out of 8: 7.3 to 8.0. Drafted tokens accepted (tau minus the free bonus
+token): Gister 285M best of 8 is 2.94 / 1.73 / 0.77, which is 49% / 29% / 29% of DFlash's 64-node tree and 60% / 38% /
+46% of DFlash's capped chain. Best of K is the ceiling for a K-branch tree, not a measured speedup.
+
+The 158M to 285M step changes four things at once (parameters, 3x data, width and depth, warm start vs from
+scratch), so it is one confounded scaling point: +3 to 7% per metric. The gist-history ablation shows no gain from
+64 positions of gist history. Two ablations are running: the target's raw states for the 56 positions before the
+chunk (full-context test) and a direct-token control with no latent (does the gist beat predicting tokens directly?).
+
+**End to end on an idle GPU** (`e2e_final.json`, 20 prompts per set, 256 new tokens, plain greedy 22.5 / 21.6 /
+22.3 tok/s, bf16 drafting for every drafter, no extra round after end of sequence):
+
+| | MT-Bench tau | speedup | GSM8K tau | speedup | HumanEval tau | speedup | ms per round |
+|---|---|---|---|---|---|---|---|
+| DFlash (released, 15 drafted) | 3.15 | 2.69x | 5.52 | 4.73x | 10.01 | 7.89x | 52 to 57 |
+| Gister v2 chain | 1.60 | 1.34x | 2.38 | 2.05x | 1.67 | 1.40x | 53 to 54 |
+| Gister tree, 4 samples + chain (285M sampler) | 1.89 | 1.08x | 2.96 | 1.75x | 2.00 | 1.16x | 77 to 78 |
+| Gister tree, 8 samples + chain (285M sampler) | 1.99 | 1.07x | 3.13 | 1.77x | 2.11 | 1.14x | 82 to 83 |
+
+- Gister's chain and DFlash cost the same per round. DFlash wins entirely on accepted tokens.
+- Trees raise tau 18 to 32% but cost 45 to 55% more per round, so every tree is slower than the chain here.
+  Profiled on the idle GPU (`profile_tree.py`, 09:00 run): plain decode step 39 ms; chain draft 11 ms + verify 40 ms;
+  tree of 67 nodes draft 30 ms + verify 62 ms; 120 nodes draft 49 ms + verify 78 ms. Verification is not flat in
+  tree size on an idle GPU (the earlier flat profile was taken under desktop contention), and the 4-bit bitsandbytes
+  kernels make all of these numbers specific to this setup. bf16 or FP8 engines change both draft and verify costs.
+- Identical outputs: drafters with the same verification width agree on every prompt; wider verification diverges
+  at near-ties under 4-bit batched numerics (counts in the JSON).
+
+**Data hygiene.** PerfectBlend prompts used for training (first 14,000 conversations of shard 0) were checked
+against all benchmark and dev prompts: no exact or near (first 120 characters) matches for MT-Bench, GSM8K test,
+HumanEval, MBPP validation or UltraChat test; 1 of 40 GSM8K-train holdout prompts shares its first 120 characters.
+
+**Positioning (from the novelty review).** The closest prior work is ChainFlow (VAE over target hidden states, flow
+to 8 future positions, frozen LM head, greedy tree), FlashMap (flow from multi-layer Qwen3-8B states, several noise
+draws merged into a tree), MFD and DBLast (latent-conditioned coherent multi-future trees), CALM (one continuous latent
+per token chunk) and DFlash with DDTree. Gister's specific combination is sampling several continuous latents of an
+8-token chunk of the target's own future states and decoding each jointly. Whether that beats a per-slot product tree
+at a matched node budget has not been tested; that comparison is the first experiment to run with more compute.
 
 ## What the results say
 

@@ -84,7 +84,7 @@ def main():
             log = run(t, tok, dr, chat(tok, text), args.rounds)
             res["examples"].append({"set": s, "prompt": text, "rounds": log})
             print(s, "mean kept", round(float(np.mean([r["kept_tokens"] for r in log])), 2), flush=True)
-    json.dump(res, open(os.path.join(RES, "examples.json"), "w"), indent=1, ensure_ascii=False)
+    json.dump(res, open(os.path.join(RES, "examples.json"), "w", encoding="utf-8"), indent=1, ensure_ascii=False)
     print("=== examples done", flush=True)
 
 

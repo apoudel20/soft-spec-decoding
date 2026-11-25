@@ -1,0 +1,36 @@
+{
+ "source": "profile_tree.py stdout, 25 Nov 09:00, idle GPU (RTX 4070 Ti), Qwen3-8B nf4, context = MT-Bench prompt + 200 tokens; flow rows use 2 Euler steps; before the bf16-drafting fix in e2e.py",
+ "plain_decode_step_ms": 38.9,
+ "rows": [
+  {
+   "name": "chain v2",
+   "nodes": 9,
+   "draft_ms": 11.2,
+   "verify_ms": 40.2
+  },
+  {
+   "name": "flow 158M K=4",
+   "nodes": 31,
+   "draft_ms": 15.4,
+   "verify_ms": 42.0
+  },
+  {
+   "name": "flow 158M K=8 + chain",
+   "nodes": 60,
+   "draft_ms": 22.0,
+   "verify_ms": 50.5
+  },
+  {
+   "name": "flow 285M K=8 + chain",
+   "nodes": 67,
+   "draft_ms": 30.3,
+   "verify_ms": 62.2
+  },
+  {
+   "name": "flow 285M K=16 + chain",
+   "nodes": 120,
+   "draft_ms": 49.1,
+   "verify_ms": 78.4
+  }
+ ]
+}
