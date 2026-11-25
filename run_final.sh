@@ -5,7 +5,7 @@ P=.venv/Scripts/python
 until grep -q "=== scale done" logs/run_scale2.log 2>/dev/null; do sleep 60; done
 sleep 30
 echo "=== final benchmark $(date +%H:%M)"
-$P e2e.py --sets mtbench gsm8k humaneval --n 20 --max_new 256 --drafters dflash gister_v2 gister_tree16d_n2 "gister_tree16d_n2@stage2_gister_flow_big" --out e2e_final > logs/e2e_final.log 2>&1
+$P e2e.py --sets mtbench gsm8k humaneval --n 20 --max_new 256 --drafters dflash gister_v2 "gister_tree4d_n2@stage2_gister_flow_big" "gister_tree8d_n2@stage2_gister_flow_big" --out e2e_final > logs/e2e_final.log 2>&1
 grep -vE "^W1" logs/e2e_final.log | grep -E "AR|tau"
 echo "=== examples $(date +%H:%M)"
 $P examples.py --s2 stage2_gister_flow_big --k 8 --rounds 12 > logs/examples.log 2>&1 || $P examples.py --s2 stage2_gister_flow --k 8 --rounds 12 > logs/examples.log 2>&1
@@ -26,3 +26,12 @@ else
   echo "CTX SMOKE FAILED"; grep -vE "^W1" logs/stage2_ctx_smoke.log | tail -8
 fi
 echo "=== full-context done $(date +%H:%M)"
+echo "=== direct-token ablation $(date +%H:%M)"
+$P stage2.py --ae gist_hf_z2048 --mode det --raw --direct --smoke > logs/stage2_direct_smoke.log 2>&1
+if grep -q "=== stage2" logs/stage2_direct_smoke.log; then
+  $P stage2.py --ae gist_hf_z2048 --mode det --raw --direct --steps 6000 > logs/stage2_direct.log 2>&1
+  grep -E "^dev_.*\{|===" logs/stage2_direct.log | cut -c1-200
+else
+  echo "DIRECT SMOKE FAILED"; grep -vE "^W1" logs/stage2_direct_smoke.log | tail -8
+fi
+echo "=== all done $(date +%H:%M)"

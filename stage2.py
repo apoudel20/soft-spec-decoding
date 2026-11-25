@@ -110,7 +110,7 @@ class ZStore:
 
 
 class Search(nn.Module):
-    def __init__(self, nq, zq, d=512, depth=6, H=1, raw=0, D=4096):
+    def __init__(self, nq, zq, d=512, depth=6, H=1, raw=0, D=4096, out_dim=None):
         super().__init__()
         self.nq = nq
         self.cin, self.xin = nn.Linear(zq, d), nn.Linear(zq, d)
@@ -120,7 +120,7 @@ class Search(nn.Module):
             self.rin = nn.Sequential(nn.LayerNorm(D), nn.Linear(D, d))
             self.rpos = nn.Parameter(torch.randn(raw, d) * 0.02)
         self.body = tblock(d, depth)
-        self.out = nn.Sequential(nn.LayerNorm(d), nn.Linear(d, zq))
+        self.out = nn.Sequential(nn.LayerNorm(d), nn.Linear(d, out_dim or zq))
 
     def forward(self, zc, xt, t, raw=None):    # zc, xt (B, nq, zq) normalised, t (B,), raw (B, R*k, D)
         f = torch.exp(torch.linspace(0, np.log(1000), 32, device=t.device))
@@ -147,6 +147,9 @@ def main():
     ap.add_argument("--hist", type=int, default=1, help="number of past chunk latents the search network reads")
     ap.add_argument("--raw", action="store_true",
                     help="also feed the target's raw states (all cached layers) at the current chunk's positions")
+    ap.add_argument("--direct", action="store_true",
+                    help="ablation: no latent. Predict the next 8 head-input states directly and decode with the LM "
+                         "head (token loss only); the current gist and raw states are still the input")
     ap.add_argument("--ctx_pos", type=int, default=0,
                     help="also feed raw states of this many positions before the chunk (zeros where outside the answer)")
     ap.add_argument("--ctx_layers", default="30,36", help="cached layers used for the --ctx_pos context rows")
@@ -274,7 +277,13 @@ def main():
     zm, zs = sub.mean(0).to(dev), sub.std(0).clamp_min(1e-4).to(dev)
 
     nraw = (R * k + len(args.ctx_layers.split(",")) * args.ctx_pos) if args.raw else 0
-    net = Search(nq, ae.zq, args.d, args.depth, args.hist, nraw, W.shape[1]).to(dev)
+    nq_out = k if args.direct else nq           # direct: one output query per drafted position
+    assert not (args.direct and args.mode != "det"), "--direct is a deterministic ablation"
+    net = Search(nq, ae.zq, args.d, args.depth, args.hist, nraw, W.shape[1],
+                 out_dim=W.shape[1] if args.direct else None).to(dev)
+    if args.direct:                             # output queries: k positions instead of nq latent tokens
+        net.nq = k
+        net.pos = nn.Parameter(torch.randn(args.hist * nq + k, args.d, device=dev) * 0.02)
     if args.init:                               # shapes that changed (e.g. rpos with --ctx_pos) start fresh
         sd, own = torch.load(os.path.join(CKPT, f"{args.init}.pt"), map_location="cpu")["model"], net.state_dict()
         keep = {kk: v for kk, v in sd.items() if kk in own and own[kk].shape == v.shape}
@@ -327,9 +336,12 @@ def main():
         sig = 1 - u
         return 1 - args.t_shift * sig / (1 + (args.t_shift - 1) * sig)
 
+    def to_head(o):                             # stage-2 output -> head inputs (B, k, D)
+        return unz(o.float()) if args.direct else dec_final(o * zs + zm)
+
     def predict(zc_n, g=None, raw=None):        # normalised z_t -> normalised z_t+1 (a sample in flow mode)
         B = zc_n.shape[0]
-        shp = (B, nq, ae.zq)
+        shp = (B, nq_out, ae.zq)
         raw = raw.float() if raw is not None else None
         if args.mode == "det":
             return net(zc_n, torch.zeros(shp, device=dev), torch.zeros(B, device=dev), raw)
@@ -351,8 +363,8 @@ def main():
         lab = torch.from_numpy(T1["train"][(s + k)[:, None] + np.arange(k)[None]]).to(dev)
         with torch.autocast("cuda", torch.bfloat16):
             if args.mode == "det":
-                z1h = net(zc, torch.zeros_like(z1), torch.zeros(args.B, device=dev), rx).float()
-                lat = F.mse_loss(z1h, z1)
+                z1h = net(zc, torch.zeros(args.B, nq_out, ae.zq, device=dev), torch.zeros(args.B, device=dev), rx).float()
+                lat = torch.zeros((), device=dev) if args.direct else F.mse_loss(z1h, z1)
             else:
                 x0 = torch.randn_like(z1)
                 t = tmap(torch.rand(args.B, device=dev))
@@ -363,7 +375,7 @@ def main():
         loss = args.lat_w * lat
         kl = torch.zeros((), device=dev)
         if args.dec_w:                          # decoded next chunk must give the target's own next 8 tokens
-            lq = logp(dec_final(z1h * zs + zm).flatten(0, 1))
+            lq = logp(to_head(z1h).flatten(0, 1))
             kl = F.nll_loss(lq, lab.flatten())
             loss = loss + args.dec_w * kl
         opt.zero_grad(set_to_none=True)
@@ -377,7 +389,7 @@ def main():
             print(json.dumps(r), flush=True)
             if not np.isfinite(loss.item()):
                 raise SystemExit("non-finite loss")
-    tag = f"{'eval_' if args.eval_only else ''}{args.ae}_{args.mode}{'_raw' if args.raw else ''}{f'_ctx{args.ctx_pos}' if args.ctx_pos else ''}{f'_{args.train_cache.replace(",", "+")}' if args.train_cache else ''}{f'_lat{args.lat_w:g}' if args.lat_w != 1 else ''}{f'_h{args.hist}' if args.hist > 1 else ''}{f'_d{args.d}x{args.depth}' if (args.d, args.depth) != (512, 6) else ''}{f'_s{args.steps}' if args.steps != 6000 else ''}{f'_nfe{args.nfe}' if args.mode == 'flow' and args.nfe != 8 else ''}{'_smoke' if args.smoke else ''}"
+    tag = f"{'eval_' if args.eval_only else ''}{args.ae}_{args.mode}{'_direct' if args.direct else ''}{'_raw' if args.raw else ''}{f'_ctx{args.ctx_pos}' if args.ctx_pos else ''}{f'_{args.train_cache.replace(",", "+")}' if args.train_cache else ''}{f'_lat{args.lat_w:g}' if args.lat_w != 1 else ''}{f'_h{args.hist}' if args.hist > 1 else ''}{f'_d{args.d}x{args.depth}' if (args.d, args.depth) != (512, 6) else ''}{f'_s{args.steps}' if args.steps != 6000 else ''}{f'_nfe{args.nfe}' if args.mode == 'flow' and args.nfe != 8 else ''}{'_smoke' if args.smoke else ''}"
     if not args.smoke and not args.eval_only:
         torch.save({"model": net.state_dict(), "args": vars(args), "zm": zm.cpu(), "zs": zs.cpu()},
                    os.path.join(CKPT, f"stage2_{tag}.pt"))
@@ -402,9 +414,10 @@ def main():
                 zc = Z[sp][s].float().to(dev)
                 zh = ctx(sp, s)
                 lab = torch.from_numpy(top1[(s + k)[:, None] + np.arange(k)[None]].astype(np.int64))
-                zp = predict(zh, g, rawx(sp, s)) * zs + zm
-                for kind, z in (("pred", zp), ("oracle", Z[sp][s + k].float().to(dev)), ("copy", zc)):
-                    tok = logp(dec_final(z).flatten(0, 1)).argmax(-1).view(len(s), k).cpu()
+                po = predict(zh, g, rawx(sp, s))
+                heads = {"pred": to_head(po), "oracle": dec_final(Z[sp][s + k].float().to(dev)), "copy": dec_final(zc)}
+                for kind, hx in heads.items():
+                    tok = logp(hx.flatten(0, 1)).argmax(-1).view(len(s), k).cpu()
                     eq = (tok == lab).int()
                     out[kind].append(eq.cumprod(1).sum(1) + 1)
                     if kind == "pred":
