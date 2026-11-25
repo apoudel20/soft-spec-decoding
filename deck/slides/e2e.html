@@ -8,7 +8,7 @@
 <tr><td>Gister, tree of 4 samples + chain</td><td style="text-align:right">1.08x</td><td style="text-align:right">1.75x</td><td style="text-align:right">1.16x</td><td style="text-align:right">77 to 78</td></tr>
 <tr><td>Gister, tree of 8 samples + chain</td><td style="text-align:right">1.07x</td><td style="text-align:right">1.77x</td><td style="text-align:right">1.14x</td><td style="text-align:right">82 to 83</td></tr>
 </table>
-<p class="lead">Gister’s chain and DFlash take about the same time per round, and DFlash accepts more tokens. Trees raise acceptance by 18 to 32% but increase round time by 45 to 55%, from sampling K latents and verifying 60 to 120 nodes with 4-bit kernels.</p>
-<p class="note" style="color:#9AA7B8">Qwen3-8B 4-bit on an otherwise idle RTX 4070 Ti (target alone: 22 tok/s). Greedy, 20 prompts per set, 256 new tokens. All drafters use the same decoding loop, checked against DFlash’s own implementation.</p>
+<p class="lead">Every tree is slower than the chain on this GPU. Trees raise accepted tokens per round by 18 to 31% but increase round time by 45 to 56%, from sampling K latents and verifying 33 to 62 nodes. Gister’s chain and DFlash take about the same time per round, and DFlash accepts more tokens.</p>
+<p class="note" style="color:#9AA7B8">Qwen3-8B 4-bit on an otherwise idle RTX 4070 Ti (target alone: 22 tok/s). Greedy, 20 prompts per set, 256 new tokens. All drafters use the same decoding loop, checked against DFlash’s own implementation. A target step costs about 39 ms in 4-bit, so these ratios are specific to this setup. An earlier 12% tree speedup was measured on a GPU shared with other applications and is withdrawn.</p>
 <aside>Source: results/e2e_final.json. An earlier tree speedup of 12% was measured on a throttled GPU and has been withdrawn.</aside>
 </section>

@@ -2,8 +2,8 @@
 
 The slides themselves are in `deck/slides/`. This file lists what each one covers.
 
-1. Cover. Gister drafts by sampling latents of Qwen3-8B's future hidden states. Output equals the target's greedy
-   decoding. Results are from one RTX 4070 Ti.
+1. Cover. Gister drafts by sampling latents of Qwen3-8B's future hidden states. The target verifies with the same greedy
+   rule as DFlash. Results are from one RTX 4070 Ti.
 2. Method. Stage 1 autoencoder (8 positions, layers 18/24/30/36, 2,048-d latent, frozen LM head). Stage 2 flow
    sampler (2 Euler steps). K samples merged into a tree and verified in one pass. Related work: ChainFlow, FlashMap,
    MFD, DBLast, CALM, DFlash and DDTree.

@@ -5,9 +5,9 @@
 <tr><th style="width:52%">Flow sampler, 2 steps. One sample / best of 16</th><th style="text-align:right">Math</th><th style="text-align:right">Code</th><th style="text-align:right">Chat</th></tr>
 <tr><td>158M, 2M positions</td><td style="text-align:right">2.85 / 4.04</td><td style="text-align:right">1.95 / 2.89</td><td style="text-align:right">1.41 / 1.85</td></tr>
 <tr><td>285M, 6M positions</td><td style="text-align:right">3.04 / 4.18</td><td style="text-align:right">2.08 / 3.06</td><td style="text-align:right">1.46 / 1.92</td></tr>
-<tr><td>158M, 2M positions, + 56 earlier positions</td><td style="text-align:right">3.00 / 4.25</td><td style="text-align:right">2.00 / 2.83</td><td style="text-align:right">1.43 / 1.82</td></tr>
+<tr><td>158M, 2M positions, + 56 earlier positions</td><td style="text-align:right">3.01 / 4.25</td><td style="text-align:right">2.00 / 2.83</td><td style="text-align:right">1.42 / 1.82</td></tr>
 </table>
-<p class="lead" style="font-size:30px">Tripling the data and roughly doubling the model gives 3 to 7%. Conditioning on the target’s states at 56 earlier positions gives +5% on math (best of 16) and no change on code or chat. Neither closes much of the gap to the oracle.</p>
-<p class="note">Not controlled comparisons. The 285M model was trained from scratch and the 158M models were warm-started. The context run used batch 64. Training data is Qwen3-8B’s own non-thinking answers (PerfectBlend regeneration), with no overlap with MT-Bench, GSM8K test, HumanEval, MBPP validation or UltraChat test.</p>
-<aside>Sources: the _nfe2 stage-2 JSONs, including stage2_gist_hf_z2048_flow_raw_ctx56_cache_pb_d1024x12_s20000_nfe2.json.</aside>
+<p class="lead" style="font-size:30px">Tripling the data and roughly doubling the model gives 3 to 7%. Conditioning on the target’s states at 56 earlier positions gives +5% on math (best of 16) and −1 to −2% on code and chat. Neither closes much of the gap to the oracle.</p>
+<p class="note">Not controlled comparisons. The 285M model was trained from scratch for 24k steps. The 158M models were warm-started from the deterministic model. The context run used batch 64 instead of 128, 20k steps, and context from layers 30 and 36 only. Training data is Qwen3-8B’s own non-thinking answers (PerfectBlend regeneration). It has no overlap with MT-Bench, GSM8K test, HumanEval, MBPP validation or UltraChat test. 1 of 40 GSM8K-train prompts used as the math dev set shares its first 120 characters with a training prompt.</p>
+<aside>Sources: the _nfe2 stage-2 JSONs, including stage2_gist_hf_z2048_flow_raw_ctx56_cache_pb_d1024x12_s20000_nfe2.json. One sample is accepted_single_k8 throughout.</aside>
 </section>

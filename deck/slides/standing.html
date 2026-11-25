@@ -2,15 +2,15 @@
 <p class="eyebrow">7 · COMPARISON</p>
 <h2>Comparison with DFlash</h2>
 <div class="row">
-<div class="card"><p class="label">Gister best of 8 as a fraction of DFlash with a 64-node tree, drafted tokens accepted (bonus token excluded)</p><p class="big">49 / 29 / 29%</p><p class="label">math / code / chat, equal node budget, offline</p></div>
-<div class="card"><p class="label">Gister best of 8 as a fraction of the DFlash chain</p><p class="big">60 / 38 / 46%</p><p class="label">math / code / chat</p></div>
+<div class="card"><p class="label">Gister 285M best of 8 as a fraction of DFlash with a 64-node tree. Drafted tokens accepted, bonus token excluded</p><p class="big">49 / 29 / 29%</p><p class="label">math / code / chat. Offline, at most 64 token slots each, different drafters (285M vs about 1B)</p></div>
+<div class="card"><p class="label">Gister 285M best of 8 as a fraction of the DFlash chain capped at 8 drafted, bonus excluded</p><p class="big">60 / 38 / 46%</p><p class="label">math / code / chat, offline</p></div>
 </div>
 <table>
 <tr><th style="width:40%">Published results, other hardware</th><th>Qwen3-8B</th></tr>
-<tr><td>DFlash, block 16</td><td>4.86x average, 2.75x MT-Bench (H200)</td></tr>
-<tr><td>EAGLE-3, tree of 60</td><td>1.90x MT-Bench (H200)</td></tr>
+<tr><td>DFlash, block 16</td><td>4.86x average, 2.75x MT-Bench</td></tr>
+<tr><td>EAGLE-3, tree of 60</td><td>1.90x MT-Bench</td></tr>
 <tr><td>DSpark</td><td>τ = 3.72 on MT-Bench, temperature 1</td></tr>
-<tr><td>DFlash 2 (RedHatAI)</td><td>block 8, acceptance reported by the vendor only</td></tr>
 </table>
-<aside>The published numbers use different hardware and are not directly comparable. A comparison against per-position trees at equal node count is test 3 on the last slide.</aside>
+<p class="note">Published numbers use different hardware and precision and are not directly comparable with our 4-bit RTX 4070 Ti runs. A comparison of sampled-latent trees with per-position trees at equal verified nodes is test 3 on the last slide.</p>
+<aside>DFlash and EAGLE-3 numbers are from the DFlash paper’s Qwen3-8B table. DSpark is from its paper.</aside>
 </section>

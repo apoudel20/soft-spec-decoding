@@ -473,8 +473,8 @@ top-1, on held-out dev windows. Gate fixed before training: 99.5% math and code,
 ### Gist autoencoder and stage 2 (later runs)
 
 - Adding the head feature (`--headfeat`, the frozen head row of each final state's own top-1, fed to the encoder)
-  plus a top-1 cross-entropy loss lifts stage 1 to 99.4% / 99.0% / 97.3% (`ae_gate_gist_hf_z2048.json`). Near the
-  gate, not over it on chat. Prefix context (`--ctx 8`) made stage 1 worse (92.5 / 91.0 / 72.9).
+  plus a top-1 cross-entropy loss lifts stage 1 to 99.4% / 99.0% / 97.3% (`ae_gate_gist_hf_z2048.json`). Below the
+  gate on all three sets (99.5 / 99.5 / 99.0%). Prefix context (`--ctx 8`) made stage 1 worse (92.5 / 91.0 / 72.9).
 - A token-chunk VAE control (`tok_vae_z128.json`, tokens only) gets 98.4% / 97.4% / 94.8%.
 - Stage 2 (`stage2.py`, deterministic, 6,000 steps) predicts the next chunk latent. Accepted per round out of 9,
   math / code / chat: gist 2.17 / 1.80 / 1.34, token latent 1.75 / 1.46 / 1.18, true next latent 8.51 / 8.47 /
@@ -626,14 +626,16 @@ batch 64, 20k steps): best of 16 is 4.25 / 2.83 / 1.82 against 4.04 / 2.89 / 1.8
 | Gister tree, 8 samples + chain (285M sampler) | 1.99 | 1.07x | 3.13 | 1.77x | 2.11 | 1.14x | 82 to 83 |
 
 - Gister's chain and DFlash take the same time per round. The difference is in accepted tokens.
-- Trees raise tau 18 to 32% but cost 45 to 55% more per round, so every tree is slower than the chain here.
+- Trees raise tau 18 to 31% but cost 45 to 56% more per round (33 to 37 nodes for 4 samples, 54 to 62 for 8), so
+  every tree is slower than the chain here.
   Profiled on the idle GPU (`profile_tree.py`, 09:00 run): plain decode step 39 ms; chain draft 11 ms + verify 40 ms;
   tree of 67 nodes draft 30 ms + verify 62 ms; 120 nodes draft 49 ms + verify 78 ms (285M sampler, before the
 bf16-drafting fix, fixed context of prompt + 200 tokens; the end-to-end rows above include the fix). Verification is not flat in
   tree size on an idle GPU (the earlier flat profile was taken under desktop contention), and the 4-bit bitsandbytes
   kernels make all of these numbers specific to this setup. bf16 or FP8 engines change both draft and verify costs.
-- Identical outputs: drafters with the same verification width agree on every prompt; wider verification diverges
-  at near-ties under 4-bit batched numerics (counts in the JSON).
+- Identical outputs: compared with target-only greedy decoding, outputs match on 4 to 18 of 20 prompts per set for
+  Gister and 4 to 15 for DFlash. In the earlier DFlash check every first difference was at a near-tie, which batched 4-bit verification resolves
+  differently from single-token steps (counts in the JSON).
 
 **Data hygiene.** PerfectBlend prompts used for training (first 14,000 conversations of shard 0) were checked
 against all benchmark and dev prompts: no exact or near (first 120 characters) matches for MT-Bench, GSM8K test,
@@ -650,8 +652,13 @@ equal node count. That comparison is one of the proposed experiments.
 encodes those tokens. The proposal is a latent over the next 64 to 256 tokens, trained by prediction in latent space
 (JEPA-style, EMA target encoder, variance regularization), sampled with flow matching, and read by a decoder trained
 with it from the start. The first test trains that decoder with the latent of the true future and compares it with the
-same decoder without the latent. Earlier plan experiments (sections above) added one averaged vector to a frozen DFlash
-and do not cover this case.
+same decoder without the latent. Earlier plan experiments (sections above) added one averaged future vector to DFlash, frozen
+and fine-tuned with LoRA r16 on 300 answers, and saw no gain even with the true future. They do not test a decoder
+trained from scratch with a latent of the future. Test 1 protocol: train the latent encoder first and freeze it, then
+train two decoders from scratch, one given z of the true future and one given z = 0. Continue only if the first accepts
+at least 20% more tokens on code and chat. Estimated compute for test 1: about one week on 4 A100- or H100-class GPUs,
+including data generation. Caching 4 layers for 100M positions takes about 3.2 TB, so larger runs compute states on
+the fly.
 
 ## What the results say
 

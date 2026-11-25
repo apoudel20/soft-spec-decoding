@@ -1,7 +1,7 @@
 <section id="cover" class="dark" style="justify-content:center;gap:40px">
-<p class="eyebrow">SPECULATIVE DECODING · QWEN3-8B</p>
+<p class="eyebrow">SPECULATIVE DECODING · QWEN3-8B (4-BIT)</p>
 <h1>Gister: speculative drafting<br>from sampled future latents</h1>
-<p class="lead">We train a generative model over Qwen3-8B’s future hidden states and use its samples as draft continuations, which the target then verifies. Output is identical to the target’s greedy decoding. Results are from a single RTX 4070 Ti. The last slide proposes what to run with more compute.</p>
-<p class="note" style="color:#9AA7B8">Greedy decoding throughout. All numbers are in results/ at github.com/apoudel20/soft-spec-decoding.</p>
+<p class="lead">We train a generative model over Qwen3-8B’s future hidden states and use its samples as draft continuations, which the target then verifies with the same greedy rule as DFlash. Results are from a single RTX 4070 Ti. The last slide proposes what to run with more compute.</p>
+<p class="note" style="color:#9AA7B8">Greedy decoding throughout. With the 4-bit target, near-ties can resolve differently in batched verification, so outputs match target-only decoding on 4 to 18 of 20 prompts per set (DFlash: 4 to 15). All numbers are in results/ at github.com/apoudel20/soft-spec-decoding.</p>
 <aside>Status: sampling in the latent space raises acceptance, but the drafter accepts fewer tokens than DFlash, and trees do not yet pay for their cost on this GPU.</aside>
 </section>

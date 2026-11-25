@@ -5,9 +5,10 @@
 <tr><th style="width:58%">Deterministic stage 2, accepted per round (max 9)</th><th style="text-align:right">Math</th><th style="text-align:right">Code</th><th style="text-align:right">Chat</th></tr>
 <tr><td>z<sub>t</sub> only, 20M</td><td style="text-align:right">2.17</td><td style="text-align:right">1.80</td><td style="text-align:right">1.34</td></tr>
 <tr><td>+ target hidden states, current 8 positions</td><td style="text-align:right">2.80</td><td style="text-align:right">2.23</td><td style="text-align:right">1.43</td></tr>
-<tr><td>+ 64 previous latents</td><td style="text-align:right">2.81</td><td style="text-align:right">2.15</td><td style="text-align:right">1.39</td></tr>
+<tr><td>+ 7 previous latents (64 positions)</td><td style="text-align:right">2.81</td><td style="text-align:right">2.15</td><td style="text-align:right">1.39</td></tr>
+<tr><td>Row 2 inputs, 8 tokens predicted directly (no latent)</td><td style="text-align:right">2.73</td><td style="text-align:right">2.16</td><td style="text-align:right">1.39</td></tr>
 <tr><td>154M, 2M positions of Qwen3-8B outputs</td><td style="text-align:right">3.08</td><td style="text-align:right">2.22</td><td style="text-align:right">1.45</td></tr>
 </table>
-<p class="lead" style="font-size:30px">With an oracle of 8.5 / 8.5 / 7.6, stage 2 is the limiting component. Conditioning on the target’s hidden states gives the largest gain. Latent history and model size add little. When the next 8 tokens are ambiguous, a deterministic regressor averages over the possible continuations, which motivates sampling.</p>
-<aside>Sources: stage2_gist_hf_z2048_det.json, _det_raw.json, _det_raw_h8.json, _det_raw_cache_pb_d1024x12_s20000.json.</aside>
+<p class="lead" style="font-size:30px">With an oracle of 8.5 / 8.5 / 7.6, stage 2 is the limiting component. Conditioning on the target’s hidden states gives the largest gain. Latent history adds nothing, and the 154M model on more data adds 10% on math only. Predicting tokens directly is about 3% worse than predicting the latent. When the next 8 tokens are ambiguous, a deterministic regressor averages over the possible continuations, which motivates sampling.</p>
+<aside>Sources: stage2_gist_hf_z2048_det.json, _det_raw.json, _det_raw_h8.json, _det_direct_raw.json, _det_raw_cache_pb_d1024x12_s20000.json. The 154M row also changes the training data mix.</aside>
 </section>

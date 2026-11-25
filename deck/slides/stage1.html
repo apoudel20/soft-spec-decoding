@@ -5,6 +5,6 @@
 <div class="card"><p class="label">Top-1 agreement with the target, 8 positions per latent</p><p class="big">99.4 / 99.0 / 97.3%</p><p class="label">math / code / chat</p></div>
 <div class="card teal"><p class="label">Accepted tokens per round if stage 2 predicted z exactly (max 9)</p><p class="big">8.5 / 8.5 / 7.6</p><p class="label">math / code / chat</p></div>
 </div>
-<div class="card orange"><h3>Limitations</h3><p>We required 99.5 / 99.5 / 99.0% top-1 and a total variation of 0.005 to 0.01. The autoencoder misses both (total variation 0.06 / 0.06 / 0.20), so all results are for greedy decoding. Reaching 99% required giving the encoder the LM-head row of each position’s top-1 token. In a z = 1,024 ablation, the last layer alone gives 93.7 / 92.3 / 76.8% against 94.0 / 92.6 / 77.6% for all four layers. The latent mostly encodes the 8 tokens.</p></div>
+<div class="card orange"><h3>Limitations</h3><p>We required 99.5 / 99.5 / 99.0% top-1 and a total variation of 0.005 to 0.01. The autoencoder misses both (total variation 0.06 / 0.06 / 0.20), so all results are for greedy decoding. Reaching these numbers required giving the encoder the LM-head row of each position’s top-1 token. In an earlier z = 1,024 ablation without that input, the last layer alone gives 93.7 / 92.3 / 76.8% against 94.0 / 92.6 / 77.6% for all four layers. The latent mostly encodes the 8 tokens.</p></div>
 <aside>Source: results/ae_gate_gist_hf_z2048.json. The oracle row is accepted_oracle in the stage-2 result files.</aside>
 </section>
