@@ -103,8 +103,14 @@ def main():
                     help="also feed the target's raw states (all cached layers) at the current chunk's positions")
     ap.add_argument("--train_cache", default="", help="train split from data/<this> (e.g. cache_pb); dev stays on the stage-1 cache")
     ap.add_argument("--init", default="", help="start from ckpt/<this>.pt (same architecture)")
+    ap.add_argument("--t_shift", type=float, default=1.0,
+                    help="flow: shift timesteps towards noise (SD3/RAE style; about 3 for a 2,048-dim latent)")
+    ap.add_argument("--bestk", default="", help="flow eval: comma list of K; report best-of-K sampled drafts")
+    ap.add_argument("--eval_only", action="store_true", help="no training; evaluate --init")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
+    if args.eval_only:
+        args.steps = 0
     assert not (args.raw and args.tok), "--raw needs a state-cache stage-1 model"
     dev = "cuda"
     if args.smoke:
@@ -210,19 +216,24 @@ def main():
         return z.flatten(1, 2)
     opt = torch.optim.AdamW(net.parameters(), lr=args.lr, weight_decay=0.01)
     sched = torch.optim.lr_scheduler.LambdaLR(
-        opt, lambda s: min(1, (s + 1) / 500) * max(0.1, 0.5 * (1 + np.cos(np.pi * min(1, s / args.steps)))))
+        opt, lambda s: min(1, (s + 1) / 500) * max(0.1, 0.5 * (1 + np.cos(np.pi * min(1, s / max(1, args.steps))))))
     print(f"search params {sum(p.numel() for p in net.parameters()) / 1e6:.1f}M", flush=True)
 
-    def predict(zc_n, g=None, raw=None):        # normalised z_t -> normalised z_t+1
+    def tmap(u):                                # data at t=1; shift spends more steps near noise
+        sig = 1 - u
+        return 1 - args.t_shift * sig / (1 + (args.t_shift - 1) * sig)
+
+    def predict(zc_n, g=None, raw=None):        # normalised z_t -> normalised z_t+1 (a sample in flow mode)
         B = zc_n.shape[0]
         shp = (B, nq, ae.zq)
         raw = raw.float() if raw is not None else None
         if args.mode == "det":
             return net(zc_n, torch.zeros(shp, device=dev), torch.zeros(B, device=dev), raw)
         x = torch.randn(shp, device=dev, generator=g)
+        grid = tmap(torch.linspace(0, 1, args.nfe + 1, device=dev))
         for i in range(args.nfe):
-            t = torch.full((B,), i / args.nfe, device=dev)
-            x = x + net(zc_n, x, t, raw) / args.nfe
+            t = grid[i].expand(B)
+            x = x + net(zc_n, x, t, raw) * (grid[i + 1] - grid[i])
         return x
 
     rng = np.random.default_rng(0)
@@ -240,7 +251,7 @@ def main():
                 lat = F.mse_loss(z1h, z1)
             else:
                 x0 = torch.randn_like(z1)
-                t = torch.rand(args.B, device=dev)
+                t = tmap(torch.rand(args.B, device=dev))
                 xt = (1 - t)[:, None, None] * x0 + t[:, None, None] * z1
                 v = net(zc, xt, t, rx).float()
                 lat = F.mse_loss(v, z1 - x0)
@@ -262,8 +273,8 @@ def main():
             print(json.dumps(r), flush=True)
             if not np.isfinite(loss.item()):
                 raise SystemExit("non-finite loss")
-    tag = f"{args.ae}_{args.mode}{'_raw' if args.raw else ''}{f'_{args.train_cache}' if args.train_cache else ''}{f'_lat{args.lat_w:g}' if args.lat_w != 1 else ''}{f'_h{args.hist}' if args.hist > 1 else ''}{f'_d{args.d}x{args.depth}' if (args.d, args.depth) != (512, 6) else ''}{f'_s{args.steps}' if args.steps != 6000 else ''}{'_smoke' if args.smoke else ''}"
-    if not args.smoke:
+    tag = f"{'eval_' if args.eval_only else ''}{args.ae}_{args.mode}{'_raw' if args.raw else ''}{f'_{args.train_cache}' if args.train_cache else ''}{f'_lat{args.lat_w:g}' if args.lat_w != 1 else ''}{f'_h{args.hist}' if args.hist > 1 else ''}{f'_d{args.d}x{args.depth}' if (args.d, args.depth) != (512, 6) else ''}{f'_s{args.steps}' if args.steps != 6000 else ''}{'_smoke' if args.smoke else ''}"
+    if not args.smoke and not args.eval_only:
         torch.save({"model": net.state_dict(), "args": vars(args), "zm": zm.cpu(), "zs": zs.cpu()},
                    os.path.join(CKPT, f"stage2_{tag}.pt"))
 
@@ -296,6 +307,24 @@ def main():
                         slot.append(eq.float().mean(0))
         r = {"rounds": len(pairs), **{f"accepted_{kk}": torch.cat(v).float().mean().item() for kk, v in out.items()},
              "slot_top1_pred": torch.stack(slot).mean(0).tolist(), "max_per_round": k + 1}
+        if args.bestk and args.mode == "flow":   # K sampled futures per round: best one = ceiling of a K-branch tree
+            for K in [int(x) for x in args.bestk.split(",")]:
+                best, single, distinct = [], [], []
+                with torch.no_grad():
+                    for i in range(0, len(pairs), 32):
+                        s = pairs[i:i + 32]
+                        zh, rx = ctx(sp, s), rawx(sp, s)
+                        zp = predict(zh.repeat_interleave(K, 0), g,
+                                     rx.repeat_interleave(K, 0) if rx is not None else None) * zs + zm
+                        tok = logp(dec_final(zp).flatten(0, 1)).argmax(-1).view(len(s), K, k).cpu()
+                        lab = torch.from_numpy(top1[(s + k)[:, None] + np.arange(k)[None]].astype(np.int64))
+                        acc = (tok == lab[:, None]).int().cumprod(2).sum(2) + 1          # (B, K)
+                        best.append(acc.max(1).values)
+                        single.append(acc.float().mean(1))
+                        distinct.append(torch.tensor([len({tuple(x) for x in tok[j].tolist()}) for j in range(len(s))]))
+                r[f"accepted_best{K}"] = torch.cat(best).float().mean().item()
+                r[f"accepted_single_k{K}"] = torch.cat(single).mean().item()
+                r[f"distinct_drafts_k{K}"] = torch.cat(distinct).float().mean().item()
         res["sets"][sp] = r
         print(sp, json.dumps({kk: v for kk, v in r.items() if kk != "slot_top1_pred"}), flush=True)
     json.dump(res, open(os.path.join(RES, f"stage2_{tag}.json"), "w"), indent=1)

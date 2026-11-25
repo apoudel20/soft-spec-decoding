@@ -497,7 +497,22 @@ DFlash on our own dev sets (`dflash_eval.py`, 10 prompts, 160 tokens): tau 5.41 
 3.80x / 2.03x. The full benchmark (20 prompts per set, 256 tokens, with Gister v2) is in `results/e2e.json` once run.
 
 Gister v2: stage 2 at 154M trained on 2M positions of Qwen3-8B's own non-thinking PerfectBlend answers
-(`cache_states.py --pb_tokens 2.0`, `stage2.py --train_cache cache_pb`), 4x v1's data. Results pending.
+(`cache_states.py --pb_tokens 2.0`, `stage2.py --train_cache cache_pb`), 4x v1's data. Offline 3.08 / 2.22 / 1.45
+(v1 2.80 / 2.23 / 1.43). Training loss levelled near 4.0 on unseen text, so data helps math only: the deterministic
+predictor sits on the averaging floor. The sampler (flow matching from v2) is next.
+
+Full end-to-end benchmark (`e2e.py`, 20 prompts per set, 256 new tokens, `results/e2e.json`):
+
+| | MT-Bench tau | speedup | GSM8K tau | speedup | HumanEval tau | speedup |
+|---|---|---|---|---|---|---|
+| Gister v2 | 1.60 | 1.48x | 2.39 | 2.24x | 1.66 | 1.52x |
+| Gister v1 | 1.42 | 1.25x | 2.08 | 1.93x | 1.48 | 1.41x |
+| DFlash capped at 8 | 3.07 | 2.49x | 4.91 | 4.43x | 7.27 | 6.63x |
+| DFlash (15 drafted) | 3.15 | 2.49x | 5.51 | 5.17x | 10.01 | 8.26x |
+
+Plain greedy ran at 21.2 / 15.9 / 19.2 tok/s. The low GSM8K baseline inflates every GSM8K speedup by the same factor.
+All drafters give identical text on every prompt. Differences from plain greedy (15 / 9 / 5 prompts) are 4-bit
+batched-verify numerics, the same for every drafter.
 
 ## What the results say
 
