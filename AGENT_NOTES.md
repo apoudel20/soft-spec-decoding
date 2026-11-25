@@ -40,7 +40,8 @@ Nothing is running. The GPU is idle. Both stages are built and run end to end (b
 
 ## Where it stands (short version)
 
-- **Stage 1 nearly passes** with the "gist" autoencoder: 99.4 / 99.0 / 97.3% exact top-1 on math / code / chat.
+- **Stage 1 nearly passes on top-1** with the "gist" autoencoder: 99.4 / 99.0 / 97.3% exact top-1 on math / code / chat.
+  It **fails the gate's distribution check** (TV 0.06 / 0.06 / 0.20 against 0.005 to 0.01), so every Gister claim is for greedy decoding only.
 - **Stage 2 works but is weak**: 2.2 / 1.8 / 1.3 accepted per round (out of 9) against DFlash's 7.5 / 6.8 / 3.0
   (out of 16).
 - **The gist beats a tokens-only latent** by 13 to 24% in every stage-2 setting. This is the first result that

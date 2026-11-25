@@ -266,7 +266,6 @@ def main():
         Z[sp], meta[sp] = mu, (dt, np.nonzero(pair)[0])
         VAL[sp] = valid
         print(sp, "chunks", len(st), "pairs", int(pair.sum()), f"{(time.time() - t0) / 60:.1f} min", flush=True)
-        print(sp, "chunks", len(st), "pairs", int(pair.sum()), f"{(time.time() - t0) / 60:.1f} min", flush=True)
     tr_mu, (tr_data, tr_pairs) = Z["train"], meta["train"]
     sub = tr_mu[np.random.default_rng(1).choice(tr_pairs, min(50000, len(tr_pairs)), replace=False)].float()
     zm, zs = sub.mean(0).to(dev), sub.std(0).clamp_min(1e-4).to(dev)

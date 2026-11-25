@@ -11,3 +11,7 @@ echo "=== examples $(date +%H:%M)"
 $P examples.py --s2 stage2_gister_flow_big --k 8 --rounds 12 > logs/examples.log 2>&1 || $P examples.py --s2 stage2_gister_flow --k 8 --rounds 12 > logs/examples.log 2>&1
 grep -E "mean kept|===|Error" logs/examples.log
 echo "=== final done $(date +%H:%M)"
+echo "=== context ablation $(date +%H:%M)"
+$P stage2.py --ae gist_hf_z2048 --mode det --raw --hist 8 --steps 6000 > logs/stage2_raw_h8.log 2>&1
+grep -E "^dev_.*\{|===" logs/stage2_raw_h8.log | cut -c1-200
+echo "=== ablation done $(date +%H:%M)"

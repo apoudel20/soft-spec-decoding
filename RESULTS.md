@@ -1,10 +1,26 @@
 # Results
 
-Target Qwen2.5-1.5B-Instruct, drafter Qwen2.5-0.5B-Instruct, one RTX 4070 Ti, batch size 1, bf16.
-All numbers come from `results/*.json` and the tables below are printed by `make_tables.py`.
+**Read this first (updated 2026-11-25).** The project now centres on **Gister** (Qwen3-8B 4-bit target, one RTX
+4070 Ti). Its results are in the sections "Stage-2 gate", "Gist autoencoder and stage 2" and "Gister" near the end.
+The early sections below are the original Qwen2.5-1.5B study (target Qwen2.5-1.5B-Instruct, drafter
+Qwen2.5-0.5B-Instruct), kept as the record. Its pending follow-ups were completed or superseded on Qwen3-8B.
 
-**Status.** Arms 0, A, C, C-hard, D and C+D are done, greedy and T=1. Two follow-ups are still running and their
-sections are marked pending. They are the corrected future-summary probes and the latent planner experiment.
+Scope and caveats for every Gister number:
+- **Greedy decoding only.** Stage 1 matches the target's top-1 token 99.4 / 99.0 / 97.3% (math / code / chat), but
+  its pre-registered gate also required the decoded distribution to stay close to the target's (total variation
+  <= 0.005 to 0.01). Measured TV is 0.060 / 0.064 / 0.202 and KL 0.20 / 0.23 / 0.84, so the gate fails
+  (`results/ae_gate_gist_hf_z2048.json`, `pass: false`). Greedy verification uses only the top-1 token, so the
+  greedy results stand, but sampling at T > 0 would need a far tighter stage 1.
+- **Two label conventions.** `dflash_tree_gap.json` and the earliest DFlash rows score against the Ollama-written
+  text with up to 16 drafted. Every stage-2, Gister and `e2e.py` number scores against the HF target's own top-1
+  with up to 8 drafted (max 9). Compare within a convention.
+- **Wall-clock runs share one consumer GPU.** Plain greedy speed varies between runs (21 / 16 / 19 tok/s in
+  `e2e.json`, 12 / 9 tok/s in `e2e_tree_fast.json` when desktop apps shared the GPU). Speedups are only compared
+  within a run. The tree's +12% on GSM8K comes from the throttled run and is re-measured on an idle GPU in
+  `e2e_final.json`.
+- **Draft latency is unoptimised.** Gister drafts in eager PyTorch (27 ms chain, 35 to 67 ms trees) against a
+  4-bit target step of about 96 ms. On an optimised bf16 engine a Qwen3-8B step is far shorter, so the drafter would
+  need CUDA graphs, fewer layers or a one-step sampler to keep any speedup.
 
 ## Relation to prior work
 
