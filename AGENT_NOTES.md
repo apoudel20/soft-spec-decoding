@@ -2,6 +2,10 @@
 
 Last updated 2026-11-24 evening. Read this first, then TWO_GPU_PLAN.md (what each GPU is doing next). RESULTS.md has every number.
 
+
+> History note (2026-11-25): commits after 2987111 were rewritten to remove personal details. If you cloned before
+> that, run `git fetch && git reset --hard origin/main` (after saving any local work).
+
 ## Goal
 
 Lossless speculative decoding on Qwen3-8B (4-bit nf4, HF transformers). Baseline drafter is the released DFlash
