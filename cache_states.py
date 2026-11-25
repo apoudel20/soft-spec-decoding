@@ -42,10 +42,12 @@ def main():
     ap.add_argument("--long", action="store_true", help="use the answers continued to 1,024 tokens (*_long)")
     ap.add_argument("--pb_tokens", type=float, default=0,
                     help="if > 0: train split only, from PerfectBlend Qwen3-8B answers, this many million response tokens")
+    ap.add_argument("--pb_offset", type=float, default=0, help="skip the conversations covering this many million tokens")
+    ap.add_argument("--pb_name", default="cache_pb")
     args = ap.parse_args()
     out = os.path.join(DATA, ("cache_smoke" if args.smoke else "cache") + ("_long" if args.long else ""))
     if args.pb_tokens:
-        out = os.path.join(DATA, "cache_pb" + ("_smoke" if args.smoke else ""))
+        out = os.path.join(DATA, args.pb_name + ("_smoke" if args.smoke else ""))
     os.makedirs(out, exist_ok=True)
     t = load_target()
     W = t.lm_head.weight.detach()
@@ -58,8 +60,11 @@ def main():
         from dflash_eval import TARGET_ID
         from gister_train import load_convs
         allc = load_convs(AutoTokenizer.from_pretrained(TARGET_ID), 200 if args.smoke else 60000, own=False)
-        seqs, tot = [], 0
+        seqs, tot, skip = [], 0, 0
         for c in allc:
+            if skip < args.pb_offset * 1e6:             # same order as the first cache, so no overlap
+                skip += len(c["resp"])
+                continue
             seqs.append(c)
             tot += len(c["resp"])
             if tot >= args.pb_tokens * 1e6:

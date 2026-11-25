@@ -63,6 +63,52 @@ def load_stage1(name, dev):
     return ae, a, cache, layers, stats, W
 
 
+class MultiData:
+    """Several state caches read as one: rows are concatenated, answer ids offset so they stay distinct."""
+
+    def __init__(self, parts):
+        self.parts = parts
+        self.off = np.cumsum([0] + [len(p.seq) for p in parts])
+        so = np.cumsum([0] + [int(p.seq.max()) + 1 for p in parts])
+        self.seq = np.concatenate([p.seq + o for p, o in zip(parts, so[:-1])])
+
+    def get(self, rows):
+        rows = np.asarray(rows)
+        out = None
+        for i, p in enumerate(self.parts):
+            m = (rows >= self.off[i]) & (rows < self.off[i + 1])
+            if not m.any():
+                continue
+            x = p.get(rows[m] - self.off[i])[0]
+            if out is None:
+                out = torch.zeros((len(rows),) + tuple(x.shape[1:]), dtype=x.dtype)
+            out[torch.from_numpy(m)] = x
+        return out, None, None
+
+
+class ZStore:
+    """Encoded latents for one or more caches, read from disk-backed arrays (np.memmap) instead of RAM.
+    Indexing with an int array of any shape returns a float16 torch tensor of shape idx.shape + (nq, zq)."""
+
+    def __init__(self, arrs):
+        self.arrs = arrs
+        self.off = np.cumsum([0] + [len(a) for a in arrs])
+        self.tail = tuple(arrs[0].shape[1:])
+
+    def __len__(self):
+        return int(self.off[-1])
+
+    def __getitem__(self, idx):
+        idx = np.asarray(idx)
+        flat = idx.reshape(-1)
+        out = np.empty((len(flat),) + self.tail, np.float16)
+        for i, a in enumerate(self.arrs):
+            m = (flat >= self.off[i]) & (flat < self.off[i + 1])
+            if m.any():
+                out[m] = a[flat[m] - self.off[i]]
+        return torch.from_numpy(out.reshape(idx.shape + self.tail))
+
+
 class Search(nn.Module):
     def __init__(self, nq, zq, d=512, depth=6, H=1, raw=0, D=4096):
         super().__init__()
@@ -159,10 +205,9 @@ def main():
     t0 = time.time()
     Z, meta = {}, {}
     T1, VAL = {}, {}
-    for sp in ["train", "dev_math", "dev_code", "dev_chat"]:
-        cdir = os.path.join(DATA, args.train_cache) if (sp == "train" and args.train_cache) else cache
+    def load_part(cdir, sp, zc_path):            # one cache split -> (Data, top1, encoded latents, chunk starts)
         mt = np.load(os.path.join(cdir, f"{sp}_meta.npz"))
-        T1[sp] = mt["top1"].astype(np.int64)
+        top1 = mt["top1"].astype(np.int64)
         if args.tok:
             from tok_vae import chunks
             dt = type("D", (), {})()
@@ -171,30 +216,56 @@ def main():
         else:
             dt = Data(cdir, sp, layers, k, stats)
         st = dt.starts[:4000] if args.smoke else dt.starts
-        zsuf = f"_{args.train_cache}" if (sp == "train" and args.train_cache) else ""
-        zc_path = os.path.join(DATA, "zcache", f"{args.ae}_{sp}{zsuf}.pt")     # encoded latents, reused across runs
-        valid = np.zeros(len(dt.seq), bool)
-        if not args.smoke and os.path.exists(zc_path):
-            mu = torch.load(zc_path)
+        npy = zc_path[:-3] + ".npy"                   # disk-backed latents: a 2M-row cache is 8 GB
+        if not args.smoke and os.path.exists(npy):
+            mu = np.load(npy, mmap_mode="r")
+        elif not args.smoke and os.path.exists(zc_path):
+            old = torch.load(zc_path).numpy()
+            np.save(npy, old)
+            del old
+            mu = np.load(npy, mmap_mode="r")
         else:
-            mu = torch.zeros(len(dt.seq), nq, ae.zq, dtype=torch.float16)
+            shape = (len(dt.seq), nq, ae.zq)
+            if args.smoke:
+                mu = np.zeros(shape, np.float16)
+            else:
+                os.makedirs(os.path.dirname(npy), exist_ok=True)
+                mu = np.lib.format.open_memmap(npy + ".tmp", "w+", np.float16, shape)
             with torch.no_grad():
                 for i in range(0, len(st), 512):
                     b = st[i:i + 512]
                     if args.tok:
-                        x = torch.from_numpy(T1[sp][b[:, None] + np.arange(k)[None]])
+                        x = torch.from_numpy(top1[b[:, None] + np.arange(k)[None]])
                     else:
                         x, _, _ = dt.get(b)
-                    mu[b] = encode(x.to(dev)).half().cpu()
+                    mu[b] = encode(x.to(dev)).half().cpu().numpy()
             if not args.smoke:
-                os.makedirs(os.path.dirname(zc_path), exist_ok=True)
-                torch.save(mu, zc_path)
+                mu.flush()
+                del mu
+                os.replace(npy + ".tmp", npy)
+                mu = np.load(npy, mmap_mode="r")
+        return dt, top1, mu, st
+
+    for sp in ["train", "dev_math", "dev_code", "dev_chat"]:
+        names = args.train_cache.split(",") if (sp == "train" and args.train_cache) else [None]
+        parts = [load_part(os.path.join(DATA, nm) if nm else cache, sp,
+                           os.path.join(DATA, "zcache", f"{args.ae}_{sp}{'_' + nm if nm else ''}.pt")) for nm in names]
+        if len(parts) == 1:
+            dt, T1[sp], mu, st = parts[0]
+            mu = ZStore([mu])
+        else:                                    # several train caches: concatenate rows, keep answers distinct
+            dt = MultiData([p_[0] for p_ in parts])
+            T1[sp] = np.concatenate([p_[1] for p_ in parts])
+            mu = ZStore([p_[2] for p_ in parts])
+            st = np.concatenate([p_[3] + o for p_, o in zip(parts, dt.off[:-1])])
+        valid = np.zeros(len(dt.seq), bool)
         valid[st] = True
         n = len(dt.seq)
         pair = np.zeros(n, bool)
         pair[:n - k] = valid[:n - k] & valid[k:] & (dt.seq[:n - k] == dt.seq[k:])
         Z[sp], meta[sp] = mu, (dt, np.nonzero(pair)[0])
         VAL[sp] = valid
+        print(sp, "chunks", len(st), "pairs", int(pair.sum()), f"{(time.time() - t0) / 60:.1f} min", flush=True)
         print(sp, "chunks", len(st), "pairs", int(pair.sum()), f"{(time.time() - t0) / 60:.1f} min", flush=True)
     tr_mu, (tr_data, tr_pairs) = Z["train"], meta["train"]
     sub = tr_mu[np.random.default_rng(1).choice(tr_pairs, min(50000, len(tr_pairs)), replace=False)].float()
@@ -273,7 +344,7 @@ def main():
             print(json.dumps(r), flush=True)
             if not np.isfinite(loss.item()):
                 raise SystemExit("non-finite loss")
-    tag = f"{'eval_' if args.eval_only else ''}{args.ae}_{args.mode}{'_raw' if args.raw else ''}{f'_{args.train_cache}' if args.train_cache else ''}{f'_lat{args.lat_w:g}' if args.lat_w != 1 else ''}{f'_h{args.hist}' if args.hist > 1 else ''}{f'_d{args.d}x{args.depth}' if (args.d, args.depth) != (512, 6) else ''}{f'_s{args.steps}' if args.steps != 6000 else ''}{f'_nfe{args.nfe}' if args.mode == 'flow' and args.nfe != 8 else ''}{'_smoke' if args.smoke else ''}"
+    tag = f"{'eval_' if args.eval_only else ''}{args.ae}_{args.mode}{'_raw' if args.raw else ''}{f'_{args.train_cache.replace(",", "+")}' if args.train_cache else ''}{f'_lat{args.lat_w:g}' if args.lat_w != 1 else ''}{f'_h{args.hist}' if args.hist > 1 else ''}{f'_d{args.d}x{args.depth}' if (args.d, args.depth) != (512, 6) else ''}{f'_s{args.steps}' if args.steps != 6000 else ''}{f'_nfe{args.nfe}' if args.mode == 'flow' and args.nfe != 8 else ''}{'_smoke' if args.smoke else ''}"
     if not args.smoke and not args.eval_only:
         torch.save({"model": net.state_dict(), "args": vars(args), "zm": zm.cpu(), "zs": zs.cpu()},
                    os.path.join(CKPT, f"stage2_{tag}.pt"))

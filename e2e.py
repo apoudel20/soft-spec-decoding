@@ -287,10 +287,11 @@ def main():
             dr[name] = GistDrafter(t)
         elif name == "gister_v2t":                         # check: v2's chain sent through the tree path
             dr[name] = GistDrafter(t, s2="stage2_gister_v2", force_tree=True)
-        elif name.startswith("gister_tree"):              # gister_tree8d_n2: 8 samples + v2's chain, 2 flow steps
-            spec_, _, nf = name[len("gister_tree"):].partition("_n")
+        elif name.startswith("gister_tree"):              # gister_tree8d_n2[@ckpt]: 8 samples + v2's chain, 2 steps
+            base, _, ck2 = name.partition("@")
+            spec_, _, nf = base[len("gister_tree"):].partition("_n")
             kk = int(spec_.rstrip("d"))
-            dr[name] = GistDrafter(t, s2="stage2_gister_flow", k_samples=kk,
+            dr[name] = GistDrafter(t, s2=ck2 or "stage2_gister_flow", k_samples=kk,
                                    det_s2="stage2_gister_v2" if spec_.endswith("d") else None)
             if nf:
                 dr[name].main = dict(dr[name].main, nfe=int(nf))
