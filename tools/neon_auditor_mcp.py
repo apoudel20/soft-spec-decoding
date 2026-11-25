@@ -45,6 +45,7 @@ PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT") or _adc_project()
 LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
 MAX_USD = float(os.environ.get("NEON_MAX_USD", "10"))         # total; the credit has to last months
 MAX_CALL_USD = float(os.environ.get("NEON_MAX_CALL_USD", "2"))  # worst case for any single call
+MAX_IN_TOKENS = int(os.environ.get("NEON_MAX_IN_TOKENS", "190000"))  # Free Trial refuses calls over 200K tokens
 LEVELS = ("low", "medium", "high", "xhigh")
 MAX_OUT = 65536
 PRICE_IN, PRICE_CACHED, PRICE_OUT = 3.00e-6, 0.15e-6, 15.00e-6     # USD per token
@@ -134,8 +135,9 @@ def _wait(client, r, max_min=90):
     cached = (getattr(u, "total_cached_tokens", 0) or 0)
     out = (getattr(u, "total_output_tokens", 0) or 0) + (getattr(u, "total_thought_tokens", 0) or 0)
     reply = getattr(r, "output_text", None) or ""
-    if st != "completed":
-        reply = f"[status: {st}; errors: {getattr(r, 'errors', None)}]" + "\n\n" + reply
+    errs = getattr(r, "errors", None)
+    if st != "completed" or errs or not reply:
+        reply = f"[NOT COMPLETED: status {st}; errors: {errs}]" + "\n\n" + reply
     return reply, inp, cached, out, iid, "interactions"
 
 
@@ -179,6 +181,9 @@ def audit(prompt, file_paths=None, thinking_level="high", previous_interaction_i
     files, notes = _read_files(file_paths)
     text = prompt if not files else f"{prompt}\n\n{files}"
     est_in = len(text) / 3.0                           # conservative token estimate
+    if est_in > MAX_IN_TOKENS:
+        return (f"refused: input about {est_in:,.0f} tokens is over NEON_MAX_IN_TOKENS={MAX_IN_TOKENS:,}. The Free Trial "
+                f"rejects long-context calls (over 200K tokens) with permission_denied. Split the files across calls.")
     worst = est_in * PRICE_IN + MAX_OUT * PRICE_OUT
     with _lock:
         led = _ledger()
