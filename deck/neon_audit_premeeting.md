@@ -1,19 +1,3 @@
-2026-11-25 16:15:22,144 neon-auditor WARNING No project ID could be determined. Consider running `gcloud config set project` or setting the GOOGLE_CLOUD_PROJECT environment variable
-2026-11-25 16:15:24,416 neon-auditor INFO HTTP Request: POST https://aiplatform.googleapis.com/v1beta1/projects/project-c545549e-3897-4300-b8a/locations/global/interactions "HTTP/1.1 200 OK"
-2026-11-25 16:15:24,430 neon-auditor INFO submitted interaction ChA2ZDI3ZmIzZjZhYmVjOTVmEAgaAjIzKgRtYWlu (status in_progress)
-2026-11-25 16:15:39,963 neon-auditor INFO HTTP Request: GET https://aiplatform.googleapis.com/v1beta1/projects/project-c545549e-3897-4300-b8a/locations/global/interactions/ChA2ZDI3ZmIzZjZhYmVjOTVmEAgaAjIzKgRtYWlu?stream=false "HTTP/1.1 200 OK"
-2026-11-25 16:15:55,427 neon-auditor INFO HTTP Request: GET https://aiplatform.googleapis.com/v1beta1/projects/project-c545549e-3897-4300-b8a/locations/global/interactions/ChA2ZDI3ZmIzZjZhYmVjOTVmEAgaAjIzKgRtYWlu?stream=false "HTTP/1.1 200 OK"
-2026-11-25 16:16:10,872 neon-auditor INFO HTTP Request: GET https://aiplatform.googleapis.com/v1beta1/projects/project-c545549e-3897-4300-b8a/locations/global/interactions/ChA2ZDI3ZmIzZjZhYmVjOTVmEAgaAjIzKgRtYWlu?stream=false "HTTP/1.1 200 OK"
-2026-11-25 16:16:26,309 neon-auditor INFO HTTP Request: GET https://aiplatform.googleapis.com/v1beta1/projects/project-c545549e-3897-4300-b8a/locations/global/interactions/ChA2ZDI3ZmIzZjZhYmVjOTVmEAgaAjIzKgRtYWlu?stream=false "HTTP/1.1 200 OK"
-2026-11-25 16:16:41,787 neon-auditor INFO HTTP Request: GET https://aiplatform.googleapis.com/v1beta1/projects/project-c545549e-3897-4300-b8a/locations/global/interactions/ChA2ZDI3ZmIzZjZhYmVjOTVmEAgaAjIzKgRtYWlu?stream=false "HTTP/1.1 200 OK"
-2026-11-25 16:16:57,318 neon-auditor INFO HTTP Request: GET https://aiplatform.googleapis.com/v1beta1/projects/project-c545549e-3897-4300-b8a/locations/global/interactions/ChA2ZDI3ZmIzZjZhYmVjOTVmEAgaAjIzKgRtYWlu?stream=false "HTTP/1.1 200 OK"
-2026-11-25 16:17:12,764 neon-auditor INFO HTTP Request: GET https://aiplatform.googleapis.com/v1beta1/projects/project-c545549e-3897-4300-b8a/locations/global/interactions/ChA2ZDI3ZmIzZjZhYmVjOTVmEAgaAjIzKgRtYWlu?stream=false "HTTP/1.1 200 OK"
-2026-11-25 16:17:28,261 neon-auditor INFO HTTP Request: GET https://aiplatform.googleapis.com/v1beta1/projects/project-c545549e-3897-4300-b8a/locations/global/interactions/ChA2ZDI3ZmIzZjZhYmVjOTVmEAgaAjIzKgRtYWlu?stream=false "HTTP/1.1 200 OK"
-2026-11-25 16:17:43,695 neon-auditor INFO HTTP Request: GET https://aiplatform.googleapis.com/v1beta1/projects/project-c545549e-3897-4300-b8a/locations/global/interactions/ChA2ZDI3ZmIzZjZhYmVjOTVmEAgaAjIzKgRtYWlu?stream=false "HTTP/1.1 200 OK"
-2026-11-25 16:17:59,141 neon-auditor INFO HTTP Request: GET https://aiplatform.googleapis.com/v1beta1/projects/project-c545549e-3897-4300-b8a/locations/global/interactions/ChA2ZDI3ZmIzZjZhYmVjOTVmEAgaAjIzKgRtYWlu?stream=false "HTTP/1.1 200 OK"
-2026-11-25 16:18:14,587 neon-auditor INFO HTTP Request: GET https://aiplatform.googleapis.com/v1beta1/projects/project-c545549e-3897-4300-b8a/locations/global/interactions/ChA2ZDI3ZmIzZjZhYmVjOTVmEAgaAjIzKgRtYWlu?stream=false "HTTP/1.1 200 OK"
-2026-11-25 16:18:30,059 neon-auditor INFO HTTP Request: GET https://aiplatform.googleapis.com/v1beta1/projects/project-c545549e-3897-4300-b8a/locations/global/interactions/ChA2ZDI3ZmIzZjZhYmVjOTVmEAgaAjIzKgRtYWlu?stream=false "HTTP/1.1 200 OK"
-2026-11-25 16:18:45,707 neon-auditor INFO HTTP Request: GET https://aiplatform.googleapis.com/v1beta1/projects/project-c545549e-3897-4300-b8a/locations/global/interactions/ChA2ZDI3ZmIzZjZhYmVjOTVmEAgaAjIzKgRtYWlu?stream=false "HTTP/1.1 200 OK"
 [gemini-4-neon via interactions, thinking_level=high, 205s]
 [tokens: input 132,774 (cached 0), output+thinking 21,605; call $0.7224; total $8.2303 of $10.00]
 [interaction_id: ChA2ZDI3ZmIzZjZhYmVjOTVmEAgaAjIzKgRtYWlu]
