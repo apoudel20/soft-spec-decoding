@@ -179,7 +179,34 @@ def budget():
             f"remaining ${max(0.0, MAX_USD - led['usd']):.4f} of ${MAX_USD:.2f}")
 
 
+def cli(argv):
+    """Same audit() / budget() as the MCP tools, from a shell:
+    python tools/neon_auditor_mcp.py --cli [PROMPT | --prompt-file F] [--file REL ...] [--thinking-level high]
+                                       [--previous-interaction-id ID] [--budget]"""
+    import argparse
+    ap = argparse.ArgumentParser(prog="neon_auditor_mcp.py --cli")
+    ap.add_argument("prompt", nargs="?", default=None)
+    ap.add_argument("--prompt-file")
+    ap.add_argument("--file", action="append", default=[], help="repo-relative path, repeatable")
+    ap.add_argument("--thinking-level", default="high", choices=LEVELS)
+    ap.add_argument("--previous-interaction-id")
+    ap.add_argument("--budget", action="store_true", help="print spend status and exit")
+    a = ap.parse_args(argv)
+    if not PROJECT:
+        sys.exit("No project: set GOOGLE_CLOUD_PROJECT or run `gcloud auth application-default set-quota-project`.")
+    if a.budget:
+        print(budget())
+        return
+    prompt = Path(a.prompt_file).read_text(encoding="utf-8") if a.prompt_file else a.prompt
+    if not prompt:
+        sys.exit("Give a prompt or --prompt-file.")
+    print(audit(prompt, a.file or None, a.thinking_level, a.previous_interaction_id))
+
+
 def main():
+    if "--cli" in sys.argv:
+        cli([x for x in sys.argv[1:] if x != "--cli"])
+        return
     if "--smoke" in sys.argv:
         out = audit("Reply with OK only.", None, "low")
         sys.stderr.write(out + "\n\n" + budget() + "\n")
