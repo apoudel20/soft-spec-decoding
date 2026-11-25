@@ -1,10 +1,21 @@
 # Agent notes: where the project is and what to do next
 
-Last updated 2026-11-24 evening. Read this first, then TWO_GPU_PLAN.md (what each GPU is doing next). RESULTS.md has every number.
+Last updated 2026-11-25. Read this first, then TWO_GPU_PLAN.md (what each GPU is doing next). RESULTS.md has every number.
 
 
 > History note (2026-11-25): commits after 2987111 were rewritten to remove personal details. If you cloned before
 > that, run `git fetch && git reset --hard origin/main` (after saving any local work).
+
+## Status, 25 Nov
+
+- Current results are in RESULTS.md, section "Gister, audited state (25 Nov)". The deck copy is in `deck/slides/`.
+- Best offline result: 285M flow sampler, best of 16, 4.18 / 3.06 / 1.92 accepted per round (max 9). Adding the raw
+  states of 56 earlier positions to the 158M sampler gives 4.25 / 2.83 / 1.82.
+- End to end, the Gister chain runs 1.34x / 2.05x / 1.40x (MT-Bench / GSM8K / HumanEval). Trees are slower than the
+  chain on this GPU. DFlash runs 2.69x / 4.73x / 7.89x.
+- The stage-1 latent mostly encodes the 8 tokens, because its gate rewards exact reconstruction. The proposed next
+  step is a latent over 64 to 256 tokens trained by latent prediction, starting with an oracle test (RESULTS.md,
+  "Proposed next step").
 
 ## Goal
 

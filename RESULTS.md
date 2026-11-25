@@ -569,9 +569,9 @@ the audited section below.
 
 ## Gister, audited state (25 Nov)
 
-This section supersedes earlier Gister statements where they differ. It reflects three adversarial reviews
-(`deck/neon_audit_b1_code.md`, `deck/neon_audit_b2_claims.md`, `deck/neon_audit_b3_novelty.md`) and the fixes made
-in response. All results are greedy decoding on the Qwen3-8B 4-bit target, one RTX 4070 Ti.
+This section replaces earlier Gister statements where they differ. Its claims were checked in three external reviews
+(`deck/neon_audit_b1_code.md`, `deck/neon_audit_b2_claims.md`, `deck/neon_audit_b3_novelty.md`), and the issues they
+raised are fixed here. All results are greedy decoding on the Qwen3-8B 4-bit target, one RTX 4070 Ti.
 
 **Stage 1 fails its gate on both checks.** Top-1 agreement 99.41 / 99.01 / 97.32% is below the 99.5 / 99.5 / 99.0%
 bar on all three sets, and total variation 0.060 / 0.064 / 0.202 is far above 0.005 / 0.005 / 0.01
@@ -594,6 +594,9 @@ token (`--headfeat`), and the middle layers barely mattered (z1024 final row onl
 | flow sampler 285M / 6M positions, from scratch, 2 steps: one sample | 3.04 | 2.08 | 1.46 |
 | best of 8 | 3.94 (+28%) | 2.73 (+23%) | 1.77 (+22%) |
 | best of 16 | 4.18 (+36%) | 3.06 (+38%) | 1.92 (+32%) |
+| flow sampler 158M / 2M positions + raw states of 56 earlier positions, warm-started from v2, batch 64, 2 steps: one sample | 3.00 | 2.00 | 1.43 |
+| best of 8 | 4.01 | 2.66 | 1.75 |
+| best of 16 | 4.25 | 2.83 | 1.82 |
 | DFlash chain, capped at 8 drafted (`dflash_s2_latent.json`, `accepted_chain`) | 5.88 | 5.59 | 2.68 |
 | DFlash tree, 64 nodes (`prune_oracle.json`, `none.tree64`) | 7.00 | 6.94 | 3.69 |
 | stage-1 reconstruction ceiling (true next gist decoded, not a drafter) | 8.51 | 8.47 | 7.63 |
@@ -607,9 +610,10 @@ The 158M to 285M step changes several things at once (158M to 285M parameters th
 positions, 30k to 24k total steps, warm start vs from scratch), so it is one confounded scaling point: +3 to 7% per
 metric. The gist-history ablation shows no gain. **Direct-token control** (`stage2_gist_hf_z2048_det_direct_raw.json`,
 same inputs, size and steps as v1, predicting the 8 head-input states directly with no latent): 2.73 / 2.16 / 1.39
-against 2.80 / 2.23 / 1.43 for v1 with the gist latent. The latent matches direct prediction and edges it by about 3%;
-it costs nothing here, but it is not a decisive advantage either. The full-context test (raw states of the 56 earlier
-positions, batch 64 x 20k steps after a first attempt overflowed GPU memory) is running.
+against 2.80 / 2.23 / 1.43 for v1 with the gist latent. With the latent, acceptance is about 3% higher. **Full-context test**
+(`stage2_gist_hf_z2048_flow_raw_ctx56_cache_pb_d1024x12_s20000_nfe2.json`, raw states of the 56 earlier positions,
+batch 64, 20k steps): best of 16 is 4.25 / 2.83 / 1.82 against 4.04 / 2.89 / 1.85 for the 158M sampler without it,
++5% on math and no change on code or chat. Batch size differs, so this is not a controlled comparison.
 
 **End to end on an idle GPU** (`e2e_final.json`, 20 prompts per set, 256 new tokens, plain greedy 22.5 / 21.6 /
 22.3 tok/s, bf16 drafting for every drafter, no extra round after end of sequence):
@@ -621,7 +625,7 @@ positions, batch 64 x 20k steps after a first attempt overflowed GPU memory) is 
 | Gister tree, 4 samples + chain (285M sampler) | 1.89 | 1.08x | 2.96 | 1.75x | 2.00 | 1.16x | 77 to 78 |
 | Gister tree, 8 samples + chain (285M sampler) | 1.99 | 1.07x | 3.13 | 1.77x | 2.11 | 1.14x | 82 to 83 |
 
-- Gister's chain and DFlash cost the same per round. DFlash wins entirely on accepted tokens.
+- Gister's chain and DFlash take the same time per round. The difference is in accepted tokens.
 - Trees raise tau 18 to 32% but cost 45 to 55% more per round, so every tree is slower than the chain here.
   Profiled on the idle GPU (`profile_tree.py`, 09:00 run): plain decode step 39 ms; chain draft 11 ms + verify 40 ms;
   tree of 67 nodes draft 30 ms + verify 62 ms; 120 nodes draft 49 ms + verify 78 ms (285M sampler, before the
@@ -639,16 +643,23 @@ HumanEval, MBPP validation or UltraChat test; 1 of 40 GSM8K-train holdout prompt
 to 8 future positions, frozen LM head, greedy tree), FlashMap (flow from multi-layer Qwen3-8B states, several noise
 draws merged into a tree), MFD and DBLast (latent-conditioned coherent multi-future trees), CALM (one continuous latent
 per token chunk) and DFlash with DDTree. Gister's specific combination is sampling several continuous latents of an
-8-token chunk of the target's own future states and decoding each jointly. Whether that beats a per-slot product tree
-at a matched node budget has not been tested; that comparison is the first experiment to run with more compute.
+8-token chunk of the target's own future states and decoding each jointly. We have not compared it with a per-position product tree at
+equal node count. That comparison is one of the proposed experiments.
+
+**Proposed next step.** The stage-1 gate rewards exact reconstruction of 8 tokens, and the resulting latent mostly
+encodes those tokens. The proposal is a latent over the next 64 to 256 tokens, trained by prediction in latent space
+(JEPA-style, EMA target encoder, variance regularization), sampled with flow matching, and read by a decoder trained
+with it from the start. The first test trains that decoder with the latent of the true future and compares it with the
+same decoder without the latent. Earlier plan experiments (sections above) added one averaged vector to a frozen DFlash
+and do not cover this case.
 
 ## What the results say
 
-1. **Refinement works, softness doesn't (target side).** Arm C turns the spare width of the verification
-   pass into τ 2.3 with no second model, but soft inputs add nothing measurable over hard guesses. This
-   agrees with the EmbeddingSuperPosition result on drafter inputs.
-2. **Soft supervision helps the drafter, and target TV labels help under sampling.** Soft feedback between
-   drafter passes is worth about 10% τ, and TV labels are worth 6 to 21% at T=1.
-3. **The block drafter's limit is coherence across the block, not per-token knowledge.** Teacher-forced
-   accuracy is flat, but free-running acceptance decays with offset. That is the gap the latent planner targets.
-4. **Combining C and D doesn't pay** at this scale.
+1. **Target-side refinement.** Arm C uses the spare width of the verification pass to reach τ 2.3 without a second
+   model. Soft inputs add nothing measurable over hard guesses, in line with the EmbeddingSuperPosition result on
+   drafter inputs.
+2. **Soft supervision.** Soft feedback between drafter passes adds about 10% τ, and target TV labels add 6 to 21% at
+   T = 1.
+3. **Block drafter errors.** Teacher-forced accuracy is flat across offsets, while free-running acceptance decays with
+   offset. Errors come more from consistency across the block than from per-token knowledge.
+4. **Combining C and D** gives no gain at this scale.

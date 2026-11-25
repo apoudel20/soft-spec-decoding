@@ -1,14 +1,14 @@
 <section id="e2e" class="dark">
-<p class="eyebrow">06 · END TO END, IDLE GPU</p>
-<h2>Gister’s chain is a real lossless speedup; trees are not yet</h2>
+<p class="eyebrow">6 · END TO END</p>
+<h2>Wall-clock speedup</h2>
 <table style="color:#F7F6F1">
-<tr><th style="width:36%">Speedup over plain decoding</th><th style="text-align:right">MT-Bench</th><th style="text-align:right">GSM8K</th><th style="text-align:right">HumanEval</th><th style="text-align:right">ms / round</th></tr>
+<tr><th style="width:36%">Speedup over target-only decoding</th><th style="text-align:right">MT-Bench</th><th style="text-align:right">GSM8K</th><th style="text-align:right">HumanEval</th><th style="text-align:right">ms / round</th></tr>
 <tr><td>DFlash (released, 15 drafted)</td><td style="text-align:right">2.69x</td><td style="text-align:right">4.73x</td><td style="text-align:right">7.89x</td><td style="text-align:right">52 to 57</td></tr>
-<tr><td>Gister chain</td><td style="text-align:right">1.34x</td><td style="text-align:right">2.05x</td><td style="text-align:right">1.40x</td><td style="text-align:right">53 to 54</td></tr>
-<tr><td>Gister tree, 4 samples + chain</td><td style="text-align:right">1.08x</td><td style="text-align:right">1.75x</td><td style="text-align:right">1.16x</td><td style="text-align:right">77 to 78</td></tr>
-<tr><td>Gister tree, 8 samples + chain</td><td style="text-align:right">1.07x</td><td style="text-align:right">1.77x</td><td style="text-align:right">1.14x</td><td style="text-align:right">82 to 83</td></tr>
+<tr><td>Gister, chain</td><td style="text-align:right">1.34x</td><td style="text-align:right">2.05x</td><td style="text-align:right">1.40x</td><td style="text-align:right">53 to 54</td></tr>
+<tr><td>Gister, tree of 4 samples + chain</td><td style="text-align:right">1.08x</td><td style="text-align:right">1.75x</td><td style="text-align:right">1.16x</td><td style="text-align:right">77 to 78</td></tr>
+<tr><td>Gister, tree of 8 samples + chain</td><td style="text-align:right">1.07x</td><td style="text-align:right">1.77x</td><td style="text-align:right">1.14x</td><td style="text-align:right">82 to 83</td></tr>
 </table>
-<p class="lead">Gister’s chain and DFlash cost the same per round; DFlash wins on accepted tokens. Trees raise acceptance 18 to 32% but cost 45 to 55% more per round here, because sampling latents and verifying 60 to 120 nodes is not free with 4-bit kernels.</p>
-<p class="note" style="color:#9AA7B8">Qwen3-8B 4-bit, RTX 4070 Ti, nothing else on the GPU (plain decoding 22 tok/s), greedy, 20 prompts per set, 256 tokens, one loop for every drafter, verified to match DFlash’s own decoder.</p>
-<aside>Source: results/e2e_final.json. An earlier +12% tree speedup came from a throttled run and is withdrawn.</aside>
+<p class="lead">Gister’s chain and DFlash take about the same time per round, and DFlash accepts more tokens. Trees raise acceptance by 18 to 32% but increase round time by 45 to 55%, from sampling K latents and verifying 60 to 120 nodes with 4-bit kernels.</p>
+<p class="note" style="color:#9AA7B8">Qwen3-8B 4-bit on an otherwise idle RTX 4070 Ti (target alone: 22 tok/s). Greedy, 20 prompts per set, 256 new tokens. All drafters use the same decoding loop, checked against DFlash’s own implementation.</p>
+<aside>Source: results/e2e_final.json. An earlier tree speedup of 12% was measured on a throttled GPU and has been withdrawn.</aside>
 </section>

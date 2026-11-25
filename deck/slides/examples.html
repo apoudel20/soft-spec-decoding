@@ -1,20 +1,20 @@
 <section id="examples">
-<p class="eyebrow">08 · REAL ROUNDS</p>
-<h2>What sampled futures look like</h2>
+<p class="eyebrow">8 · EXAMPLES</p>
+<h2>Sampled drafts</h2>
 <div class="row" style="align-items:stretch">
 <div class="card"><p class="label">GSM8K · context ends “Let’s break this down step”</p>
 <p class="mono" style="font-size:26px;color:#172033">8 ✓ <b>step.⏎⏎---⏎⏎### Step 1:</b></p>
 <p class="mono" style="font-size:26px">4 ✓ step.⏎⏎---⏎⏎### **1: Find</p>
 <p class="mono" style="font-size:26px">4 ✓ step.⏎⏎---⏎⏎### 1: Understand</p>
 <p class="mono" style="font-size:26px">1 ✓ step:⏎⏎---⏎⏎### 1: Determine</p>
-<p class="note">Target kept all 8 drafted tokens from the best branch, plus its own next token.</p></div>
+<p class="note">The best sample matches all 8 tokens, and the target adds one more.</p></div>
 <div class="card"><p class="label">GSM8K · context ends “Janet’s ducks lay **1”</p>
 <p class="mono" style="font-size:26px;color:#172033">7 ✓ <b>eggs per day**.⏎⏎---⏎⏎### Step</b></p>
 <p class="mono" style="font-size:26px">4 ✓ eggs per day**---⏎⏎### Step</p>
 <p class="mono" style="font-size:26px">1 ✓ eggs days**.⏎⏎---⏎⏎### Step</p>
 <p class="mono" style="font-size:26px">0 ✓ days per****.⏎⏎### Step</p>
-<p class="note">Samples agree on the plan (end the line, start the next step) but differ in exact tokens.</p></div>
+<p class="note">The samples agree on the line break and the next heading and differ in the tokens before them.</p></div>
 </div>
-<p class="lead" style="font-size:30px">Branches share prefixes and fan out where the future is uncertain. Some samples are garbled token mixes: the sampler is still noisy, which is why the plan slide targets a better latent objective, not only more context or data.</p>
-<aside>Source: results/examples.json (285M sampler, 8 samples plus the deterministic chain, 2 flow steps). Numbers are drafted tokens the target accepted from that branch; ⏎ is a newline.</aside>
+<p class="lead" style="font-size:30px">Samples share prefixes and diverge where the continuation is uncertain. Some samples are not well-formed text, such as the last row on the right.</p>
+<aside>Source: results/examples.json (285M sampler, 8 samples plus the deterministic chain, 2 flow steps). The number is how many drafted tokens the target accepted from that sample. ⏎ is a newline.</aside>
 </section>

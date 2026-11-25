@@ -1,10 +1,10 @@
 <section id="stage1">
-<p class="eyebrow">02 · STAGE 1</p>
-<h2>A strong latent space, but the gate is not passed</h2>
+<p class="eyebrow">2 · STAGE 1</p>
+<h2>Reconstruction</h2>
 <div class="row">
-<div class="card"><p class="label">Exact top-1 tokens from one latent per 8 tokens</p><p class="big">99.4 / 99.0 / 97.3%</p><p class="label">math / code / chat</p></div>
-<div class="card teal"><p class="label">Accepted per round if stage 2 predicted the true next latent (max 9)</p><p class="big">8.5 / 8.5 / 7.6</p><p class="label">the ceiling: this space is good to draft in</p></div>
+<div class="card"><p class="label">Top-1 agreement with the target, 8 positions per latent</p><p class="big">99.4 / 99.0 / 97.3%</p><p class="label">math / code / chat</p></div>
+<div class="card teal"><p class="label">Accepted tokens per round if stage 2 predicted z exactly (max 9)</p><p class="big">8.5 / 8.5 / 7.6</p><p class="label">math / code / chat</p></div>
 </div>
-<div class="card orange"><h3>Caveats on the slide</h3><p>Gate failed on both checks: top-1 below 99.5 / 99.5 / 99.0%, and total variation 0.06 / 0.06 / 0.20 against a 0.005 to 0.01 bar. So every result is for greedy decoding only. It reached this level only once the encoder was given the output-layer row of each state’s own top token; middle layers add little. The latent is closer to a token chunk plus the final state than to a multi-layer plan.</p></div>
-<aside>Source: results/ae_gate_gist_hf_z2048.json. Ceiling: accepted_oracle in the stage-2 JSONs.</aside>
+<div class="card orange"><h3>Limitations</h3><p>We required 99.5 / 99.5 / 99.0% top-1 and a total variation of 0.005 to 0.01. The autoencoder misses both (total variation 0.06 / 0.06 / 0.20), so all results are for greedy decoding. Reaching 99% required giving the encoder the LM-head row of each position’s top-1 token. In a z = 1,024 ablation, the last layer alone gives 93.7 / 92.3 / 76.8% against 94.0 / 92.6 / 77.6% for all four layers. The latent mostly encodes the 8 tokens.</p></div>
+<aside>Source: results/ae_gate_gist_hf_z2048.json. The oracle row is accepted_oracle in the stage-2 result files.</aside>
 </section>

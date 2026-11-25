@@ -1,16 +1,13 @@
 <section id="bottleneck" class="alt">
-<p class="eyebrow">03 · STAGE 2</p>
-<h2>The predictor is the bottleneck</h2>
+<p class="eyebrow">3 · STAGE 2</p>
+<h2>Deterministic prediction</h2>
 <table>
-<tr><th style="width:58%">Deterministic stage 2 (accepted per round, max 9)</th><th style="text-align:right">Math</th><th style="text-align:right">Code</th><th style="text-align:right">Chat</th></tr>
-<tr><td>Gist only, 20M</td><td style="text-align:right">2.17</td><td style="text-align:right">1.80</td><td style="text-align:right">1.34</td></tr>
-<tr><td>+ target’s raw states for the current 8 positions</td><td style="text-align:right">2.80</td><td style="text-align:right">2.23</td><td style="text-align:right">1.43</td></tr>
-<tr><td>+ 64 positions of gist history</td><td style="text-align:right">2.81</td><td style="text-align:right">2.15</td><td style="text-align:right">1.39</td></tr>
-<tr><td>154M on 2M on-policy positions (v2)</td><td style="text-align:right">3.08</td><td style="text-align:right">2.22</td><td style="text-align:right">1.45</td></tr>
+<tr><th style="width:58%">Deterministic stage 2, accepted per round (max 9)</th><th style="text-align:right">Math</th><th style="text-align:right">Code</th><th style="text-align:right">Chat</th></tr>
+<tr><td>z<sub>t</sub> only, 20M</td><td style="text-align:right">2.17</td><td style="text-align:right">1.80</td><td style="text-align:right">1.34</td></tr>
+<tr><td>+ target hidden states, current 8 positions</td><td style="text-align:right">2.80</td><td style="text-align:right">2.23</td><td style="text-align:right">1.43</td></tr>
+<tr><td>+ 64 previous latents</td><td style="text-align:right">2.81</td><td style="text-align:right">2.15</td><td style="text-align:right">1.39</td></tr>
+<tr><td>154M, 2M positions of Qwen3-8B outputs</td><td style="text-align:right">3.08</td><td style="text-align:right">2.22</td><td style="text-align:right">1.45</td></tr>
 </table>
-<div class="row">
-<div class="card"><h3>Why</h3><p>A deterministic predictor must bet on one future. Where futures branch, it averages them. Raw states helped most; history and size helped little.</p></div>
-<div class="card"><h3>Structural limit</h3><p>It reads only the last 8 positions’ states; DFlash reads every earlier position. A full-context test is running now.</p></div>
-</div>
+<p class="lead" style="font-size:30px">With an oracle of 8.5 / 8.5 / 7.6, stage 2 is the limiting component. Conditioning on the target’s hidden states gives the largest gain. Latent history and model size add little. When the next 8 tokens are ambiguous, a deterministic regressor averages over the possible continuations, which motivates sampling.</p>
 <aside>Sources: stage2_gist_hf_z2048_det.json, _det_raw.json, _det_raw_h8.json, _det_raw_cache_pb_d1024x12_s20000.json.</aside>
 </section>
