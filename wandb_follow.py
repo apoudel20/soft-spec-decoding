@@ -26,8 +26,11 @@ def main():
     args = ap.parse_args()
     while not os.path.exists(args.log):
         time.sleep(10)
+    # no machine metadata: no hostname, OS, Python path, command line, git remote or system stats
+    private = wandb.Settings(x_disable_meta=True, x_disable_machine_info=True, x_disable_stats=True,
+                             disable_git=True, save_code=False, disable_job_creation=True, host="local")
     run = wandb.init(project=args.project, name=args.name, group=args.group, notes=args.notes,
-                     config={"log": args.log}, reinit=True)
+                     config={"log": os.path.basename(args.log)}, reinit=True, settings=private)
     f = open(args.log, encoding="utf-8", errors="replace")
     last = time.time()
     while True:

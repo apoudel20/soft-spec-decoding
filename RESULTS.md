@@ -514,6 +514,21 @@ Plain greedy ran at 21.2 / 15.9 / 19.2 tok/s. The low GSM8K baseline inflates ev
 All drafters give identical text on every prompt. Differences from plain greedy (15 / 9 / 5 prompts) are 4-bit
 batched-verify numerics, the same for every drafter.
 
+Gister sampler (`stage2.py --mode flow --raw --train_cache cache_pb --d 1024 --depth 12 --dec_w 0 --t_shift 3
+--nfe 8 --init stage2_gister_v2 --steps 10000 --bestk 4,8,16`), offline, out of 9:
+
+| | Math | Code | Chat |
+|---|---|---|---|
+| v2 deterministic | 3.08 | 2.22 | 1.45 |
+| sampler, one sample | 2.71 | 1.83 | 1.36 |
+| sampler, best of 4 | 3.36 | 2.38 | 1.58 |
+| sampler, best of 8 | 3.67 | 2.59 | 1.70 |
+| sampler, best of 16 | 4.00 | 2.86 | 1.84 |
+
+Samples are distinct (8 draws give 7.6 to 8 different drafts). Best-of-K beats the deterministic predictor from K=4
+and grows about +0.3 tokens per doubling of K, in every domain. Best-of-K is the ceiling of a K-branch tree, not a
+speedup: verification of the tree is not built yet. Still far below DFlash's single chain (5.88 / 5.59 / 2.68).
+
 ## What the results say
 
 1. **Refinement works, softness doesn't (target side).** Arm C turns the spare width of the verification
