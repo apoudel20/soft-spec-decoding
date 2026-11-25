@@ -273,7 +273,7 @@ def main():
             print(json.dumps(r), flush=True)
             if not np.isfinite(loss.item()):
                 raise SystemExit("non-finite loss")
-    tag = f"{'eval_' if args.eval_only else ''}{args.ae}_{args.mode}{'_raw' if args.raw else ''}{f'_{args.train_cache}' if args.train_cache else ''}{f'_lat{args.lat_w:g}' if args.lat_w != 1 else ''}{f'_h{args.hist}' if args.hist > 1 else ''}{f'_d{args.d}x{args.depth}' if (args.d, args.depth) != (512, 6) else ''}{f'_s{args.steps}' if args.steps != 6000 else ''}{'_smoke' if args.smoke else ''}"
+    tag = f"{'eval_' if args.eval_only else ''}{args.ae}_{args.mode}{'_raw' if args.raw else ''}{f'_{args.train_cache}' if args.train_cache else ''}{f'_lat{args.lat_w:g}' if args.lat_w != 1 else ''}{f'_h{args.hist}' if args.hist > 1 else ''}{f'_d{args.d}x{args.depth}' if (args.d, args.depth) != (512, 6) else ''}{f'_s{args.steps}' if args.steps != 6000 else ''}{f'_nfe{args.nfe}' if args.mode == 'flow' and args.nfe != 8 else ''}{'_smoke' if args.smoke else ''}"
     if not args.smoke and not args.eval_only:
         torch.save({"model": net.state_dict(), "args": vars(args), "zm": zm.cpu(), "zs": zs.cpu()},
                    os.path.join(CKPT, f"stage2_{tag}.pt"))

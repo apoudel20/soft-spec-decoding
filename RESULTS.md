@@ -529,6 +529,26 @@ Samples are distinct (8 draws give 7.6 to 8 different drafts). Best-of-K beats t
 and grows about +0.3 tokens per doubling of K, in every domain. Best-of-K is the ceiling of a K-branch tree, not a
 speedup: verification of the tree is not built yet. Still far below DFlash's single chain (5.88 / 5.59 / 2.68).
 
+Flow steps at sampling time (offline, best of 8, out of 9): 8 steps 3.67 / 2.59 / 1.70, 2 steps 3.72 / 2.64 / 1.72,
+1 step 3.50 / 2.49 / 1.63. One step makes each sample more accurate but less diverse. Two steps is the setting.
+
+Sampled trees end to end (`e2e.py`, K sampled futures plus v2's chain merged into one token tree, verified in one
+target pass with a tree attention mask; a one-branch tree reproduces the chain path exactly). 20 prompts per set,
+256 new tokens, `results/e2e_tree.json`:
+
+| | MT-Bench tau | speedup | GSM8K tau | speedup | HumanEval tau | speedup |
+|---|---|---|---|---|---|---|
+| Gister v2 chain | 1.60 | 1.54x | 2.39 | 2.31x | 1.66 | 1.60x |
+| tree, 8 samples + chain, 2 steps | 1.89 | 1.31x | 2.94 | 2.28x | 1.99 | 1.53x |
+| tree, 16 samples + chain, 2 steps | 2.01 | 1.33x | 3.12 | 2.24x | 2.08 | 1.48x |
+| tree, 8 samples + chain, 1 step | 1.80 | 1.36x | 2.79 | 2.29x | 1.90 | 1.62x |
+
+Trees raise tau 18% to 31%, as predicted offline, with no net speedup yet: a tree round costs 122 to 146 ms
+against 100 to 104 ms for the chain. Verifying up to 112 nodes costs the same as one decode step
+(`profile_tree.py`), so the overhead is drafting and tree bookkeeping, being cut. Desktop apps shared the GPU during
+this run (plain greedy 10 tok/s against 21 earlier), which lowers absolute speeds but not the comparison. On a
+larger target the fixed draft cost is a smaller share of each round.
+
 ## What the results say
 
 1. **Refinement works, softness doesn't (target side).** Arm C turns the spare width of the verification

@@ -64,29 +64,70 @@ class DFlashDrafter:
         return (x.to(torch.bfloat16) @ self.W.T)[0].argmax(-1)
 
 
+_SHARED = {}                                     # one copy of each network, shared by every drafter
+
+
+def shared(key, fn):
+    if key not in _SHARED:
+        _SHARED[key] = fn()
+    return _SHARED[key]
+
+
 class GistDrafter:
+    """Gister. Deterministic stage 2 drafts one chain. A flow (sampler) stage 2 with k_samples > 1 drafts K sampled
+    futures, returned as a (K, 8) tensor that spec() verifies as one token tree. det_s2 adds the deterministic
+    stage-2 draft to the tree as one more branch."""
     LAYERS = [18, 24, 30, 36]
 
-    def __init__(self, t, ae_name="gist_hf_z2048", s2="stage2_gist_hf_z2048_det_raw"):
+    def __init__(self, t, ae_name="gist_hf_z2048", s2="stage2_gist_hf_z2048_det_raw", k_samples=1, det_s2=None,
+                 force_tree=False):
         self.t, self.W = t, t.lm_head.weight
-        self.ae, a, _, layers, stats, _ = load_stage1(ae_name, "cuda")
+        self.force_tree, self.nodes = force_tree, []
+        self.ae, a, _, layers, stats, w = shared(("ae", ae_name), lambda: load_stage1(ae_name, "cuda"))
+        if w is not None:                                # the stage-1 loader's own head copy is not needed here
+            _SHARED[("ae", ae_name)] = (self.ae, a, None, layers, stats, None)
+            del w
+            torch.cuda.empty_cache()
         assert layers == self.LAYERS
         self.st = [(m.cuda(), s.cuda(), mk.cuda()) for m, s, mk in stats]
-        ck = torch.load(os.path.join(CKPT, f"{s2}.pt"), map_location="cpu")
+        self.k = k_samples
+        self.main = self._load(s2)
+        self.det = self._load(det_s2) if det_s2 else None
+        g = torch.Generator(device="cuda")
+        g.manual_seed(0)
+        self.g = g
+
+    def _load(self, name):
+        return shared(("s2", name), lambda: self._load_new(name))
+
+    def _load_new(self, name):
+        ck = torch.load(os.path.join(CKPT, f"{name}.pt"), map_location="cpu")
         sa = ck["args"]
-        D, R = self.W.shape[1], len(layers)
-        self.net = Search(self.ae.nq, self.ae.zq, sa["d"], sa["depth"], sa.get("hist", 1),
-                          R * K if sa.get("raw") else 0, D).cuda().eval()
-        self.net.load_state_dict(ck["model"])
-        self.raw = sa.get("raw", False)
-        self.zm, self.zs = ck["zm"].cuda(), ck["zs"].cuda()
+        D, R = self.W.shape[1], len(self.LAYERS)
+        net = Search(self.ae.nq, self.ae.zq, sa["d"], sa["depth"], sa.get("hist", 1),
+                     R * K if sa.get("raw") else 0, D).cuda().eval()
+        net.load_state_dict(ck["model"])
+        return {"net": net, "raw": sa.get("raw", False), "zm": ck["zm"].cuda(), "zs": ck["zs"].cuda(),
+                "mode": sa.get("mode", "det"), "shift": sa.get("t_shift", 1.0), "nfe": sa.get("nfe", 8)}
 
     def reset(self):
         self.buf = None
 
-    def observe(self, hs, n):
-        x = torch.stack([hs[l][0, :n] for l in self.LAYERS])                 # (R, n, D)
+    def observe(self, hs, n, idx=None):
+        x = torch.stack([hs[l][0, :n] if idx is None else hs[l][0, idx] for l in self.LAYERS])   # (R, n, D)
         self.buf = (x if self.buf is None else torch.cat([self.buf, x], 1))[:, -K:]
+
+    def _sample(self, m, zc, x, n):              # n latents (normalised) from one stage-2 net
+        net, raw = m["net"], (x.expand(n, -1, -1) if m["raw"] else None)
+        zc = zc.expand(n, -1, -1)
+        if m["mode"] == "det":
+            return net(zc, torch.zeros_like(zc), torch.zeros(n, device="cuda"), raw)
+        u = torch.linspace(0, 1, m["nfe"] + 1, device="cuda")
+        grid = 1 - m["shift"] * (1 - u) / (1 + (m["shift"] - 1) * (1 - u))
+        y = torch.randn(zc.shape, device="cuda", generator=self.g)
+        for i in range(m["nfe"]):
+            y = y + net(zc, y, grid[i].expand(n), raw) * (grid[i + 1] - grid[i])
+        return y
 
     def draft(self, bonus, start):
         b = self.buf
@@ -102,12 +143,41 @@ class GistDrafter:
         hf = self.W[(fin.to(torch.bfloat16) @ self.W.T).argmax(-1)].float()[None]
         with torch.autocast("cuda", torch.bfloat16):
             z = self.ae.encode(x, None, hf)[0].float()
-        zc = (z - self.zm) / self.zs
-        z1 = self.net(zc, torch.zeros_like(zc), torch.zeros(1, device="cuda"), x if self.raw else None)
+        zs_all = []
+        for m, n in ((self.main, self.k if self.main["mode"] == "flow" else 1), (self.det, 1)):
+            if m is None:
+                continue
+            zn = self._sample(m, (z - m["zm"]) / m["zs"], x, n)
+            zs_all.append(zn * m["zs"] + m["zm"])
+        zz = torch.cat(zs_all)
         with torch.autocast("cuda", torch.bfloat16):
-            fo = self.ae.decode(z1 * self.zs + self.zm).float()[:, -K:]
+            fo = self.ae.decode(zz).float()[:, -K:]
         m, s, _ = self.st[-1]
-        return ((fo * s + m).to(torch.bfloat16) @ self.W.T)[0].argmax(-1)
+        tok = ((fo * s + m).to(torch.bfloat16) @ self.W.T).argmax(-1)          # (n_drafts, 8)
+        return tok[0] if (len(tok) == 1 and not self.force_tree) else tok
+
+
+def keep_path(cache, start, idx):
+    """Keep cache positions [0, start) plus start + idx (the accepted tree path), drop the rest of the tree."""
+    keep = torch.cat([torch.arange(start, device="cuda"), start + idx])
+    for layer in cache.layers:
+        layer.keys = layer.keys[:, :, keep]
+        layer.values = layer.values[:, :, keep]
+
+
+def build_tree(bonus, drafts):
+    """Token trie rooted at the bonus token. Returns tokens, parents, depths (parents always precede children)."""
+    toks, par, dep, kids = [int(bonus)], [-1], [0], [{}]
+    for d in drafts.tolist():
+        cur = 0
+        for x in d:
+            nxt = kids[cur].get(x)
+            if nxt is None:
+                nxt = len(toks)
+                toks.append(x); par.append(cur); dep.append(dep[cur] + 1); kids.append({})
+                kids[cur][x] = nxt
+            cur = nxt
+    return toks, par, dep, kids
 
 
 @torch.inference_mode()
@@ -121,6 +191,38 @@ def spec(t, drafter, ids, max_new, stop):
     out, taus, start = [], [], n0
     while len(out) < max_new:
         dr = drafter.draft(bonus, start)
+        if dr.dim() == 2:                                       # K drafts: verify them as one tree
+            toks, par, dep, kids = build_tree(bonus, dr)
+            n = len(toks)
+            if hasattr(drafter, "nodes"):
+                drafter.nodes.append(n)
+            anc = np.zeros((n, n), bool)                        # ancestor matrix built on the CPU, sent once
+            for i in range(n):
+                if par[i] >= 0:
+                    anc[i] = anc[par[i]]
+                anc[i, i] = True
+            mask = torch.ones(1, 1, n, start + n, dtype=torch.bool)
+            mask[0, 0, :, start:] = torch.from_numpy(anc)
+            mask = mask.to("cuda", non_blocking=True)
+            o = t(torch.tensor([toks], device="cuda"), attention_mask=mask,
+                  position_ids=torch.tensor([[start + x for x in dep]], device="cuda"),
+                  past_key_values=cache, use_cache=True, output_hidden_states=True)
+            post = o.logits[0].argmax(-1).tolist()
+            path, cur = [0], 0
+            while post[cur] in kids[cur]:
+                cur = kids[cur][post[cur]]
+                path.append(cur)
+            new = [toks[i] for i in path]
+            out += new
+            taus.append(len(path))
+            bonus = torch.tensor(post[cur], device="cuda")
+            idx = torch.tensor(path, device="cuda")
+            keep_path(cache, start, idx)
+            start += len(path)
+            drafter.observe(o.hidden_states, None, idx)
+            if any(s in new for s in stop):
+                break
+            continue
         blk = torch.cat([bonus[None], dr])[None]
         o = t(blk, position_ids=torch.arange(start, start + blk.shape[1], device="cuda")[None],
               past_key_values=cache, use_cache=True, output_hidden_states=True)
@@ -156,7 +258,8 @@ def main():
     if args.smoke:
         args.n, args.max_new = 2, 48
     tok = AutoTokenizer.from_pretrained(TARGET_ID)
-    t, d = load_target(), load_drafter()
+    t = load_target()
+    d = load_drafter() if any(n.startswith("dflash") for n in args.drafters) or args.check_ref else None
     stop = [tok.eos_token_id, tok.convert_tokens_to_ids("<|im_end|>")]
     dr = {}
     for name in args.drafters:
@@ -182,6 +285,15 @@ def main():
             dr[name] = DFlashDrafter(t, d, K, head, dec)
         elif name == "gister":
             dr[name] = GistDrafter(t)
+        elif name == "gister_v2t":                         # check: v2's chain sent through the tree path
+            dr[name] = GistDrafter(t, s2="stage2_gister_v2", force_tree=True)
+        elif name.startswith("gister_tree"):              # gister_tree8d_n2: 8 samples + v2's chain, 2 flow steps
+            spec_, _, nf = name[len("gister_tree"):].partition("_n")
+            kk = int(spec_.rstrip("d"))
+            dr[name] = GistDrafter(t, s2="stage2_gister_flow", k_samples=kk,
+                                   det_s2="stage2_gister_v2" if spec_.endswith("d") else None)
+            if nf:
+                dr[name].main = dict(dr[name].main, nfe=int(nf))
         elif name.startswith("gister_"):                   # e.g. gister_v2 -> ckpt/stage2_gister_v2.pt
             dr[name] = GistDrafter(t, s2=f"stage2_{name}")
     w = chat(tok, "Say hi.")                                   # warm-up
@@ -208,7 +320,10 @@ def main():
                 n = min(len(out), len(ref))
                 row["d"][name] = {"s": time.perf_counter() - a, "len": len(out), "taus": taus,
                                   "identical": out[:n] == ref[:n],
-                                  "first_diff": next((i for i in range(n) if out[i] != ref[i]), None)}
+                                  "first_diff": next((i for i in range(n) if out[i] != ref[i]), None),
+                                  "nodes": list(getattr(x, "nodes", []))}
+                if hasattr(x, "nodes"):
+                    x.nodes.clear()
                 if args.check_ref and name == "dflash":
                     row["d"][name]["same_as_spec_generate"] = out == row["ref_spec"]["out"][:len(out)]
             rows.append(row)
@@ -217,14 +332,17 @@ def main():
         for name in dr:
             taus = [x for r in rows for x in r["d"][name]["taus"]]
             tps = sum(r["d"][name]["len"] for r in rows) / sum(r["d"][name]["s"] for r in rows)
+            nodes = [x for r in rows for x in r["d"][name]["nodes"]]
             sm[name] = {"tau": float(np.mean(taus)), "tok_s": tps, "speedup": tps / ar,
-                        "identical": sum(r["d"][name]["identical"] for r in rows)}
+                        "identical": sum(r["d"][name]["identical"] for r in rows),
+                        "tree_nodes": float(np.mean(nodes)) if nodes else None}
         res["sets"][s] = {"summary": sm, "rows": rows}
         print(s, f"AR {ar:.1f} tok/s", flush=True)
         for name in dr:
             v = sm[name]
             print(f"  {name:14s} tau {v['tau']:.2f}  {v['tok_s']:.1f} tok/s  speedup {v['speedup']:.2f}x  "
-                  f"identical {v['identical']}/{len(rows)}", flush=True)
+                  f"identical {v['identical']}/{len(rows)}"
+                  + (f"  tree nodes {v['tree_nodes']:.1f}" if v["tree_nodes"] else ""), flush=True)
         json.dump(res, open(os.path.join(RES, args.out + ".json"), "w"), indent=1)
 
 
