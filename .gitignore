@@ -25,3 +25,4 @@ tools/.neon_spend.tmp
 .env
 *.env
 tools/.neon_pending.json
+tools/.neon_replies/

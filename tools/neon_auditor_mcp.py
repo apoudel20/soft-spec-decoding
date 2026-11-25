@@ -197,6 +197,9 @@ def audit(prompt, file_paths=None, thinking_level="high", previous_interaction_i
     t0 = time.time()
     reply, inp, cached, out, iid, api = _call(text, thinking_level, previous_interaction_id)
     c = _cost(inp, cached, out)
+    saved = TOOLS / ".neon_replies"                    # every reply on disk before anything can fail
+    saved.mkdir(exist_ok=True)
+    (saved / f"{time.strftime('%Y%m%d-%H%M%S')}_{(iid or 'noid')[:16]}.md").write_text(reply, encoding="utf-8")
     with _lock:
         led = _ledger()
         led["calls"] += 1
@@ -245,7 +248,9 @@ def cli(argv):
     prompt = Path(a.prompt_file).read_text(encoding="utf-8") if a.prompt_file else a.prompt
     if not prompt:
         sys.exit("Give a prompt or --prompt-file.")
-    print(audit(prompt, a.file or None, a.thinking_level, a.previous_interaction_id))
+    out = audit(prompt, a.file or None, a.thinking_level, a.previous_interaction_id)
+    sys.stdout.reconfigure(encoding="utf-8")           # replies contain arrows, math, dashes; cp1252 cannot print them
+    print(out)
 
 
 def main():
