@@ -1,0 +1,4 @@
+# neon-auditor MCP server (tools/neon_auditor_mcp.py). Install into tools/.venv, not the research venv.
+# mcp is pinned below 2: FastMCP was renamed to MCPServer in mcp 2.x.
+mcp<2
+google-genai>=2.34.0

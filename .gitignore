@@ -18,3 +18,9 @@ logs/
 *.npz
 *.log
 results/failures_examples.jsonl
+
+# neon-auditor MCP: local spend ledger and env files
+tools/.neon_spend.json
+tools/.neon_spend.tmp
+.env
+*.env
