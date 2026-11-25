@@ -8,4 +8,4 @@ deck), call the `neon-auditor` MCP tool `audit_with_neon` with `thinking_level="
   caches or large logs.
 - Ask it to check claims against the code and JSON, look for bugs, leakage, confounds and overclaiming.
 - Address every critical or high finding (fix it, or disclose it in the write-up) before calling the task done.
-- Check `neon_budget_status` first. The spend cap is NEON_MAX_USD (default $50). Calls are slow (minutes).
+- Check `neon_budget_status` first. The spend cap is NEON_MAX_USD ($45). Calls are slow (minutes).

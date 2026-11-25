@@ -2,7 +2,7 @@
 
 Auth: Application Default Credentials (gcloud auth application-default login), location "global", project from
 GOOGLE_CLOUD_PROJECT. Every call is checked against a local spend ledger (tools/.neon_spend.json) and refused if the
-worst-case cost of the call would push estimated spend past NEON_MAX_USD (default $50).
+worst-case cost of the call would push estimated spend past NEON_MAX_USD (default $45).
 
 Model rules for gemini-4-neon: thinking_level only (low / medium / high / xhigh), no temperature / top_p / top_k,
 max_output_tokens 65536, HTTP timeout 15 minutes. The Interactions API is tried first; if it is not available on
@@ -25,7 +25,12 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO, format="%(asctime)s n
 log = logging.getLogger("neon-auditor")
 
 TOOLS = Path(__file__).resolve().parent
-ROOT = TOOLS.parent                                    # files are read relative to the repo root, and only inside it
+ROOT = TOOLS.parent                                    # relative paths are resolved against the repo root
+# read-only allowlist: this repo, the sibling movement repo (website and deck files) and the research working
+# directory (logs, results, code). Absolute paths inside any of these are accepted, nothing outside them.
+ALLOWED = [ROOT, ROOT.parent / "movement", ROOT.parent / "movement-softspec" / "research" / "soft-spec-decoding"]
+ALLOWED += [Path(p) for p in os.environ.get("NEON_EXTRA_ROOTS", "").split(os.pathsep) if p]
+ALLOWED = [p.resolve() for p in ALLOWED]
 LEDGER = TOOLS / ".neon_spend.json"
 MODEL = "gemini-4-neon"
 def _adc_project():                                    # default: the quota project saved in the local ADC file
@@ -38,7 +43,7 @@ def _adc_project():                                    # default: the quota proj
 
 PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT") or _adc_project()
 LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
-MAX_USD = float(os.environ.get("NEON_MAX_USD", "50"))
+MAX_USD = float(os.environ.get("NEON_MAX_USD", "45"))
 LEVELS = ("low", "medium", "high", "xhigh")
 MAX_OUT = 65536
 PRICE_IN, PRICE_CACHED, PRICE_OUT = 3.00e-6, 0.15e-6, 15.00e-6     # USD per token
@@ -79,9 +84,12 @@ def _client_():
 def _read_files(paths):
     parts, notes = [], []
     for rel in paths or []:
-        p = (ROOT / rel).resolve()
-        if ROOT not in p.parents and p != ROOT:
-            notes.append(f"refused {rel}: outside the repo")
+        p = (ROOT / rel).resolve()                     # an absolute rel overrides ROOT
+        if not any(r == p or r in p.parents for r in ALLOWED):
+            notes.append(f"refused {rel}: outside the allowed roots")
+            continue
+        if p.name.startswith(".neon_spend") or p.name.endswith((".env", "credentials.json")):
+            notes.append(f"refused {rel}: private file")
             continue
         if not p.is_file():
             notes.append(f"refused {rel}: not a file")
