@@ -1,7 +1,7 @@
 <section class="sec" id="now" aria-labelledby="nowT" style="margin-top:8px">
     <div class="eyebrow">Now · 24 Nov 2026</div>
-    <h2 id="nowT">Gister: drafting by predicting latent futures</h2>
-    <p>Gister is our own drafter, not a modification of DFlash or EAGLE. Stage 1 compresses the target&#8217;s hidden states for 8 positions (layers 18, 24, 30 and the final layer) into one gist latent and decodes it back to exact tokens through the target&#8217;s frozen output layer. Stage 2 is a search network that predicts the <em>next</em> gist latent from the current gist and the target&#8217;s raw states. Decoding that predicted future gives 8 draft tokens, which the target verifies in one pass, so the output stays the target&#8217;s.</p>
+    <h2 id="nowT">Gister: method and results</h2>
+    <p>Gister is a drafter we built from scratch. Stage 1 is an autoencoder that encodes the target&#8217;s hidden states at 8 positions (layers 18, 24, 30 and 36) into a latent z and decodes it through the target&#8217;s frozen LM head. Stage 2 predicts the next latent from z and the target&#8217;s hidden states at the current positions. The decoded prediction gives 8 draft tokens, which the target verifies in one forward pass.</p>
     <figure class="fig1" style="margin:0"><div class="figscroll"><svg viewBox="0 0 820 230" role="img" aria-label="Gister pipeline. The target's states for the last 8 verified positions go into the stage-1 encoder, giving the current gist z_t. The stage-2 search network reads z_t and the raw states and predicts the next gist z_t+1. The stage-1 decoder and the target's frozen output layer turn z_t+1 into 8 draft tokens, which the target verifies in one forward pass; its states for the accepted tokens feed the next round."><defs><marker id="gArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker></defs>
       <rect x="16" y="70" width="128" height="70" rx="10" style="fill:var(--accent-bg);stroke:var(--accent)"/><text x="80" y="96" text-anchor="middle" font-size="12.5" font-weight="600" style="fill:var(--fg)">Qwen3-8B</text><text x="80" y="112" text-anchor="middle" font-size="11" style="fill:var(--muted)">states, last 8</text><text x="80" y="126" text-anchor="middle" font-size="11" style="fill:var(--muted)">layers 18/24/30/36</text>
       <line x1="146" y1="105" x2="184" y2="105" style="stroke:var(--muted);stroke-width:1.4" marker-end="url(#gArrow)"/><text x="165" y="97" text-anchor="middle" font-size="10.5" style="fill:var(--muted)">encode</text>
@@ -19,9 +19,9 @@
       <line x1="690" y1="105" x2="708" y2="105" style="stroke:var(--muted);stroke-width:1.4" marker-end="url(#gArrow)"/>
       <rect x="712" y="91" width="92" height="28" rx="6" style="fill:var(--panel);stroke:var(--ours)"/><text x="758" y="109" text-anchor="middle" font-size="11" style="fill:var(--fg)">8 draft tokens</text>
       <path d="M758,90 C758,30 80,30 80,68" style="fill:none;stroke:var(--accept);stroke-width:1.4" marker-end="url(#gArrow)"/><text x="420" y="40" text-anchor="middle" font-size="11" style="fill:var(--accept)">target verifies all 8 in one pass, accepted tokens&#8217; states feed the next round</text>
-    </svg></div><figcaption><b>Where it stands.</b> All results are for greedy decoding: stage 1 matches the target&#8217;s top token but not its full distribution (total variation 0.06 to 0.20), which sampling at T &gt; 0 would need. Stage 1 rebuilds exact tokens 99.4 / 99.0 / 97.3% of the time (math / code / chat), and decoding the <em>true</em> next gist would give 8.5 / 8.5 / 7.6 accepted tokens per round out of 9. The gap is stage 2: predicting the future gist. That is what the current training run attacks.</figcaption></figure>
+    </svg></div><figcaption><b>Figure 1.</b> One round. All results use greedy decoding, because stage 1 matches the target&#8217;s top-1 token but not its distribution (total variation 0.06 to 0.20). Stage 1 recovers the target&#8217;s top-1 token at 99.4 / 99.0 / 97.3% of positions (math / code / chat). Decoding the true next latent would give 8.5 / 8.5 / 7.6 accepted tokens per round out of 9, so the gap is in stage 2.</figcaption></figure>
 
-    <h3 style="margin:8px 0 0;font-size:17px">On top of the stack, 25 Nov</h3>
+    <h3 style="margin:8px 0 0;font-size:17px">Sampled trees</h3>
     <figure class="fig1" style="margin:0"><div class="figscroll"><svg viewBox="0 0 860 360" role="img" aria-label="One Gister round with a sampled tree. Top row, drafting: the target's states for the last 8 tokens at layers 18, 24, 30 and 36 go through the stage-1 encoder to the current gist. The stage-2 flow sampler turns K noise draws into K future gists in 2 Euler steps, reading the gist and the raw states. The stage-1 decoder and the frozen LM head turn each future gist into 8 draft tokens, plus v2's deterministic draft. Bottom row, verifying: shared prefixes merge into one token tree, the target checks every node in one forward pass with a tree attention mask, the path the target agrees with is kept, and only that path's KV cache and states carry into the next round.">
       <defs><marker id="sA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker>
       <marker id="sG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accept)"/></marker></defs>
@@ -109,7 +109,7 @@
       <text x="772" y="282" text-anchor="middle" font-size="10.5" style="fill:var(--muted)">output stays the target&#8217;s</text>
       <polyline points="846,262 853,262 853,172 7,172 7,85 13,85" style="fill:none;stroke:var(--accept);stroke-width:1.3;stroke-dasharray:5 3" marker-end="url(#sG)"/>
       <text x="640" y="168" text-anchor="middle" font-size="10" style="fill:var(--accept)">accepted tokens&#8217; states feed the next round</text>
-    </svg></div><figcaption><b>One Gister round with a sampled tree.</b> A deterministic predictor has to bet on one future and averages the ones it cannot tell apart. The sampler instead draws K different futures, each decoded into a whole 8-token continuation, and the target checks all of them at once. Measured: trees raise &#964; 18% to 31%, and verifying about 100 nodes costs the same as one decode step. Drafting 16 samples costs about 30 ms more per round than one chain, so the net result is +12% on GSM8K (2.54x against 2.27x) and still a loss on MT-Bench (1.34x against 1.53x).</figcaption></figure>
+    </svg></div><figcaption><b>Figure 2.</b> One round with a sampled tree. A deterministic predictor regresses toward the mean of the continuations it cannot distinguish. The sampler draws K latents, each decoded into an 8-token draft, and the target verifies all of them in one pass. Trees raise &#964; by 18 to 32% but increase round time by 45 to 55% on this GPU (table below).</figcaption></figure>
 
     <figure class="fig1" style="margin:0"><div class="figscroll"><svg viewBox="0 0 860 250" role="img" aria-label="Tonight's scale step, training side. Qwen3-8B's own non-thinking answers from PerfectBlend go through the 4-bit target once, and its states at 4 layers are written to a disk cache of 4 million positions. The target is then unloaded. The frozen stage-1 encoder turns each chunk and the next chunk into gists. A 285M flow sampler learns to move noise to the next gist given the current gist and the raw states. Then it is compared with the 158M sampler on 2 million positions, offline best-of-K and in end-to-end trees.">
       <defs><marker id="tA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker></defs>
@@ -148,10 +148,10 @@
       <text x="727" y="183" text-anchor="middle" font-size="10.5" style="fill:var(--fg)">1,280 wide &#215; 14 layers, 24k steps</text>
       <text x="727" y="200" text-anchor="middle" font-size="10" style="fill:var(--muted)">vs 158M on 2M positions today</text>
       <text x="430" y="238" text-anchor="middle" font-size="10.5" style="fill:var(--fg)">Then: offline best-of-8/16 and end-to-end trees, old sampler against new, same benchmark run (about 7 to 8 am).</text>
-    </svg></div><figcaption><b>What tonight measures.</b> One scaling point: twice the data and almost twice the sampler. If best-of-K and the tree speedups rise clearly, scaling further (NYU HPC or Trainium) is the path. If they barely move, the sampler&#8217;s objective or the latent needs work before more compute helps. Training streams live to W&amp;B as <code>gister_flow_285M_4M</code>.</figcaption></figure>
+    </svg></div><figcaption><b>Figure 3.</b> The scaling run used about twice the data and twice the sampler size (285M parameters, 6M positions). It improved acceptance by 3 to 7%.</figcaption></figure>
 
     <h3 style="margin:8px 0 0;font-size:17px">Measured here, end to end (idle GPU)</h3>
-    <p class="muted" style="font-size:13.5px">Qwen3-8B 4-bit target, RTX 4070 Ti with nothing else on it (plain greedy 22.5 / 21.6 / 22.3 tok/s), greedy, 20 prompts per benchmark, 256 new tokens, bf16 drafting for every drafter, one lossless loop verified to match DFlash&#8217;s own decoder round for round. &#964; = tokens kept per round.</p>
+    <p class="muted" style="font-size:13.5px">Qwen3-8B 4-bit target on an otherwise idle RTX 4070 Ti (target alone 22.5 / 21.6 / 22.3 tok/s). Greedy, 20 prompts per benchmark, 256 new tokens, bf16 drafting. All drafters share one decoding loop, checked round by round against DFlash&#8217;s implementation. &#964; is tokens kept per round.</p>
     <div class="scroll"><table class="gaptable">
       <thead><tr><th>Drafter</th><th>Size</th><th>MT-Bench &#964;</th><th>Speedup</th><th>GSM8K &#964;</th><th>Speedup</th><th>HumanEval &#964;</th><th>Speedup</th><th>ms / round</th></tr></thead>
       <tbody>
@@ -160,7 +160,7 @@
         <tr><td>Gister tree, 4 samples + chain</td><td>+ 285M sampler</td><td>1.89</td><td>1.08x</td><td>2.96</td><td>1.75x</td><td>2.00</td><td>1.16x</td><td>77 to 78</td></tr>
         <tr><td>Gister tree, 8 samples + chain</td><td>+ 285M sampler</td><td>1.99</td><td>1.07x</td><td>3.13</td><td>1.77x</td><td>2.11</td><td>1.14x</td><td>82 to 83</td></tr>
       </tbody></table></div>
-    <p class="note">Gister&#8217;s chain costs the same per round as DFlash; DFlash wins on accepted tokens. Sampled trees raise &#964; 18 to 32% but cost 45 to 55% more per round here (sampling the latents plus verifying 60 to 120 nodes with 4-bit kernels), so on this hardware every tree is slower than the chain. An earlier &#8220;+12% tree speedup on GSM8K&#8221; came from a run where desktop apps throttled the GPU and is withdrawn. Drafters with the same verification width give identical text; wider verification diverges at near-ties under 4-bit numerics. All results are greedy decoding only.</p>
+    <p class="note">Gister&#8217;s chain and DFlash take the same time per round, and DFlash accepts more tokens. Trees raise &#964; by 18 to 32% and increase round time by 45 to 55%, from sampling the latents and verifying 60 to 120 nodes with 4-bit kernels, so every tree is slower than the chain here. An earlier 12% tree speedup on GSM8K was measured while other applications were using the GPU and is withdrawn. Drafters with the same verification width produce identical text. Wider verification can change the output at near-ties because of 4-bit numerics.</p>
 
     <h3 style="margin:8px 0 0;font-size:17px">Offline acceptance, same rounds and labels</h3>
     <div class="scroll"><table class="gaptable">
@@ -177,11 +177,13 @@
         <tr><td>Gister sampler 285M on 6M positions, one sample (2 steps)</td><td>3.04</td><td>2.08</td><td>1.46</td></tr>
         <tr><td><b>Gister sampler 285M, best of 8</b></td><td><b>3.94</b></td><td><b>2.73</b></td><td><b>1.77</b></td></tr>
         <tr><td><b>Gister sampler 285M, best of 16</b></td><td><b>4.18</b></td><td><b>3.06</b></td><td><b>1.92</b></td></tr>
+        <tr><td>Gister sampler 158M + 56 earlier positions, best of 8</td><td>4.01</td><td>2.66</td><td>1.75</td></tr>
+        <tr><td>Gister sampler 158M + 56 earlier positions, best of 16</td><td>4.25</td><td>2.83</td><td>1.82</td></tr>
         <tr><td>DFlash chain, capped at 8</td><td>5.88</td><td>5.59</td><td>2.68</td></tr>
         <tr><td>DFlash tree, 64 nodes (same tree budget as best of 8)</td><td>7.00</td><td>6.94</td><td>3.69</td></tr>
-        <tr><td>Stage-1 ceiling (if stage 2 predicted the true next gist; not a result)</td><td>8.51</td><td>8.47</td><td>7.63</td></tr>
+        <tr><td>Oracle: decoding the true next latent</td><td>8.51</td><td>8.47</td><td>7.63</td></tr>
       </tbody></table></div>
-    <p class="note">What moved stage 2: giving it the target&#8217;s raw states (+29% math). What did not: 64 positions of history, a 7x bigger network on the same 2,000 answers (it memorised them), or dropping the latent loss. The 154M overfit is why v2 trains on far more on-policy data: Qwen3-8B&#8217;s own non-thinking answers from PerfectBlend plus our own, about 100x more text, computed live so nothing is cached to disk.</p>
+    <p class="note">Giving stage 2 the target&#8217;s hidden states improved math by 29%. Latent history (64 positions), a 7x larger network on the same 2,000 answers (which overfit), and removing the latent loss did not help. Later models train on Qwen3-8B&#8217;s own non-thinking answers (PerfectBlend regeneration), about 100x more text. The context run is warm-started and uses batch 64, so it is not a controlled comparison with the 158M sampler.</p>
 
     <h3 style="margin:8px 0 0;font-size:17px">Published baselines (other hardware, not apples to apples)</h3>
     <div class="scroll"><table class="gaptable">
@@ -199,13 +201,14 @@
     <div class="scroll"><table class="status">
       <thead><tr><th>Piece</th><th>State</th><th>Evidence</th></tr></thead>
       <tbody>
-        <tr><td>Stage 1 gist autoencoder</td><td><span class="pill ok">built</span>top-1 near the 99% gate; distribution check fails</td><td>99.4 / 99.0 / 97.3% exact tokens, but total variation 0.06 / 0.06 / 0.20 against a 0.005 to 0.01 bar, so results hold for greedy decoding only</td></tr>
-        <tr><td>Stage 2 search network</td><td><span class="pill ok">built</span>weak</td><td>2.80 / 2.23 / 1.43 of 9</td></tr>
-        <tr><td>End-to-end lossless loop</td><td><span class="pill ok">built</span>verified</td><td>matches DFlash&#8217;s decoder exactly</td></tr>
-        <tr><td>Gister v2 on on-policy data</td><td><span class="pill ok">done</span>+10% to +15% over v1</td><td>loss levelled near 4.0, the averaging floor</td></tr>
-        <tr><td>Gister sampler (flow matching)</td><td><span class="pill ok">works</span>best of 16 +27% to +30% over deterministic</td><td>8 samples give 7.6 to 8 distinct drafts per round</td></tr>
-        <tr><td>Scale step: 285M sampler on 6M positions</td><td><span class="pill ok">done</span>+3 to 7% on every metric</td><td>one confounded point (size, data, shape, warm start all changed)</td></tr>
-        <tr><td>Sampled latent trees, verified end to end</td><td><span class="pill no">not faster yet</span>&#964; +18 to 32%</td><td>45 to 55% more time per round on this GPU; needs cheaper drafting and sharper samples</td></tr>
-        <tr><td>Full-context test, direct-token control</td><td><span class="pill run">running</span></td><td>does more context help; does the latent beat predicting tokens directly</td></tr>
+        <tr><td>Stage 1 autoencoder</td><td><span class="pill ok">built</span></td><td>99.4 / 99.0 / 97.3% top-1. Total variation 0.06 / 0.06 / 0.20 against a target of 0.005 to 0.01, so greedy only</td></tr>
+        <tr><td>Stage 2, deterministic</td><td><span class="pill ok">built</span></td><td>2.80 / 2.23 / 1.43 of 9 at 22M, 3.08 / 2.22 / 1.45 at 154M</td></tr>
+        <tr><td>Decoding loop</td><td><span class="pill ok">built</span></td><td>matches DFlash&#8217;s implementation exactly</td></tr>
+        <tr><td>Flow sampler</td><td><span class="pill ok">done</span></td><td>best of 16 is 27 to 38% above deterministic. 7.6 to 8 distinct drafts out of 8</td></tr>
+        <tr><td>285M sampler, 6M positions</td><td><span class="pill ok">done</span></td><td>+3 to 7%. Size, data, shape and initialization changed together</td></tr>
+        <tr><td>Sampled trees, end to end</td><td><span class="pill no">slower than chain</span></td><td>&#964; +18 to 32%, round time +45 to 55% on this GPU</td></tr>
+        <tr><td>Direct-token control</td><td><span class="pill ok">done</span></td><td>without the latent 2.73 / 2.16 / 1.39, with it 2.80 / 2.23 / 1.43</td></tr>
+        <tr><td>56 earlier positions as context</td><td><span class="pill ok">done</span></td><td>best of 16 4.25 / 2.83 / 1.82 vs 4.04 / 2.89 / 1.85</td></tr>
+        <tr><td>Long-horizon latent</td><td><span class="pill run">proposed</span></td><td>latent over the next 64 to 256 tokens, trained by latent prediction. Oracle test first</td></tr>
       </tbody></table></div>
   </section>
