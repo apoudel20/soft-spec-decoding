@@ -1,0 +1,338 @@
+{
+ "e2e": {
+  "args": {
+   "sets": [
+    "mtbench",
+    "gsm8k",
+    "humaneval"
+   ],
+   "n": 20,
+   "max_new": 256,
+   "drafters": [
+    "dflash",
+    "dflash8",
+    "gister",
+    "gister_v2"
+   ],
+   "out": "e2e",
+   "check_ref": false,
+   "smoke": false
+  },
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "sets": {
+   "mtbench": {
+    "n": 20,
+    "ar_tok_s": 21.222262155219067,
+    "dflash": {
+     "tau": 3.1512027491408934,
+     "tok_s": 52.901987862562244,
+     "speedup": 2.492759135460607,
+     "identical": 4
+    },
+    "dflash8": {
+     "tau": 3.0717241379310343,
+     "tok_s": 52.82455189450903,
+     "speedup": 2.4891103270778414,
+     "identical": 5
+    },
+    "gister": {
+     "tau": 1.4218298555377207,
+     "tok_s": 26.503902082196618,
+     "speedup": 1.2488726172708533,
+     "identical": 5
+    },
+    "gister_v2": {
+     "tau": 1.604491126403477,
+     "tok_s": 31.396958315083012,
+     "speedup": 1.4794350425721106,
+     "identical": 5
+    }
+   },
+   "gsm8k": {
+    "n": 20,
+    "ar_tok_s": 15.871691630344888,
+    "dflash": {
+     "tau": 5.514476614699332,
+     "tok_s": 82.00189169828121,
+     "speedup": 5.166550208265313,
+     "identical": 7
+    },
+    "dflash8": {
+     "tau": 4.914767096134787,
+     "tok_s": 70.25294690974354,
+     "speedup": 4.426304929931213,
+     "identical": 11
+    },
+    "gister": {
+     "tau": 2.0777027027027026,
+     "tok_s": 30.66760997136142,
+     "speedup": 1.9322206281231171,
+     "identical": 11
+    },
+    "gister_v2": {
+     "tau": 2.3869249394673124,
+     "tok_s": 35.47336214457419,
+     "speedup": 2.2350082757878886,
+     "identical": 11
+    }
+   },
+   "humaneval": {
+    "n": 20,
+    "ar_tok_s": 19.21133039467405,
+    "dflash": {
+     "tau": 10.006309148264984,
+     "tok_s": 158.7060504695339,
+     "speedup": 8.261065069888753,
+     "identical": 15
+    },
+    "dflash8": {
+     "tau": 7.272311212814645,
+     "tok_s": 127.44076044329212,
+     "speedup": 6.633624940343667,
+     "identical": 15
+    },
+    "gister": {
+     "tau": 1.481203007518797,
+     "tok_s": 27.12468183574056,
+     "speedup": 1.4119106422353929,
+     "identical": 15
+    },
+    "gister_v2": {
+     "tau": 1.6589473684210527,
+     "tok_s": 29.238198072066385,
+     "speedup": 1.521924690867431,
+     "identical": 15
+    }
+   }
+  }
+ },
+ "e2e_tree": {
+  "args": {
+   "sets": [
+    "mtbench",
+    "gsm8k",
+    "humaneval"
+   ],
+   "n": 20,
+   "max_new": 256,
+   "drafters": [
+    "gister_v2",
+    "gister_tree8d_n2",
+    "gister_tree16d_n2",
+    "gister_tree8d_n1"
+   ],
+   "out": "e2e_tree",
+   "check_ref": false,
+   "smoke": false
+  },
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "sets": {
+   "mtbench": {
+    "n": 20,
+    "ar_tok_s": 10.386310344273264,
+    "gister_v2": {
+     "tau": 1.604491126403477,
+     "tok_s": 15.951161616023583,
+     "speedup": 1.5357871166269002,
+     "identical": 5,
+     "tree_nodes": null
+    },
+    "gister_tree8d_n2": {
+     "tau": 1.887531592249368,
+     "tok_s": 13.63483705455114,
+     "speedup": 1.312770040813293,
+     "identical": 5,
+     "tree_nodes": 62.74737725556022
+    },
+    "gister_tree16d_n2": {
+     "tau": 2.005366726296959,
+     "tok_s": 13.76355455442677,
+     "speedup": 1.3251630365556744,
+     "identical": 5,
+     "tree_nodes": 112.1532293986637
+    },
+    "gister_tree8d_n1": {
+     "tau": 1.7960602549246814,
+     "tok_s": 14.145663618835652,
+     "speedup": 1.3619527194886099,
+     "identical": 5,
+     "tree_nodes": 50.269822940723635
+    }
+   },
+   "gsm8k": {
+    "n": 20,
+    "ar_tok_s": 9.983406944994245,
+    "gister_v2": {
+     "tau": 2.3869249394673124,
+     "tok_s": 23.043789343044764,
+     "speedup": 2.3082089581251712,
+     "identical": 11,
+     "tree_nodes": null
+    },
+    "gister_tree8d_n2": {
+     "tau": 2.9361830222757375,
+     "tok_s": 22.753128694020642,
+     "speedup": 2.2790945835809318,
+     "identical": 9,
+     "tree_nodes": 55.591812161348585
+    },
+    "gister_tree16d_n2": {
+     "tau": 3.1176096630642087,
+     "tok_s": 22.340493379735516,
+     "speedup": 2.2377624695482545,
+     "identical": 7,
+     "tree_nodes": 96.60203432930706
+    },
+    "gister_tree8d_n1": {
+     "tau": 2.793162393162393,
+     "tok_s": 22.88235142607407,
+     "speedup": 2.2920383344232453,
+     "identical": 8,
+     "tree_nodes": 42.8011396011396
+    }
+   },
+   "humaneval": {
+    "n": 20,
+    "ar_tok_s": 9.99378058698917,
+    "gister_v2": {
+     "tau": 1.6589473684210527,
+     "tok_s": 16.01025546259558,
+     "speedup": 1.6020219098505342,
+     "identical": 15,
+     "tree_nodes": null
+    },
+    "gister_tree8d_n2": {
+     "tau": 1.9854889589905362,
+     "tok_s": 15.304468072636615,
+     "speedup": 1.5313992477042564,
+     "identical": 16,
+     "tree_nodes": 62.81451104100946
+    },
+    "gister_tree16d_n2": {
+     "tau": 2.0760079312623927,
+     "tok_s": 14.834610325113156,
+     "speedup": 1.4843842323721042,
+     "identical": 18,
+     "tree_nodes": 112.86715135492399
+    },
+    "gister_tree8d_n1": {
+     "tau": 1.9049636803874093,
+     "tok_s": 16.206209719961485,
+     "speedup": 1.6216295303761454,
+     "identical": 18,
+     "tree_nodes": 51.93946731234867
+    }
+   }
+  }
+ },
+ "e2e_tree_fast": {
+  "args": {
+   "sets": [
+    "mtbench",
+    "gsm8k"
+   ],
+   "n": 20,
+   "max_new": 256,
+   "drafters": [
+    "gister_v2",
+    "gister_tree8d_n2",
+    "gister_tree16d_n2"
+   ],
+   "out": "e2e_tree_fast",
+   "check_ref": false,
+   "smoke": false
+  },
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "sets": {
+   "mtbench": {
+    "n": 20,
+    "ar_tok_s": 11.829541614652976,
+    "gister_v2": {
+     "tau": 1.604491126403477,
+     "tok_s": 18.12679973149526,
+     "speedup": 1.5323332316648701,
+     "identical": 5,
+     "tree_nodes": null
+    },
+    "gister_tree8d_n2": {
+     "tau": 1.887531592249368,
+     "tok_s": 16.528052178880575,
+     "speedup": 1.3971844993898719,
+     "identical": 5,
+     "tree_nodes": 62.74737725556022
+    },
+    "gister_tree16d_n2": {
+     "tau": 2.005366726296959,
+     "tok_s": 15.89112243233256,
+     "speedup": 1.343342197862392,
+     "identical": 5,
+     "tree_nodes": 112.1532293986637
+    }
+   },
+   "gsm8k": {
+    "n": 20,
+    "ar_tok_s": 9.312225514450569,
+    "gister_v2": {
+     "tau": 2.3869249394673124,
+     "tok_s": 21.126783947896918,
+     "speedup": 2.2687148109882753,
+     "identical": 11,
+     "tree_nodes": null
+    },
+    "gister_tree8d_n2": {
+     "tau": 2.9361830222757375,
+     "tok_s": 21.22341482843025,
+     "speedup": 2.279091587236164,
+     "identical": 9,
+     "tree_nodes": 55.591812161348585
+    },
+    "gister_tree16d_n2": {
+     "tau": 3.1176096630642087,
+     "tok_s": 23.680994359656655,
+     "speedup": 2.543000523656654,
+     "identical": 7,
+     "tree_nodes": 96.60203432930706
+    }
+   }
+  }
+ },
+ "dflash_eval": {
+  "args": {
+   "n": 10,
+   "max_new": 160,
+   "sets": [
+    "math",
+    "code",
+    "chat"
+   ],
+   "out": "dflash_eval"
+  },
+  "gpu": null,
+  "sets": {
+   "math": {
+    "n": 10,
+    "tau": 5.41,
+    "ar_tok_s": 20.86304984111967,
+    "spec_tok_s": 99.20262295678273,
+    "speedup": 4.7549434867984175,
+    "identical": 2
+   },
+   "code": {
+    "n": 10,
+    "tau": 4.705501618122978,
+    "ar_tok_s": 23.00480830672178,
+    "spec_tok_s": 87.31854970797133,
+    "speedup": 3.795665173287173,
+    "identical": 6
+   },
+   "chat": {
+    "n": 10,
+    "tau": 2.3731563421828907,
+    "ar_tok_s": 23.03258077456812,
+    "spec_tok_s": 46.731146653191445,
+    "speedup": 2.028914914510603,
+    "identical": 0
+   }
+  }
+ }
+}

@@ -147,6 +147,9 @@ def main():
     ap.add_argument("--hist", type=int, default=1, help="number of past chunk latents the search network reads")
     ap.add_argument("--raw", action="store_true",
                     help="also feed the target's raw states (all cached layers) at the current chunk's positions")
+    ap.add_argument("--ctx_pos", type=int, default=0,
+                    help="also feed raw states of this many positions before the chunk (zeros where outside the answer)")
+    ap.add_argument("--ctx_layers", default="30,36", help="cached layers used for the --ctx_pos context rows")
     ap.add_argument("--train_cache", default="", help="train split from data/<this> (e.g. cache_pb); dev stays on the stage-1 cache")
     ap.add_argument("--init", default="", help="start from ckpt/<this>.pt (same architecture)")
     ap.add_argument("--t_shift", type=float, default=1.0,
@@ -270,12 +273,43 @@ def main():
     sub = tr_mu[np.random.default_rng(1).choice(tr_pairs, min(50000, len(tr_pairs)), replace=False)].float()
     zm, zs = sub.mean(0).to(dev), sub.std(0).clamp_min(1e-4).to(dev)
 
-    net = Search(nq, ae.zq, args.d, args.depth, args.hist, R * k if args.raw else 0, W.shape[1]).to(dev)
-    if args.init:
-        net.load_state_dict(torch.load(os.path.join(CKPT, f"{args.init}.pt"), map_location="cpu")["model"])
+    nraw = (R * k + len(args.ctx_layers.split(",")) * args.ctx_pos) if args.raw else 0
+    net = Search(nq, ae.zq, args.d, args.depth, args.hist, nraw, W.shape[1]).to(dev)
+    if args.init:                               # shapes that changed (e.g. rpos with --ctx_pos) start fresh
+        sd, own = torch.load(os.path.join(CKPT, f"{args.init}.pt"), map_location="cpu")["model"], net.state_dict()
+        keep = {kk: v for kk, v in sd.items() if kk in own and own[kk].shape == v.shape}
+        skipped = sorted(set(own) - set(keep))
+        net.load_state_dict(keep, strict=False)
+        print(f"init from {args.init}: {len(keep)} tensors loaded, fresh: {skipped}", flush=True)
 
-    def rawx(sp, s):                            # (B, R*k, D) normalised target states of chunk s, or None
-        return meta[sp][0].get(s)[0].to(dev) if args.raw else None
+    cl = [layers.index(int(x)) for x in args.ctx_layers.split(",")] if args.ctx_pos else []
+
+    def ctxraw(sp, s):                          # (B, len(cl)*C, D): raw states of the C positions before chunk s
+        dt = meta[sp][0]
+        assert not isinstance(dt, MultiData), "--ctx_pos supports a single train cache"
+        C = args.ctx_pos
+        rows = s[:, None] + np.arange(-C, 0)[None]
+        rc = np.clip(rows, 0, None)
+        ok = torch.from_numpy((rows >= 0) & (dt.seq[rc] == dt.seq[s][:, None]))          # same answer only
+        out = []
+        for li in cl:
+            mean, std, mask = dt.stats[li]
+            flat = rc.reshape(-1)
+            srt = np.argsort(flat)
+            a = np.empty((len(flat), dt.mm[li].shape[1]), np.float16)
+            a[srt] = dt.mm[li][flat[srt]]
+            x = (torch.from_numpy(a).float() - mean) / std
+            x[:, mask] = 0
+            out.append(x.view(len(s), C, -1) * ok[:, :, None])
+        return torch.cat(out, 1)
+
+    def rawx(sp, s):                            # (B, R*k [+ len(cl)*C], D) normalised target states, or None
+        if not args.raw:
+            return None
+        x = meta[sp][0].get(s)[0]
+        if args.ctx_pos:
+            x = torch.cat([x, ctxraw(sp, s)], 1)
+        return x.to(dev)
 
     def ctx(sp, s):                             # (B, hist*nq, zq) normalised, oldest first, zeros where missing
         seq = meta[sp][0].seq
@@ -343,7 +377,7 @@ def main():
             print(json.dumps(r), flush=True)
             if not np.isfinite(loss.item()):
                 raise SystemExit("non-finite loss")
-    tag = f"{'eval_' if args.eval_only else ''}{args.ae}_{args.mode}{'_raw' if args.raw else ''}{f'_{args.train_cache.replace(",", "+")}' if args.train_cache else ''}{f'_lat{args.lat_w:g}' if args.lat_w != 1 else ''}{f'_h{args.hist}' if args.hist > 1 else ''}{f'_d{args.d}x{args.depth}' if (args.d, args.depth) != (512, 6) else ''}{f'_s{args.steps}' if args.steps != 6000 else ''}{f'_nfe{args.nfe}' if args.mode == 'flow' and args.nfe != 8 else ''}{'_smoke' if args.smoke else ''}"
+    tag = f"{'eval_' if args.eval_only else ''}{args.ae}_{args.mode}{'_raw' if args.raw else ''}{f'_ctx{args.ctx_pos}' if args.ctx_pos else ''}{f'_{args.train_cache.replace(",", "+")}' if args.train_cache else ''}{f'_lat{args.lat_w:g}' if args.lat_w != 1 else ''}{f'_h{args.hist}' if args.hist > 1 else ''}{f'_d{args.d}x{args.depth}' if (args.d, args.depth) != (512, 6) else ''}{f'_s{args.steps}' if args.steps != 6000 else ''}{f'_nfe{args.nfe}' if args.mode == 'flow' and args.nfe != 8 else ''}{'_smoke' if args.smoke else ''}"
     if not args.smoke and not args.eval_only:
         torch.save({"model": net.state_dict(), "args": vars(args), "zm": zm.cpu(), "zs": zs.cpu()},
                    os.path.join(CKPT, f"stage2_{tag}.pt"))
