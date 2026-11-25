@@ -1,0 +1,20 @@
+<section id="examples">
+<p class="eyebrow">08 · REAL ROUNDS</p>
+<h2>What sampled futures look like</h2>
+<div class="row" style="align-items:stretch">
+<div class="card"><p class="label">GSM8K · context ends “Let’s break this down step”</p>
+<p class="mono" style="font-size:26px;color:#172033">8 ✓ <b>step.⏎⏎---⏎⏎### Step 1:</b></p>
+<p class="mono" style="font-size:26px">4 ✓ step.⏎⏎---⏎⏎### **1: Find</p>
+<p class="mono" style="font-size:26px">4 ✓ step.⏎⏎---⏎⏎### 1: Understand</p>
+<p class="mono" style="font-size:26px">1 ✓ step:⏎⏎---⏎⏎### 1: Determine</p>
+<p class="note">Target kept all 8 drafted tokens from the best branch, plus its own next token.</p></div>
+<div class="card"><p class="label">GSM8K · context ends “Janet’s ducks lay **1”</p>
+<p class="mono" style="font-size:26px;color:#172033">7 ✓ <b>eggs per day**.⏎⏎---⏎⏎### Step</b></p>
+<p class="mono" style="font-size:26px">4 ✓ eggs per day**---⏎⏎### Step</p>
+<p class="mono" style="font-size:26px">1 ✓ eggs days**.⏎⏎---⏎⏎### Step</p>
+<p class="mono" style="font-size:26px">0 ✓ days per****.⏎⏎### Step</p>
+<p class="note">Samples agree on the plan (end the line, start the next step) but differ in exact tokens.</p></div>
+</div>
+<p class="lead" style="font-size:30px">Branches share prefixes and fan out where the future is uncertain. Some samples are garbled token mixes: the sampler is still noisy, which is why sharper samples (more context, more data) are the first thing to buy.</p>
+<aside>Source: results/examples.json (285M sampler, 8 samples plus the deterministic chain, 2 flow steps). Numbers are drafted tokens the target accepted from that branch; ⏎ is a newline.</aside>
+</section>

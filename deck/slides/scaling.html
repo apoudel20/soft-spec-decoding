@@ -1,0 +1,15 @@
+<section id="scaling" class="alt">
+<p class="eyebrow">05 · ONE SCALING POINT</p>
+<h2>More data and a bigger sampler help, modestly</h2>
+<table>
+<tr><th style="width:52%">Flow sampler, 2 steps (accepted per round, max 9)</th><th style="text-align:right">Math</th><th style="text-align:right">Code</th><th style="text-align:right">Chat</th></tr>
+<tr><td>158M, 2M positions: one sample / best of 16</td><td style="text-align:right">2.85 / 4.04</td><td style="text-align:right">1.95 / 2.89</td><td style="text-align:right">1.41 / 1.85</td></tr>
+<tr><td>285M, 6M positions: one sample / best of 16</td><td style="text-align:right">3.04 / 4.18</td><td style="text-align:right">2.08 / 3.06</td><td style="text-align:right">1.46 / 1.92</td></tr>
+</table>
+<div class="row">
+<div class="card teal"><p class="big">+3 to 7%</p><p class="label">on every metric, and one sample now matches the deterministic predictor</p></div>
+<div class="card orange"><h3>Confounded</h3><p>Size, data, shape and warm start all changed at once (285M trained from scratch, 158M warm-started). One point, not a trend.</p></div>
+<div class="card"><h3>Reading</h3><p>Gains are small for 3x the data. With history adding nothing, context is the likelier limit than size.</p></div>
+</div>
+<aside>Training data: Qwen3-8B’s own non-thinking answers (PerfectBlend regeneration), checked against every benchmark prompt: no overlap with MT-Bench, GSM8K test, HumanEval, MBPP validation or UltraChat test.</aside>
+</section>

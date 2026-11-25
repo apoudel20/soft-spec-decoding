@@ -6,8 +6,8 @@ The early sections below are the original Qwen2.5-1.5B study (target Qwen2.5-1.5
 Qwen2.5-0.5B-Instruct), kept as the record. Its pending follow-ups were completed or superseded on Qwen3-8B.
 
 Scope and caveats for every Gister number:
-- **Greedy decoding only.** Stage 1 matches the target's top-1 token 99.4 / 99.0 / 97.3% (math / code / chat), but
-  its pre-registered gate also required the decoded distribution to stay close to the target's (total variation
+- **Greedy decoding only.** Stage 1 matches the target's top-1 token 99.4 / 99.0 / 97.3% (math / code / chat), which
+  is itself below the gate's 99.5 / 99.5 / 99.0% (`agree_ok: false` on all three sets). The gate also required the decoded distribution to stay close to the target's (total variation
   <= 0.005 to 0.01). Measured TV is 0.060 / 0.064 / 0.202 and KL 0.20 / 0.23 / 0.84, so the gate fails
   (`results/ae_gate_gist_hf_z2048.json`, `pass: false`). Greedy verification uses only the top-1 token, so the
   greedy results stand, but sampling at T > 0 would need a far tighter stage 1.
@@ -18,9 +18,10 @@ Scope and caveats for every Gister number:
   `e2e.json`, 12 / 9 tok/s in `e2e_tree_fast.json` when desktop apps shared the GPU). Speedups are only compared
   within a run. An earlier "+12% tree speedup on GSM8K" came from a throttled run and is withdrawn: on an idle GPU
   (`e2e_final.json`) every tree is slower than the chain.
-- **Draft latency is unoptimised.** Gister drafts in eager PyTorch (27 ms chain, 35 to 67 ms trees) against a
-  4-bit target step of about 96 ms. On an optimised bf16 engine a Qwen3-8B step is far shorter, so the drafter would
-  need CUDA graphs, fewer layers or a one-step sampler to keep any speedup.
+- **Draft latency is unoptimised.** On an idle GPU Gister drafts in about 11 ms (chain) and 15 to 49 ms (trees, before
+  the bf16-drafting fix) against a 4-bit target decode step of about 39 to 45 ms (`profile_tree_idle.json`). On an
+  optimised bf16 engine a Qwen3-8B step is far shorter, so the drafter would need CUDA graphs, fewer layers or a
+  one-step sampler to keep any speedup.
 
 ## Relation to prior work
 
@@ -530,8 +531,8 @@ Full end-to-end benchmark (`e2e.py`, 20 prompts per set, 256 new tokens, `result
 Plain greedy ran at 21.2 / 15.9 / 19.2 tok/s. The low GSM8K baseline inflates every GSM8K speedup by the same factor.
 Drafters with the same verification width give identical text (dflash8, gister, gister_v2 in
 `e2e.json`). Wider verification (DFlash's 16 tokens, trees of 30 to 120 nodes) diverges differently at near-ties
-under 4-bit batched numerics, so the identical counts differ by drafter. Differences from plain greedy (15 / 9 / 5 prompts) are 4-bit
-batched-verify numerics, the same for every drafter.
+under 4-bit batched numerics, so the identical counts differ by drafter. For the width-9 drafters, 15 / 9 / 5 prompts
+differ from plain greedy (counts match across those drafters; pairwise agreement was checked only in the smoke test).
 
 Gister sampler (`stage2.py --mode flow --raw --train_cache cache_pb --d 1024 --depth 12 --dec_w 0 --t_shift 3
 --nfe 8 --init stage2_gister_v2 --steps 10000 --bestk 4,8,16`), offline, out of 9:
@@ -562,12 +563,9 @@ target pass with a tree attention mask; a one-branch tree reproduces the chain p
 | tree, 16 samples + chain, 2 steps | 2.01 | 1.33x | 3.12 | 2.24x | 2.08 | 1.48x |
 | tree, 8 samples + chain, 1 step | 1.80 | 1.36x | 2.79 | 2.29x | 1.90 | 1.62x |
 
-Trees raise tau 18% to 31%, as predicted offline, with no net speedup yet: a tree round costs 122 to 146 ms
-against 100 to 104 ms for the chain. Under desktop GPU contention verifying up to 112 nodes cost about the same as one decode step;
-on an idle GPU it does not (see the audited section below)
-(`profile_tree.py`), so the overhead is drafting and tree bookkeeping, being cut. Desktop apps shared the GPU during
-this run (plain greedy 10 tok/s against 21 earlier), which lowers absolute speeds but not the comparison. On a
-larger target the fixed draft cost is a smaller share of each round.
+This `e2e_tree.json` run was taken while desktop apps shared the GPU (plain greedy 10 tok/s against 21), which
+distorts the tree-vs-chain speed comparison. Its tau values stand; its speedups are superseded by `e2e_final.json` in
+the audited section below.
 
 ## Gister, audited state (25 Nov)
 
@@ -587,7 +585,9 @@ token (`--headfeat`), and the middle layers barely mattered (z1024 final row onl
 | Stage 2 | Math | Code | Chat |
 |---|---|---|---|
 | deterministic, 154M, 2M positions (v2) | 3.08 | 2.22 | 1.45 |
-| same, plus 64 positions of gist history (`_h8`, 20M, old cache) | 2.81 | 2.15 | 1.39 |
+| v1: deterministic + raw states, 20M, 512K positions | 2.80 | 2.23 | 1.43 |
+| v1 + 7 prior gist chunks (`--hist 8`, 64 positions in total) | 2.81 | 2.15 | 1.39 |
+| v1 inputs, no latent: 8 tokens predicted directly (`--direct`) | 2.73 | 2.16 | 1.39 |
 | flow sampler 158M / 2M positions, warm-started from v2, 2 steps: one sample | 2.85 | 1.95 | 1.41 |
 | best of 8 | 3.72 (+21%) | 2.64 (+19%) | 1.72 (+18%) |
 | best of 16 | 4.04 (+31%) | 2.89 (+30%) | 1.85 (+27%) |
@@ -603,10 +603,13 @@ Percentages are against the deterministic v2. Per doubling of K (8 to 16): +0.31
 token): Gister 285M best of 8 is 2.94 / 1.73 / 0.77, which is 49% / 29% / 29% of DFlash's 64-node tree and 60% / 38% /
 46% of DFlash's capped chain. Best of K is the ceiling for a K-branch tree, not a measured speedup.
 
-The 158M to 285M step changes four things at once (parameters, 3x data, width and depth, warm start vs from
-scratch), so it is one confounded scaling point: +3 to 7% per metric. The gist-history ablation shows no gain from
-64 positions of gist history. Two ablations are running: the target's raw states for the 56 positions before the
-chunk (full-context test) and a direct-token control with no latent (does the gist beat predicting tokens directly?).
+The 158M to 285M step changes several things at once (158M to 285M parameters through width and depth, 2M to 6M
+positions, 30k to 24k total steps, warm start vs from scratch), so it is one confounded scaling point: +3 to 7% per
+metric. The gist-history ablation shows no gain. **Direct-token control** (`stage2_gist_hf_z2048_det_direct_raw.json`,
+same inputs, size and steps as v1, predicting the 8 head-input states directly with no latent): 2.73 / 2.16 / 1.39
+against 2.80 / 2.23 / 1.43 for v1 with the gist latent. The latent matches direct prediction and edges it by about 3%;
+it costs nothing here, but it is not a decisive advantage either. The full-context test (raw states of the 56 earlier
+positions, batch 64 x 20k steps after a first attempt overflowed GPU memory) is running.
 
 **End to end on an idle GPU** (`e2e_final.json`, 20 prompts per set, 256 new tokens, plain greedy 22.5 / 21.6 /
 22.3 tok/s, bf16 drafting for every drafter, no extra round after end of sequence):
@@ -621,7 +624,8 @@ chunk (full-context test) and a direct-token control with no latent (does the gi
 - Gister's chain and DFlash cost the same per round. DFlash wins entirely on accepted tokens.
 - Trees raise tau 18 to 32% but cost 45 to 55% more per round, so every tree is slower than the chain here.
   Profiled on the idle GPU (`profile_tree.py`, 09:00 run): plain decode step 39 ms; chain draft 11 ms + verify 40 ms;
-  tree of 67 nodes draft 30 ms + verify 62 ms; 120 nodes draft 49 ms + verify 78 ms. Verification is not flat in
+  tree of 67 nodes draft 30 ms + verify 62 ms; 120 nodes draft 49 ms + verify 78 ms (285M sampler, before the
+bf16-drafting fix, fixed context of prompt + 200 tokens; the end-to-end rows above include the fix). Verification is not flat in
   tree size on an idle GPU (the earlier flat profile was taken under desktop contention), and the 4-bit bitsandbytes
   kernels make all of these numbers specific to this setup. bf16 or FP8 engines change both draft and verify costs.
 - Identical outputs: drafters with the same verification width agree on every prompt; wider verification diverges

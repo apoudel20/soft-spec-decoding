@@ -1,0 +1,11 @@
+<section id="idea">
+<p class="eyebrow">01 · THE IDEA</p>
+<h2>Sample several futures of the target’s own states, check them at once</h2>
+<div class="row" style="align-items:stretch">
+<div class="card anim" style="--i:0"><h3>1 · Compress</h3><p>Stage 1 turns the target’s hidden states for 8 tokens into one 2,048-dim latent and decodes them back through the target’s frozen output layer.</p></div>
+<div class="card teal anim" style="animation-delay:150ms"><h3>2 · Sample futures</h3><p>Stage 2, a flow-matching sampler, draws several possible next latents from the current one plus the target’s raw states.</p></div>
+<div class="card anim" style="animation-delay:300ms"><h3>3 · Verify as a tree</h3><p>Each sample decodes to a whole 8-token continuation. Shared prefixes merge into one tree, checked in one target pass. Output stays the target’s.</p></div>
+</div>
+<div class="card alt" style="background:#ECEAE2;border-color:#CFCBBF"><h3>Closest prior work</h3><p>ChainFlow (VAE over target states, flow to 8 positions, one deterministic draft) · FlashMap (flow from multi-layer states, several draws as a tree) · MFD, DBLast (coherent multi-future trees) · CALM (one latent per token chunk) · DFlash + DDTree (per-slot trees). Gister’s specific combination: several sampled latents of a chunk of the target’s own future states, each decoded jointly.</p></div>
+<aside>Be explicit that the components exist in prior work. The contribution is the combination, and the evidence so far is about whether sampling in this latent space works, not about beating these methods.</aside>
+</section>

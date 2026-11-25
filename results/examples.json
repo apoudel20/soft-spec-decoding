@@ -1,0 +1,3285 @@
+{
+ "args": {
+  "s2": "stage2_gister_flow_big",
+  "k": 8,
+  "rounds": 12
+ },
+ "examples": [
+  {
+   "set": "gsm8k",
+   "prompt": "Janet’s ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market?\nPlease reason step by step, and put your final answer within \\boxed{}.",
+   "rounds": [
+    {
+     "context_tail": ". How much in dollars does she make every day at the farmers' market?\nPlease reason step by step, and put your final answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+     "bonus": "Let",
+     "drafts": [
+      {
+       "text": " step to find out number a candy per",
+       "accepted": 0
+      },
+      {
+       "text": ", step step to step: 1",
+       "accepted": 0
+      },
+      {
+       "text": " step step step the number number number1",
+       "accepted": 0
+      },
+      {
+       "text": "\n\n total beans from from ** cars to",
+       "accepted": 0
+      },
+      {
+       "text": " 1. **Step 5:",
+       "accepted": 0
+      },
+      {
+       "text": ":\n\n Step **  ** by ** **",
+       "accepted": 0
+      },
+      {
+       "text": " Step **- **Total of **",
+       "accepted": 0
+      },
+      {
+       "text": "\n\n###1: 1 per **",
+       "accepted": 0
+      },
+      {
+       "text": ", Step,, number.\n\n",
+       "accepted": 0
+      }
+     ],
+     "kept": "Let",
+     "kept_tokens": 1,
+     "tree_nodes": 69
+    },
+    {
+     "context_tail": " How much in dollars does she make every day at the farmers' market?\nPlease reason step by step, and put your final answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet",
+     "bonus": "'s",
+     "drafts": [
+      {
+       "text": " solve this step.\n\n---\n\n### StepStep",
+       "accepted": 0
+      },
+      {
+       "text": " break it down by.\n\n---\n\n---\n\n###",
+       "accepted": 1
+      },
+      {
+       "text": " break it step by step step.\n\n---\n\n",
+       "accepted": 1
+      },
+      {
+       "text": " break down into each day.\n\n- **",
+       "accepted": 1
+      },
+      {
+       "text": " solve down step step:\n\n step step step",
+       "accepted": 0
+      },
+      {
+       "text": " break this down to step by step1",
+       "accepted": 3
+      },
+      {
+       "text": " break this total.\n\n each day into **",
+       "accepted": 2
+      },
+      {
+       "text": " solve down this each step.\n\n---\n\n Step",
+       "accepted": 0
+      },
+      {
+       "text": " break down step by step---\n\n---\n\n Step",
+       "accepted": 1
+      }
+     ],
+     "kept": "'s break this down",
+     "kept_tokens": 4,
+     "tree_nodes": 62
+    },
+    {
+     "context_tail": " does she make every day at the farmers' market?\nPlease reason step by step, and put your final answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break this down",
+     "bonus": " step",
+     "drafts": [
+      {
+       "text": " by step.\n\n---\n\n ** 1:",
+       "accepted": 2
+      },
+      {
+       "text": " by by step.\n\n---\n\n###  ",
+       "accepted": 1
+      },
+      {
+       "text": " step:\n\n---\n\n### **Step11",
+       "accepted": 0
+      },
+      {
+       "text": " by step.\n\n step the number **1",
+       "accepted": 2
+      },
+      {
+       "text": " step step by step:\n\n### **1",
+       "accepted": 0
+      },
+      {
+       "text": " step.\n\n---\n\n### Step  Step1",
+       "accepted": 0
+      },
+      {
+       "text": " by step:\n\n:\n\n:\n\n---\n\n###1",
+       "accepted": 3
+      },
+      {
+       "text": " by step by **Step:\n\n---\n\n###",
+       "accepted": 2
+      },
+      {
+       "text": " by step step.\n\n.\n\n ** ** **",
+       "accepted": 2
+      }
+     ],
+     "kept": " step by step:\n\n",
+     "kept_tokens": 4,
+     "tree_nodes": 61
+    },
+    {
+     "context_tail": " day at the farmers' market?\nPlease reason step by step, and put your final answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break this down step by step:\n\n",
+     "bonus": "---\n\n",
+     "drafts": [
+      {
+       "text": "### 1. ** Total ate eggs",
+       "accepted": 1
+      },
+      {
+       "text": "### **Step : Total total number",
+       "accepted": 4
+      },
+      {
+       "text": "### **Step:Total TotalTotal:",
+       "accepted": 3
+      },
+      {
+       "text": "### **Step 1: Total daily",
+       "accepted": 7
+      },
+      {
+       "text": "### **11 Total Total number from",
+       "accepted": 2
+      },
+      {
+       "text": "### **Step 1Total total total",
+       "accepted": 5
+      },
+      {
+       "text": "### **1: TotalTotal number:",
+       "accepted": 2
+      },
+      {
+       "text": "### **11: Total number total",
+       "accepted": 2
+      },
+      {
+       "text": "### **Step.::: of",
+       "accepted": 3
+      }
+     ],
+     "kept": "---\n\n### **Step 1: Total",
+     "kept_tokens": 8,
+     "tree_nodes": 48
+    },
+    {
+     "context_tail": " reason step by step, and put your final answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break this down step by step:\n\n---\n\n### **Step 1: Total",
+     "bonus": " eggs",
+     "drafts": [
+      {
+       "text": " per day**\nEach eats has ** **",
+       "accepted": 0
+      },
+      {
+       "text": " per day**\n\n-- eats ** eggs",
+       "accepted": 0
+      },
+      {
+       "text": " per eggs**\n**\nShe buys ** buys",
+       "accepted": 0
+      },
+      {
+       "text": " per eggs eggs**\nShe**\n ** buys",
+       "accepted": 0
+      },
+      {
+       "text": " per eggs eggs**\n-  day per",
+       "accepted": 0
+      },
+      {
+       "text": " per eggs**\n**\n\nEach ** ** **",
+       "accepted": 0
+      },
+      {
+       "text": " per day**\n**\n- ** **8",
+       "accepted": 0
+      },
+      {
+       "text": " per eggs day day**\n\n- 1",
+       "accepted": 0
+      },
+      {
+       "text": " from eggs**\n**\n\n- ** **2",
+       "accepted": 0
+      }
+     ],
+     "kept": " eggs",
+     "kept_tokens": 1,
+     "tree_nodes": 56
+    },
+    {
+     "context_tail": " step by step, and put your final answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break this down step by step:\n\n---\n\n### **Step 1: Total eggs",
+     "bonus": " laid",
+     "drafts": [
+      {
+       "text": " per**\n-She eggs has ** **",
+       "accepted": 1
+      },
+      {
+       "text": " eggs**\n\nEach eggs eats ** ** **",
+       "accepted": 0
+      },
+      {
+       "text": " per day**\n- He buys ** **",
+       "accepted": 3
+      },
+      {
+       "text": " day**\n day**\n\n- **18",
+       "accepted": 0
+      },
+      {
+       "text": " per**\n**\n- eats **1 ",
+       "accepted": 1
+      },
+      {
+       "text": " eggs**\n**\nShe buys **1**",
+       "accepted": 0
+      },
+      {
+       "text": " per**\n**\n**\nHe eggs ** **",
+       "accepted": 1
+      },
+      {
+       "text": " eggs**\n\n**\n\n-Monday ducks must **",
+       "accepted": 0
+      },
+      {
+       "text": " per day**\nA ** **22",
+       "accepted": 3
+      }
+     ],
+     "kept": " laid per day**\n",
+     "kept_tokens": 4,
+     "tree_nodes": 61
+    },
+    {
+     "context_tail": " and put your final answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break this down step by step:\n\n---\n\n### **Step 1: Total eggs laid per day**\n",
+     "bonus": "Jan",
+     "drafts": [
+      {
+       "text": "ias eats ** **28****",
+       "accepted": 0
+      },
+      {
+       "text": "ias** eggs **8 eggs****",
+       "accepted": 0
+      },
+      {
+       "text": "day first ** eggs ** eggs eggs eggs",
+       "accepted": 0
+      },
+      {
+       "text": "ietates ** eggs **26**",
+       "accepted": 0
+      },
+      {
+       "text": "ene spends ** **26 eggs**",
+       "accepted": 0
+      },
+      {
+       "text": "ay ate ** **22 days**",
+       "accepted": 0
+      },
+      {
+       "text": "ice eggs ** eggs per eggs**$$",
+       "accepted": 0
+      },
+      {
+       "text": "akates ** **20 eggs.\n\n",
+       "accepted": 0
+      },
+      {
+       "text": "ie ** ** ** eggs eggs****",
+       "accepted": 0
+      }
+     ],
+     "kept": "Jan",
+     "kept_tokens": 1,
+     "tree_nodes": 72
+    },
+    {
+     "context_tail": " put your final answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break this down step by step:\n\n---\n\n### **Step 1: Total eggs laid per day**\nJan",
+     "bonus": "et",
+     "drafts": [
+      {
+       "text": " has **22 eggs eggs**.\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " has **120** eggs**",
+       "accepted": 0
+      },
+      {
+       "text": " spends spends **2 days days** day",
+       "accepted": 0
+      },
+      {
+       "text": " has **18** eggs**.\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " has **38 eggs per eggs**",
+       "accepted": 0
+      },
+      {
+       "text": " starts **ays **6 day**.\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " will ** **2 eggs** per day",
+       "accepted": 0
+      },
+      {
+       "text": " has **88 days.\n\n---\n\n.\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " buys **2 eggs eggs.\n\n**.\n\n",
+       "accepted": 0
+      }
+     ],
+     "kept": "et",
+     "kept_tokens": 1,
+     "tree_nodes": 64
+    },
+    {
+     "context_tail": " your final answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break this down step by step:\n\n---\n\n### **Step 1: Total eggs laid per day**\nJanet",
+     "bonus": "'s",
+     "drafts": [
+      {
+       "text": " eggs ** **2 days** day.\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " ** ducks **2 eggs**.\n\n---\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " **ges8 38**.\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " eggs ** **22 eggs**.\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " eggs ** buys **5****.\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " ducks ducks ** **6**.\n\n---\n\n",
+       "accepted": 1
+      },
+      {
+       "text": " eggs ** **12 days**.\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " eggs ** **ks per eggs eggs.\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " chickens ducks **2 eggs** days day",
+       "accepted": 0
+      }
+     ],
+     "kept": "'s ducks",
+     "kept_tokens": 2,
+     "tree_nodes": 60
+    },
+    {
+     "context_tail": " answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break this down step by step:\n\n---\n\n### **Step 1: Total eggs laid per day**\nJanet's ducks",
+     "bonus": " lay",
+     "drafts": [
+      {
+       "text": " **6 days days**.\n\n---\n\n---\n\n",
+       "accepted": 1
+      },
+      {
+       "text": " **22 days**.\n\n.\n\n---\n\n",
+       "accepted": 1
+      },
+      {
+       "text": " **6 eggs per**.\n\n.\n\n.\n\n",
+       "accepted": 1
+      },
+      {
+       "text": " **2 days per day**.\n\n---\n\n",
+       "accepted": 1
+      },
+      {
+       "text": " **60 days**---\n\n### **",
+       "accepted": 1
+      },
+      {
+       "text": " **20 days per day**.\n\n",
+       "accepted": 1
+      },
+      {
+       "text": " **1 days per**.\n\n.\n\n day",
+       "accepted": 2
+      },
+      {
+       "text": " **22** day**.\n\n---\n\n",
+       "accepted": 1
+      },
+      {
+       "text": " **2 eggs****.\n\n---\n\n---\n\n",
+       "accepted": 1
+      }
+     ],
+     "kept": " lay **1",
+     "kept_tokens": 3,
+     "tree_nodes": 58
+    },
+    {
+     "context_tail": "boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break this down step by step:\n\n---\n\n### **Step 1: Total eggs laid per day**\nJanet's ducks lay **1",
+     "bonus": "6",
+     "drafts": [
+      {
+       "text": " days per**.\n\n---\n\n### Step ",
+       "accepted": 0
+      },
+      {
+       "text": " eggs days**.\n\n---\n\n### Step ",
+       "accepted": 1
+      },
+      {
+       "text": " eggs per day**.\n\n---\n\n###.",
+       "accepted": 7
+      },
+      {
+       "text": " days per****.\n\n### Step ",
+       "accepted": 0
+      },
+      {
+       "text": " eggs per day**---\n\n### Step ",
+       "accepted": 4
+      },
+      {
+       "text": " eggs per day**.\n\n---\n\n### Step",
+       "accepted": 7
+      },
+      {
+       "text": " eggs per day**.\n\n---\n\n### Step",
+       "accepted": 7
+      },
+      {
+       "text": " eggs days****.\n\n---\n\n Step ",
+       "accepted": 1
+      },
+      {
+       "text": " eggs********---\n\n### Step",
+       "accepted": 1
+      }
+     ],
+     "kept": "6 eggs per day**.\n\n---\n\n###",
+     "kept_tokens": 8,
+     "tree_nodes": 46
+    },
+    {
+     "context_tail": "\n\n</think>\n\nLet's break this down step by step:\n\n---\n\n### **Step 1: Total eggs laid per day**\nJanet's ducks lay **16 eggs per day**.\n\n---\n\n###",
+     "bonus": " **",
+     "drafts": [
+      {
+       "text": "Step 2: Determine of eggs eggs",
+       "accepted": 4
+      },
+      {
+       "text": "Step 2: Determine eggs eggs eggs",
+       "accepted": 4
+      },
+      {
+       "text": "Step 2: Total eggs eggs ate",
+       "accepted": 4
+      },
+      {
+       "text": "Step 2: Determine the eggs of",
+       "accepted": 4
+      },
+      {
+       "text": "Step 2: Determine eggs per per",
+       "accepted": 4
+      },
+      {
+       "text": "Step 2: Total eggs per eggs",
+       "accepted": 4
+      },
+      {
+       "text": "Step 2: Total of eggs eggs",
+       "accepted": 4
+      },
+      {
+       "text": "Step 2: Total eggs are eggs",
+       "accepted": 4
+      },
+      {
+       "text": "Step 2: How eggs eggs eggs",
+       "accepted": 4
+      }
+     ],
+     "kept": " **Step 2:",
+     "kept_tokens": 5,
+     "tree_nodes": 32
+    }
+   ]
+  },
+  {
+   "set": "gsm8k",
+   "prompt": "A robe takes 2 bolts of blue fiber and half that much white fiber.  How many bolts in total does it take?\nPlease reason step by step, and put your final answer within \\boxed{}.",
+   "rounds": [
+    {
+     "context_tail": " half that much white fiber.  How many bolts in total does it take?\nPlease reason step by step, and put your final answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+     "bonus": "Let",
+     "drafts": [
+      {
+       "text": " a a problem that the is ** of",
+       "accepted": 0
+      },
+      {
+       "text": " we are the of **2 ounce.\n\n",
+       "accepted": 0
+      },
+      {
+       "text": "### Step 1 **Total per**\n\n",
+       "accepted": 0
+      },
+      {
+       "text": "\n\n### Step: ** beans\n1",
+       "accepted": 0
+      },
+      {
+       "text": "\n\nLet, Calculate  ** **1",
+       "accepted": 0
+      },
+      {
+       "text": ",### Step: problem of of a",
+       "accepted": 0
+      },
+      {
+       "text": " Let's given a the ** **",
+       "accepted": 0
+      },
+      {
+       "text": " given:\n\n **Step Problem**\n\n the number",
+       "accepted": 0
+      },
+      {
+       "text": ", the 11 the the the",
+       "accepted": 0
+      }
+     ],
+     "kept": "Let",
+     "kept_tokens": 1,
+     "tree_nodes": 71
+    },
+    {
+     "context_tail": " that much white fiber.  How many bolts in total does it take?\nPlease reason step by step, and put your final answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet",
+     "bonus": "'s",
+     "drafts": [
+      {
+       "text": " break it problem step by step.\n\n---\n\n",
+       "accepted": 1
+      },
+      {
+       "text": " solve it the step:\n\nStep step:\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " solve it step.\n\n.\n\n the the **",
+       "accepted": 0
+      },
+      {
+       "text": " break the:\n\n---\n\n:\n\nStep 2",
+       "accepted": 1
+      },
+      {
+       "text": " break it step:\n\n---\n\n### Step ",
+       "accepted": 1
+      },
+      {
+       "text": " solve it the problem problem of a.\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " solve it problem 3 step.\n\n---\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " solve it.\n\n.\n\n:\n\n the step step",
+       "accepted": 0
+      },
+      {
+       "text": " break down down step step---\n\n---\n\n Step",
+       "accepted": 1
+      }
+     ],
+     "kept": "'s break",
+     "kept_tokens": 2,
+     "tree_nodes": 60
+    },
+    {
+     "context_tail": " white fiber.  How many bolts in total does it take?\nPlease reason step by step, and put your final answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break",
+     "bonus": " this",
+     "drafts": [
+      {
+       "text": " step by step step by step the step",
+       "accepted": 0
+      },
+      {
+       "text": " problem into step step.\n\n---\n\n### Step",
+       "accepted": 0
+      },
+      {
+       "text": " the problem step by step.\n\n---\n\n Step",
+       "accepted": 0
+      },
+      {
+       "text": " step by step by step step.\n\n---\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " problem step step step.\n\n step.\n\n###",
+       "accepted": 0
+      },
+      {
+       "text": " step by step by step.\n\n.\n\n---\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " problem by step step.\n\n---\n\n Step###",
+       "accepted": 0
+      },
+      {
+       "text": " step by step by.\n\n---\n\n### Step",
+       "accepted": 0
+      },
+      {
+       "text": " down step step step step---\n\n---\n\n Step",
+       "accepted": 2
+      }
+     ],
+     "kept": " this down step",
+     "kept_tokens": 3,
+     "tree_nodes": 59
+    },
+    {
+     "context_tail": "  How many bolts in total does it take?\nPlease reason step by step, and put your final answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break this down step",
+     "bonus": " by",
+     "drafts": [
+      {
+       "text": " step.\n\n---\n\n### **1: Find",
+       "accepted": 4
+      },
+      {
+       "text": " step:\n\n---\n\n### 1: Determine",
+       "accepted": 1
+      },
+      {
+       "text": " step.\n\n---\n\n ** ** ** many **",
+       "accepted": 3
+      },
+      {
+       "text": " step.\n\n---\n\n### Step 1:",
+       "accepted": 8
+      },
+      {
+       "text": " step.\n\n---\n\n### 1: Understand",
+       "accepted": 4
+      },
+      {
+       "text": " step.\n\n---\n\n### Step 1:",
+       "accepted": 8
+      },
+      {
+       "text": " step.\n\n---\n\n the find ** step:\n\n",
+       "accepted": 3
+      },
+      {
+       "text": " step.\n\n### find the ** of:\n\n",
+       "accepted": 2
+      },
+      {
+       "text": " step.\n\n###  **11:",
+       "accepted": 2
+      }
+     ],
+     "kept": " by step.\n\n---\n\n### Step 1:",
+     "kept_tokens": 9,
+     "tree_nodes": 45
+    },
+    {
+     "context_tail": "?\nPlease reason step by step, and put your final answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break this down step by step.\n\n---\n\n### Step 1:",
+     "bonus": " Understand",
+     "drafts": [
+      {
+       "text": " the problem of tire\n\nThe number\n\n",
+       "accepted": 1
+      },
+      {
+       "text": " the number of **\n\n\n ** **",
+       "accepted": 1
+      },
+      {
+       "text": " the number\n\n\n\n ** ball\n\n-",
+       "accepted": 1
+      },
+      {
+       "text": " the find of ** balls\n- **",
+       "accepted": 1
+      },
+      {
+       "text": " the number of ** balls\n **\n",
+       "accepted": 1
+      },
+      {
+       "text": " the number of each ** one quarter in",
+       "accepted": 1
+      },
+      {
+       "text": " the number amount\n-- ** **",
+       "accepted": 1
+      },
+      {
+       "text": " the total amount per **\n\n- **",
+       "accepted": 1
+      },
+      {
+       "text": " the the to to to to ** **",
+       "accepted": 1
+      }
+     ],
+     "kept": " Understand the",
+     "kept_tokens": 2,
+     "tree_nodes": 58
+    },
+    {
+     "context_tail": " reason step by step, and put your final answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break this down step by step.\n\n---\n\n### Step 1: Understand the",
+     "bonus": " requirements",
+     "drafts": [
+      {
+       "text": "\n\n-The **ers has **8",
+       "accepted": 2
+      },
+      {
+       "text": "\n\n- We are given that ** **",
+       "accepted": 2
+      },
+      {
+       "text": "\n\nThe number of **: **1",
+       "accepted": 1
+      },
+      {
+       "text": "\n\n- are are ** ** ** **",
+       "accepted": 2
+      },
+      {
+       "text": "\n\n- ** are ** **1 dozen",
+       "accepted": 2
+      },
+      {
+       "text": "\n\n- ** ** **old **8",
+       "accepted": 2
+      },
+      {
+       "text": "\n\n- ** cake: **10",
+       "accepted": 2
+      },
+      {
+       "text": "\n\nWe are, are ** ** **",
+       "accepted": 1
+      },
+      {
+       "text": "\n\n- ** ** ** **11",
+       "accepted": 2
+      }
+     ],
+     "kept": " requirements\n\n-",
+     "kept_tokens": 3,
+     "tree_nodes": 54
+    },
+    {
+     "context_tail": " step, and put your final answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break this down step by step.\n\n---\n\n### Step 1: Understand the requirements\n\n-",
+     "bonus": " A",
+     "drafts": [
+      {
+       "text": " ** type is ** **4 of **",
+       "accepted": 1
+      },
+      {
+       "text": " ** **pe3 pairs** pencils**",
+       "accepted": 1
+      },
+      {
+       "text": " dozen** must needed to ** ** **",
+       "accepted": 0
+      },
+      {
+       "text": " ** ** ** **1 cups blue**",
+       "accepted": 1
+      },
+      {
+       "text": " ** can make **** ** balls**",
+       "accepted": 1
+      },
+      {
+       "text": " ** ** **** to ** ** **",
+       "accepted": 1
+      },
+      {
+       "text": " wheel has ** **3** square**",
+       "accepted": 0
+      },
+      {
+       "text": " **** has ** **b houses**",
+       "accepted": 1
+      },
+      {
+       "text": " **a ** ** ** ** ****",
+       "accepted": 1
+      }
+     ],
+     "kept": " A **",
+     "kept_tokens": 2,
+     "tree_nodes": 64
+    },
+    {
+     "context_tail": " and put your final answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break this down step by step.\n\n---\n\n### Step 1: Understand the requirements\n\n- A **",
+     "bonus": "robe",
+     "drafts": [
+      {
+       "text": "**** ** **2 cups redlaces",
+       "accepted": 1
+      },
+      {
+       "text": "** has **1 ** tilesfts**",
+       "accepted": 1
+      },
+      {
+       "text": "** has ** **22****",
+       "accepted": 1
+      },
+      {
+       "text": "** uses ** ** ** cups of **",
+       "accepted": 1
+      },
+      {
+       "text": "** requires ** **1 dozen nails**",
+       "accepted": 2
+      },
+      {
+       "text": "** has ** **1 pieces of **",
+       "accepted": 1
+      },
+      {
+       "text": "** uses ** ** **8** **",
+       "accepted": 1
+      },
+      {
+       "text": "** can make ** **3 cups**",
+       "accepted": 1
+      },
+      {
+       "text": "** can ** ** ** ** ****",
+       "accepted": 1
+      }
+     ],
+     "kept": "robe** requires",
+     "kept_tokens": 3,
+     "tree_nodes": 55
+    },
+    {
+     "context_tail": " final answer within \\boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break this down step by step.\n\n---\n\n### Step 1: Understand the requirements\n\n- A **robe** requires",
+     "bonus": ":\n",
+     "drafts": [
+      {
+       "text": "- **2 of **length length of",
+       "accepted": 0
+      },
+      {
+       "text": "- **22 of ** of **",
+       "accepted": 0
+      },
+      {
+       "text": "  - 8 nails** of-",
+       "accepted": 2
+      },
+      {
+       "text": "  -2 of of blue** green",
+       "accepted": 2
+      },
+      {
+       "text": "  - ** ** oflacks**",
+       "accepted": 3
+      },
+      {
+       "text": "2.2 of of balls** (",
+       "accepted": 0
+      },
+      {
+       "text": "  -22 of feet of **",
+       "accepted": 2
+      },
+      {
+       "text": "  -2 number of silver** (",
+       "accepted": 2
+      },
+      {
+       "text": "  - **1 of of of**",
+       "accepted": 3
+      }
+     ],
+     "kept": ":\n  - **",
+     "kept_tokens": 4,
+     "tree_nodes": 57
+    },
+    {
+     "context_tail": "boxed{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break this down step by step.\n\n---\n\n### Step 1: Understand the requirements\n\n- A **robe** requires:\n  - **",
+     "bonus": "2",
+     "drafts": [
+      {
+       "text": " blue beans****\n   **2**",
+       "accepted": 0
+      },
+      {
+       "text": " blue blue beans** **2 barrels ",
+       "accepted": 0
+      },
+      {
+       "text": " foot foot beans**  \n 22",
+       "accepted": 0
+      },
+      {
+       "text": " blue beans** balls**\n  - **",
+       "accepted": 0
+      },
+      {
+       "text": " blue of of**\n   - **",
+       "accepted": 0
+      },
+      {
+       "text": " blue blue beans****\n  - **",
+       "accepted": 0
+      },
+      {
+       "text": " blue of blue**.\n- - **",
+       "accepted": 0
+      },
+      {
+       "text": " blue b**\n**\n  - ** **",
+       "accepted": 0
+      },
+      {
+       "text": " large of of of**\n**\n ** **",
+       "accepted": 0
+      }
+     ],
+     "kept": "2",
+     "kept_tokens": 1,
+     "tree_nodes": 61
+    },
+    {
+     "context_tail": "{}.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break this down step by step.\n\n---\n\n### Step 1: Understand the requirements\n\n- A **robe** requires:\n  - **2",
+     "bonus": " bolts",
+     "drafts": [
+      {
+       "text": " of of**\n**\n  - **R",
+       "accepted": 1
+      },
+      {
+       "text": " of a****\n  - - **",
+       "accepted": 1
+      },
+      {
+       "text": " of nails of**\n**\n  - **",
+       "accepted": 1
+      },
+      {
+       "text": " of blue blue**\n**\n- 2",
+       "accepted": 2
+      },
+      {
+       "text": " of beans**\n\n  - ** **",
+       "accepted": 1
+      },
+      {
+       "text": " of blue beans**\n  \n  - **",
+       "accepted": 2
+      },
+      {
+       "text": "** the ****\n  - ** **",
+       "accepted": 0
+      },
+      {
+       "text": " of of ****\n\n  - **",
+       "accepted": 1
+      },
+      {
+       "text": " of of**\n**\n**\n  ** **",
+       "accepted": 1
+      }
+     ],
+     "kept": " bolts of blue",
+     "kept_tokens": 3,
+     "tree_nodes": 61
+    },
+    {
+     "context_tail": "<|im_start|>assistant\n<think>\n\n</think>\n\nLet's break this down step by step.\n\n---\n\n### Step 1: Understand the requirements\n\n- A **robe** requires:\n  - **2 bolts of blue",
+     "bonus": " fiber",
+     "drafts": [
+      {
+       "text": "**\n  - ** ** **8**,",
+       "accepted": 4
+      },
+      {
+       "text": "**\n**\n  - - ** ** **",
+       "accepted": 1
+      },
+      {
+       "text": "**\n  - -2 dozen of of",
+       "accepted": 3
+      },
+      {
+       "text": "**\n**\n  -A of ** blue",
+       "accepted": 1
+      },
+      {
+       "text": "****\n  - - **2 more",
+       "accepted": 0
+      },
+      {
+       "text": "**\n  - - 0 ounces**\n",
+       "accepted": 3
+      },
+      {
+       "text": "****\n  - ** ** **2",
+       "accepted": 0
+      },
+      {
+       "text": "****\n  - **2 of **",
+       "accepted": 0
+      },
+      {
+       "text": "**.\n  - ** **2**",
+       "accepted": 0
+      }
+     ],
+     "kept": " fiber**\n  - **",
+     "kept_tokens": 5,
+     "tree_nodes": 51
+    }
+   ]
+  },
+  {
+   "set": "mtbench",
+   "prompt": "Suppose you are a mathematician and poet. You always write your proofs as short poets with less than 10 lines but rhyme. Prove the square root of 2 is irrational number.",
+   "rounds": [
+    {
+     "context_tail": ". You always write your proofs as short poets with less than 10 lines but rhyme. Prove the square root of 2 is irrational number.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+     "bonus": "Two",
+     "drafts": [
+      {
+       "text": " a Hell.  \nButA, the",
+       "accepted": 0
+      },
+      {
+       "text": " stillorus,  \n,1 forest,",
+       "accepted": 0
+      },
+      {
+       "text": " and the horus,  \n the bark",
+       "accepted": 0
+      },
+      {
+       "text": ", the world.  \n  \npol,",
+       "accepted": 0
+      },
+      {
+       "text": " I I I I I of. I",
+       "accepted": 0
+      },
+      {
+       "text": " a a true of a hym.  \n",
+       "accepted": 0
+      },
+      {
+       "text": " sol, love,, never sorrow.\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " be fall, a light etildute",
+       "accepted": 0
+      },
+      {
+       "text": " a,,  \n  \n,  \n  \n",
+       "accepted": 0
+      }
+     ],
+     "kept": "Two",
+     "kept_tokens": 1,
+     "tree_nodes": 71
+    },
+    {
+     "context_tail": " You always write your proofs as short poets with less than 10 lines but rhyme. Prove the square root of 2 is irrational number.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nTwo",
+     "bonus": " dots",
+     "drafts": [
+      {
+       "text": ", the,  \n, don a a",
+       "accepted": 1
+      },
+      {
+       "text": ",,, no no call, forget",
+       "accepted": 1
+      },
+      {
+       "text": " a a,,  \nWith no there",
+       "accepted": 0
+      },
+      {
+       "text": ", then, still,  \n  \n I",
+       "accepted": 1
+      },
+      {
+       "text": ", we, square, let,  \n",
+       "accepted": 1
+      },
+      {
+       "text": ",  \n,, then the the  \n",
+       "accepted": 1
+      },
+      {
+       "text": ",  \n  \n, no the square  \n",
+       "accepted": 1
+      },
+      {
+       "text": ", two,  \n we we are,",
+       "accepted": 1
+      },
+      {
+       "text": ", the,,,,  \n  \n",
+       "accepted": 1
+      }
+     ],
+     "kept": " dots,",
+     "kept_tokens": 2,
+     "tree_nodes": 63
+    },
+    {
+     "context_tail": " write your proofs as short poets with less than 10 lines but rhyme. Prove the square root of 2 is irrational number.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nTwo dots,",
+     "bonus": " a",
+     "drafts": [
+      {
+       "text": " love, a, a two,  \n",
+       "accepted": 0
+      },
+      {
+       "text": " pair,  \n,And the a,",
+       "accepted": 0
+      },
+      {
+       "text": " true, a we must true,  \n",
+       "accepted": 0
+      },
+      {
+       "text": " sing,  \n  \nA try a,",
+       "accepted": 0
+      },
+      {
+       "text": " face,  \n  \n,, a circle",
+       "accepted": 0
+      },
+      {
+       "text": " true,  \n  \n  \nAnd, sing",
+       "accepted": 0
+      },
+      {
+       "text": " true,  \n,  \n I let let",
+       "accepted": 0
+      },
+      {
+       "text": " true,,,  \n let a a",
+       "accepted": 0
+      },
+      {
+       "text": ",,,,,,  \n  \n",
+       "accepted": 0
+      }
+     ],
+     "kept": " a",
+     "kept_tokens": 1,
+     "tree_nodes": 66
+    },
+    {
+     "context_tail": " your proofs as short poets with less than 10 lines but rhyme. Prove the square root of 2 is irrational number.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nTwo dots, a",
+     "bonus": " line",
+     "drafts": [
+      {
+       "text": ",  \n we we be a true,",
+       "accepted": 1
+      },
+      {
+       "text": ", a,,  \n  \n  \nAnd",
+       "accepted": 2
+      },
+      {
+       "text": ",  \n  \nAnd, time in time",
+       "accepted": 1
+      },
+      {
+       "text": ", we sing bend.No, no",
+       "accepted": 1
+      },
+      {
+       "text": ",  \n hope,, a dream song",
+       "accepted": 1
+      },
+      {
+       "text": ", we love still,  \n,,",
+       "accepted": 1
+      },
+      {
+       "text": ",  \nAndA one we speak,",
+       "accepted": 1
+      },
+      {
+       "text": ",  \n  \n,  \n never and  \n",
+       "accepted": 1
+      },
+      {
+       "text": ", and a,  \n  \n  \n  \n",
+       "accepted": 1
+      }
+     ],
+     "kept": " line, a",
+     "kept_tokens": 3,
+     "tree_nodes": 59
+    },
+    {
+     "context_tail": " short poets with less than 10 lines but rhyme. Prove the square root of 2 is irrational number.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nTwo dots, a line, a",
+     "bonus": " square",
+     "drafts": [
+      {
+       "text": ",  \nAndNo truth must no,",
+       "accepted": 0
+      },
+      {
+       "text": ",  \nA, do not,,",
+       "accepted": 0
+      },
+      {
+       "text": ",  \n  \nAnd are born to love",
+       "accepted": 0
+      },
+      {
+       "text": ",,  \nBut we square the light",
+       "accepted": 0
+      },
+      {
+       "text": " line,  \nNot, manve,",
+       "accepted": 0
+      },
+      {
+       "text": ",  \n  \nAndA born,A",
+       "accepted": 0
+      },
+      {
+       "text": ",,  \nAA know, the",
+       "accepted": 0
+      },
+      {
+       "text": ",  \n  \nA a thief is bark",
+       "accepted": 0
+      },
+      {
+       "text": ",  \n  \n  \n  \n,,,",
+       "accepted": 0
+      }
+     ],
+     "kept": " square",
+     "kept_tokens": 1,
+     "tree_nodes": 55
+    },
+    {
+     "context_tail": " poets with less than 10 lines but rhyme. Prove the square root of 2 is irrational number.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nTwo dots, a line, a square",
+     "bonus": " so",
+     "drafts": [
+      {
+       "text": " sing,  \nAnd the the the soul",
+       "accepted": 0
+      },
+      {
+       "text": "  \n,  \n  \n, don a,",
+       "accepted": 0
+      },
+      {
+       "text": "  \n,  \nA a trueer,",
+       "accepted": 0
+      },
+      {
+       "text": ",,  \nBut in in a,",
+       "accepted": 0
+      },
+      {
+       "text": "  \n,  \nBut  \n, we do",
+       "accepted": 0
+      },
+      {
+       "text": "  \n  \n  \n  \n, if if love",
+       "accepted": 0
+      },
+      {
+       "text": " know,  \nA a the true,",
+       "accepted": 0
+      },
+      {
+       "text": " sing,  \nAnd born, ,",
+       "accepted": 0
+      },
+      {
+       "text": "  \n  \n  \nA,,,,",
+       "accepted": 0
+      }
+     ],
+     "kept": " so",
+     "kept_tokens": 1,
+     "tree_nodes": 59
+    },
+    {
+     "context_tail": " with less than 10 lines but rhyme. Prove the square root of 2 is irrational number.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nTwo dots, a line, a square so",
+     "bonus": " true",
+     "drafts": [
+      {
+       "text": ",  \nAnd will a form, the",
+       "accepted": 2
+      },
+      {
+       "text": ",  \nA don a with the,",
+       "accepted": 2
+      },
+      {
+       "text": "  \n  \n  \n pair, each, each",
+       "accepted": 0
+      },
+      {
+       "text": ",  \nAndWe sum of true,",
+       "accepted": 2
+      },
+      {
+       "text": ",  \nAnd is not the stars,",
+       "accepted": 2
+      },
+      {
+       "text": ",  \nA, born the the the",
+       "accepted": 2
+      },
+      {
+       "text": ",  \nAndThe square of the the",
+       "accepted": 2
+      },
+      {
+       "text": ",  \nWe find the first line,",
+       "accepted": 2
+      },
+      {
+       "text": ",  \nA a a,,,",
+       "accepted": 2
+      }
+     ],
+     "kept": " true,  \n",
+     "kept_tokens": 3,
+     "tree_nodes": 54
+    },
+    {
+     "context_tail": " 10 lines but rhyme. Prove the square root of 2 is irrational number.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nTwo dots, a line, a square so true,  \n",
+     "bonus": "Yet",
+     "drafts": [
+      {
+       "text": ",, so,  \n not not just",
+       "accepted": 0
+      },
+      {
+       "text": " the roots, a bit a light,",
+       "accepted": 0
+      },
+      {
+       "text": "er the true, and no true,",
+       "accepted": 0
+      },
+      {
+       "text": " but butbut,, the know.",
+       "accepted": 0
+      },
+      {
+       "text": ", she still,, a promise of",
+       "accepted": 0
+      },
+      {
+       "text": " never not the,  \nBut the,",
+       "accepted": 0
+      },
+      {
+       "text": " the first, let a a,,",
+       "accepted": 0
+      },
+      {
+       "text": " sum of still,  \n, the,",
+       "accepted": 0
+      },
+      {
+       "text": " a,, a,,  \n  \n",
+       "accepted": 0
+      }
+     ],
+     "kept": "Yet",
+     "kept_tokens": 1,
+     "tree_nodes": 71
+    },
+    {
+     "context_tail": "10 lines but rhyme. Prove the square root of 2 is irrational number.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nTwo dots, a line, a square so true,  \nYet",
+     "bonus": " roots",
+     "drafts": [
+      {
+       "text": ", not lose,  \n don don don",
+       "accepted": 0
+      },
+      {
+       "text": " is not no square.  \nNo no",
+       "accepted": 0
+      },
+      {
+       "text": "'s true,..  \n  \n roots",
+       "accepted": 0
+      },
+      {
+       "text": " in in and love no,.  \n",
+       "accepted": 0
+      },
+      {
+       "text": ", not no must no..  \n",
+       "accepted": 0
+      },
+      {
+       "text": " no square true.  \n we let the",
+       "accepted": 0
+      },
+      {
+       "text": " that no it.  \n  \n, we",
+       "accepted": 0
+      },
+      {
+       "text": ": not square, no know,  \n",
+       "accepted": 0
+      },
+      {
+       "text": ", a,,...  \n",
+       "accepted": 0
+      }
+     ],
+     "kept": " roots",
+     "kept_tokens": 1,
+     "tree_nodes": 70
+    },
+    {
+     "context_tail": "0 lines but rhyme. Prove the square root of 2 is irrational number.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nTwo dots, a line, a square so true,  \nYet roots",
+     "bonus": " of",
+     "drafts": [
+      {
+       "text": " so, no still, the..",
+       "accepted": 0
+      },
+      {
+       "text": " true,, so, hope  \n  \n",
+       "accepted": 0
+      },
+      {
+       "text": " love to the, still.  \n  \n",
+       "accepted": 0
+      },
+      {
+       "text": " fear are so,  \nBut the hard",
+       "accepted": 0
+      },
+      {
+       "text": " bark,  \n  \nNoon, a",
+       "accepted": 0
+      },
+      {
+       "text": " never known. The the truth, no",
+       "accepted": 0
+      },
+      {
+       "text": " love,, so no only no the",
+       "accepted": 0
+      },
+      {
+       "text": " try, it, never are..",
+       "accepted": 0
+      },
+      {
+       "text": " no,,,  \n..  \n",
+       "accepted": 0
+      }
+     ],
+     "kept": " of",
+     "kept_tokens": 1,
+     "tree_nodes": 72
+    },
+    {
+     "context_tail": " lines but rhyme. Prove the square root of 2 is irrational number.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nTwo dots, a line, a square so true,  \nYet roots of",
+     "bonus": " two",
+     "drafts": [
+      {
+       "text": ", notis...  \n  \n",
+       "accepted": 1
+      },
+      {
+       "text": ",  \n, are be..  \n",
+       "accepted": 1
+      },
+      {
+       "text": ", not fear.  \n  \n don the",
+       "accepted": 1
+      },
+      {
+       "text": ", not..  \nWe are the",
+       "accepted": 1
+      },
+      {
+       "text": ", still not not.  \n a a",
+       "accepted": 1
+      },
+      {
+       "text": ", never hard.  \n,  \n a",
+       "accepted": 1
+      },
+      {
+       "text": " will still fire.  \n  \nThe truth",
+       "accepted": 0
+      },
+      {
+       "text": " is not,, no fall.  \n",
+       "accepted": 0
+      },
+      {
+       "text": ", not to.....",
+       "accepted": 1
+      }
+     ],
+     "kept": " two,",
+     "kept_tokens": 2,
+     "tree_nodes": 64
+    },
+    {
+     "context_tail": " rhyme. Prove the square root of 2 is irrational number.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nTwo dots, a line, a square so true,  \nYet roots of two,",
+     "bonus": " they",
+     "drafts": [
+      {
+       "text": " never not fight.  \n  \nAnd born",
+       "accepted": 0
+      },
+      {
+       "text": " not not sing.  \nNo the the",
+       "accepted": 0
+      },
+      {
+       "text": " speak a be sing.  \n  \nNo",
+       "accepted": 0
+      },
+      {
+       "text": " are be to good.  \nI don",
+       "accepted": 0
+      },
+      {
+       "text": " never so sing.  \nNo weNo",
+       "accepted": 0
+      },
+      {
+       "text": " never not.  \n\nSoA can a",
+       "accepted": 0
+      },
+      {
+       "text": " are not..  \nAnd.And",
+       "accepted": 0
+      },
+      {
+       "text": "'s fall..  \nNo will not",
+       "accepted": 0
+      },
+      {
+       "text": " not not no.  \nA,,",
+       "accepted": 0
+      }
+     ],
+     "kept": " they",
+     "kept_tokens": 1,
+     "tree_nodes": 67
+    }
+   ]
+  },
+  {
+   "set": "mtbench",
+   "prompt": "How many integers are in the solution of the inequality |x + 5| < 10",
+   "rounds": [
+    {
+     "context_tail": "<|im_start|>user\nHow many integers are in the solution of the inequality |x + 5| < 10<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+     "bonus": "We",
+     "drafts": [
+      {
+       "text": " are asked find the ** ** equation +",
+       "accepted": 1
+      },
+      {
+       "text": " are to the equationax + x(x",
+       "accepted": 1
+      },
+      {
+       "text": " to find the difference:\n\n **$$ ",
+       "accepted": 0
+      },
+      {
+       "text": " are asked told that:\n\n $ \\math",
+       "accepted": 1
+      },
+      {
+       "text": " are find the ** the ** **math",
+       "accepted": 1
+      },
+      {
+       "text": " are asked to:\n\n:\n\n\nx of",
+       "accepted": 1
+      },
+      {
+       "text": " are to find the the value in ",
+       "accepted": 1
+      },
+      {
+       "text": " are to find:\n\n$$\n \\m",
+       "accepted": 1
+      },
+      {
+       "text": " are told the:\n\n the value**\n",
+       "accepted": 1
+      }
+     ],
+     "kept": "We are",
+     "kept_tokens": 2,
+     "tree_nodes": 61
+    },
+    {
+     "context_tail": "<|im_start|>user\nHow many integers are in the solution of the inequality |x + 5| < 10<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nWe are",
+     "bonus": " given",
+     "drafts": [
+      {
+       "text": " the:\n\n:\n\n$$\n\\\\frac",
+       "accepted": 1
+      },
+      {
+       "text": " the given:\n\n$$\n$$\ntext",
+       "accepted": 1
+      },
+      {
+       "text": " to the equation:\n\n$$\n\\\n",
+       "accepted": 0
+      },
+      {
+       "text": " the:\n\n$$\n\\x - ",
+       "accepted": 1
+      },
+      {
+       "text": " to:\n\n:\n\n$$\n\\\\Rightarrow",
+       "accepted": 0
+      },
+      {
+       "text": " the:\n\n$$\n\\(x2 +",
+       "accepted": 1
+      },
+      {
+       "text": " the:\n\n$$$$\n\\{2",
+       "accepted": 1
+      },
+      {
+       "text": " to the equation:\n\n$$$$\n\\",
+       "accepted": 0
+      },
+      {
+       "text": " the:\n\n:\n\n$$$$\\\\\\",
+       "accepted": 1
+      }
+     ],
+     "kept": " given the",
+     "kept_tokens": 2,
+     "tree_nodes": 52
+    },
+    {
+     "context_tail": "<|im_start|>user\nHow many integers are in the solution of the inequality |x + 5| < 10<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nWe are given the",
+     "bonus": " inequality",
+     "drafts": [
+      {
+       "text": ":\n\n$$\nx = \\xx",
+       "accepted": 3
+      },
+      {
+       "text": ":\n\n$$\n\\9 + + ",
+       "accepted": 3
+      },
+      {
+       "text": ":\n\n$$$$\nxx 2",
+       "accepted": 2
+      },
+      {
+       "text": ":\n\n$$\n\\frac 21",
+       "accepted": 3
+      },
+      {
+       "text": ":\n\n$$\n33 \\times ",
+       "accepted": 3
+      },
+      {
+       "text": ":\n\n$$\n\\x + 9",
+       "accepted": 3
+      },
+      {
+       "text": ":\n\n$$\n2\n2 - ",
+       "accepted": 3
+      },
+      {
+       "text": ":\n\n$$$$\nxx - ",
+       "accepted": 2
+      },
+      {
+       "text": ":\n\n$$\n222 - ",
+       "accepted": 3
+      }
+     ],
+     "kept": " inequality:\n\n$$\n",
+     "kept_tokens": 4,
+     "tree_nodes": 44
+    },
+    {
+     "context_tail": "<|im_start|>user\nHow many integers are in the solution of the inequality |x + 5| < 10<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nWe are given the inequality:\n\n$$\n",
+     "bonus": "|x",
+     "drafts": [
+      {
+       "text": " - 18 = 1 =",
+       "accepted": 0
+      },
+      {
+       "text": " + 100| = ",
+       "accepted": 2
+      },
+      {
+       "text": " - - 1 = 10",
+       "accepted": 0
+      },
+      {
+       "text": " + 100 =  ",
+       "accepted": 2
+      },
+      {
+       "text": " - 10 = 3\n",
+       "accepted": 0
+      },
+      {
+       "text": "0 - 0 = 2 =",
+       "accepted": 0
+      },
+      {
+       "text": " - 15 = = 2",
+       "accepted": 0
+      },
+      {
+       "text": " - 12} = 1",
+       "accepted": 0
+      },
+      {
+       "text": "x  3x   ",
+       "accepted": 0
+      }
+     ],
+     "kept": "|x + ",
+     "kept_tokens": 3,
+     "tree_nodes": 58
+    },
+    {
+     "context_tail": "How many integers are in the solution of the inequality |x + 5| < 10<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nWe are given the inequality:\n\n$$\n|x + ",
+     "bonus": "5",
+     "drafts": [
+      {
+       "text": "|| 1\n\n\n---\n\n###",
+       "accepted": 1
+      },
+      {
+       "text": "| = 10\n$$$$",
+       "accepted": 1
+      },
+      {
+       "text": "| = 3\n$$$$We",
+       "accepted": 1
+      },
+      {
+       "text": "| = 4\n$$\n\nWe",
+       "accepted": 1
+      },
+      {
+       "text": "| = 1\n\n$$We",
+       "accepted": 1
+      },
+      {
+       "text": "| = 1\n\n\n\nWe",
+       "accepted": 1
+      },
+      {
+       "text": "| = 1\n$$$$$$",
+       "accepted": 1
+      },
+      {
+       "text": "| = 1\n$$\n\n###",
+       "accepted": 1
+      },
+      {
+       "text": "| is 0\n$$\n\nWe",
+       "accepted": 1
+      }
+     ],
+     "kept": "5|",
+     "kept_tokens": 2,
+     "tree_nodes": 44
+    },
+    {
+     "context_tail": " integers are in the solution of the inequality |x + 5| < 10<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nWe are given the inequality:\n\n$$\n|x + 5|",
+     "bonus": " <",
+     "drafts": [
+      {
+       "text": " 20\n$$\n\n######",
+       "accepted": 1
+      },
+      {
+       "text": " 20\n$$We### are",
+       "accepted": 1
+      },
+      {
+       "text": " 36\n$$\n\n### Step",
+       "accepted": 1
+      },
+      {
+       "text": " 6\n\n$$---\n\n### Step",
+       "accepted": 1
+      },
+      {
+       "text": " 20\n$$---\n\n### Step",
+       "accepted": 1
+      },
+      {
+       "text": " 25\n$$\n\n### Step",
+       "accepted": 1
+      },
+      {
+       "text": " 20\n$$\n\n### Step",
+       "accepted": 1
+      },
+      {
+       "text": " 20\n$$\n\n### Step",
+       "accepted": 1
+      },
+      {
+       "text": " 00\n$$\n\nWe are",
+       "accepted": 1
+      }
+     ],
+     "kept": " < ",
+     "kept_tokens": 2,
+     "tree_nodes": 43
+    },
+    {
+     "context_tail": " in the solution of the inequality |x + 5| < 10<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nWe are given the inequality:\n\n$$\n|x + 5| < ",
+     "bonus": "1",
+     "drafts": [
+      {
+       "text": "0\n$$\n\n---\n\n### 1",
+       "accepted": 4
+      },
+      {
+       "text": "0\n$$\n\n---\n\n### 1",
+       "accepted": 4
+      },
+      {
+       "text": "0\n$$\n\n### Step 1",
+       "accepted": 8
+      },
+      {
+       "text": "0\n$$\n\n---\n\n### 1",
+       "accepted": 4
+      },
+      {
+       "text": "0\n$$\n\n---\n\n### Step ",
+       "accepted": 4
+      },
+      {
+       "text": "0\n$$\n\n###### 1",
+       "accepted": 5
+      },
+      {
+       "text": "0\n$$\n\n### to to **",
+       "accepted": 5
+      },
+      {
+       "text": "0\n$$\n\n### Step 1",
+       "accepted": 8
+      },
+      {
+       "text": "0\n$$\n\n### is  ",
+       "accepted": 5
+      }
+     ],
+     "kept": "10\n$$\n\n### Step 1",
+     "kept_tokens": 9,
+     "tree_nodes": 24
+    },
+    {
+     "context_tail": " 5| < 10<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nWe are given the inequality:\n\n$$\n|x + 5| < 10\n$$\n\n### Step 1",
+     "bonus": ":",
+     "drafts": [
+      {
+       "text": " Define the equation equation\n$$\n$$",
+       "accepted": 0
+      },
+      {
+       "text": " Understand the problem equation\n\nThe equation **",
+       "accepted": 0
+      },
+      {
+       "text": " Solve the Problem equation\n\nThe the formula",
+       "accepted": 2
+      },
+      {
+       "text": " Solve the the expression\n\nFor formula formula",
+       "accepted": 2
+      },
+      {
+       "text": " Solve the inequality expression\n\nThe problem given",
+       "accepted": 3
+      },
+      {
+       "text": " Understand the problem equation\n\nThe term only",
+       "accepted": 0
+      },
+      {
+       "text": " Understand the equation equation\n\nThe equation is",
+       "accepted": 0
+      },
+      {
+       "text": " Understand the formula expression\n\nThe problem is",
+       "accepted": 0
+      },
+      {
+       "text": " Solve the inequality inequality\n\nWe the the",
+       "accepted": 3
+      }
+     ],
+     "kept": ": Solve the inequality",
+     "kept_tokens": 4,
+     "tree_nodes": 56
+    },
+    {
+     "context_tail": " 10<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nWe are given the inequality:\n\n$$\n|x + 5| < 10\n$$\n\n### Step 1: Solve the inequality",
+     "bonus": "\n\n",
+     "drafts": [
+      {
+       "text": "We use given as the the **amental",
+       "accepted": 0
+      },
+      {
+       "text": "We are the equation:\n\n the:\n\n$$",
+       "accepted": 0
+      },
+      {
+       "text": "We use given a formula of a **",
+       "accepted": 0
+      },
+      {
+       "text": "We problem equation the the standard of the",
+       "accepted": 0
+      },
+      {
+       "text": "We given the the means:\n\n$$\n",
+       "accepted": 0
+      },
+      {
+       "text": "We are need compute the formula:\n\n$$",
+       "accepted": 0
+      },
+      {
+       "text": "We use the equation as an inequality inequality",
+       "accepted": 0
+      },
+      {
+       "text": "We are given for the equation:\n\n:\n\n",
+       "accepted": 0
+      },
+      {
+       "text": "We the inequality the expression expression** equality",
+       "accepted": 0
+      }
+     ],
+     "kept": "\n\n",
+     "kept_tokens": 1,
+     "tree_nodes": 60
+    },
+    {
+     "context_tail": "10<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nWe are given the inequality:\n\n$$\n|x + 5| < 10\n$$\n\n### Step 1: Solve the inequality\n\n",
+     "bonus": "The",
+     "drafts": [
+      {
+       "text": " function of ** ** ** given:\n\n$$",
+       "accepted": 0
+      },
+      {
+       "text": " inequality inequality because the only the for the",
+       "accepted": 0
+      },
+      {
+       "text": " standard inequality inequality is an means:\n\n$$",
+       "accepted": 0
+      },
+      {
+       "text": " given equation inequality:\n\n:\n\n the number:\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " equation equation equation:\n\n:\n\n the the$",
+       "accepted": 0
+      },
+      {
+       "text": " equation of an ** equation:\n\n equation:\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " equation equation:\n\n:\n\n$$:\n\n$$\n",
+       "accepted": 0
+      },
+      {
+       "text": " ** of ** of the **:\n\n:\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " inequality inequality equality the:\n\n | ",
+       "accepted": 0
+      }
+     ],
+     "kept": "The",
+     "kept_tokens": 1,
+     "tree_nodes": 68
+    },
+    {
+     "context_tail": "0<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nWe are given the inequality:\n\n$$\n|x + 5| < 10\n$$\n\n### Step 1: Solve the inequality\n\nThe",
+     "bonus": " absolute",
+     "drafts": [
+      {
+       "text": " number of:\n\n1:\n\n:\n\n\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " value of:\n\n:\n\n$$\n\\0",
+       "accepted": 1
+      },
+      {
+       "text": " value the equation:\n\n$$\nfrac{",
+       "accepted": 1
+      },
+      {
+       "text": " number of `x $ $:\n\n\n",
+       "accepted": 0
+      },
+      {
+       "text": " of any equation as an value of $",
+       "accepted": 0
+      },
+      {
+       "text": " inequality:\n\n:\n\n:\n\n$$\nxx",
+       "accepted": 0
+      },
+      {
+       "text": " inequality:\n\n the formula:\n\n:\n\n$$\n",
+       "accepted": 0
+      },
+      {
+       "text": " condition of the:\n\n:\n\n given:\n\n$$",
+       "accepted": 0
+      },
+      {
+       "text": " value the the is| is||",
+       "accepted": 1
+      }
+     ],
+     "kept": " absolute value",
+     "kept_tokens": 2,
+     "tree_nodes": 66
+    },
+    {
+     "context_tail": "\n<|im_start|>assistant\n<think>\n\n</think>\n\nWe are given the inequality:\n\n$$\n|x + 5| < 10\n$$\n\n### Step 1: Solve the inequality\n\nThe absolute value",
+     "bonus": " inequality",
+     "drafts": [
+      {
+       "text": " is:\n\n$$\n\n| \\ \\",
+       "accepted": 0
+      },
+      {
+       "text": " is:\n\n$$$$\n|| \\",
+       "accepted": 0
+      },
+      {
+       "text": " is:\n\n$$\n\\|||",
+       "accepted": 0
+      },
+      {
+       "text": " is:\n\n:\n\n$$\n \\||",
+       "accepted": 0
+      },
+      {
+       "text": ":\n\n:\n\n:\n\n:\n\n$$\nx|",
+       "accepted": 0
+      },
+      {
+       "text": " is:\n\n$$\nx x + ",
+       "accepted": 0
+      },
+      {
+       "text": " is:\n\n$$$$\n\\\\x",
+       "accepted": 0
+      },
+      {
+       "text": " is:\n\n$$\n\n1 \\ ",
+       "accepted": 0
+      },
+      {
+       "text": " by  is|| | ",
+       "accepted": 0
+      }
+     ],
+     "kept": " inequality",
+     "kept_tokens": 1,
+     "tree_nodes": 50
+    }
+   ]
+  },
+  {
+   "set": "humaneval",
+   "prompt": "Complete the following Python function. Reply with the full function in a Python code block.\n\n```python\nfrom typing import List\n\n\ndef has_close_elements(numbers: List[float], threshold: float) -> bool:\n    \"\"\" Check if in given list of numbers, are any two numbers closer to each other than\n    given threshold.\n    >>> has_close_elements([1.0, 2.0, 3.0], 0.5)\n    False\n    >>> has_close_elements([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)\n    True\n    \"\"\"\n```",
+   "rounds": [
+    {
+     "context_tail": " 3.0, 4.0, 5.0, 2.0], 0.3)\n    True\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+     "bonus": "```",
+     "drafts": [
+      {
+       "text": "python\ndef return_count_bool = {\n",
+       "accepted": 2
+      },
+      {
+       "text": "python\n(parenpython {\n {\n int.get",
+       "accepted": 2
+      },
+      {
+       "text": "python\n   hở {\n_string = sorted",
+       "accepted": 2
+      },
+      {
+       "text": "python\nuples = max_inches:]:\n   ",
+       "accepted": 2
+      },
+      {
+       "text": " php\nأهد(sorted_missing_bool\n       ",
+       "accepted": 0
+      },
+      {
+       "text": " sorted_ends\n incrementisors(arr:\n ",
+       "accepted": 0
+      },
+      {
+       "text": "python\ndefpython = cards.dawks",
+       "accepted": 2
+      },
+      {
+       "text": "python\n    sorted.lucene(fnedian =",
+       "accepted": 2
+      },
+      {
+       "text": " fibonacci\n\n\n\n\n\n\n\n\n\n\n",
+       "accepted": 0
+      }
+     ],
+     "kept": "```python\n",
+     "kept_tokens": 3,
+     "tree_nodes": 61
+    },
+    {
+     "context_tail": "0, 4.0, 5.0, 2.0], 0.3)\n    True\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\n",
+     "bonus": "from",
+     "drafts": [
+      {
+       "text": " itertoolsana, defaultdict, lst, b",
+       "accepted": 0
+      },
+      {
+       "text": " itertools(data(data, import heapq_dict):\n",
+       "accepted": 0
+      },
+      {
+       "text": " heapq_times_length):\n {\n ratio = ValueError",
+       "accepted": 0
+      },
+      {
+       "text": " heapq_numbers)) input < ValueError\n",
+       "accepted": 0
+      },
+      {
+       "text": " test_query(my(result {\n    {\n={\n",
+       "accepted": 0
+      },
+      {
+       "text": " heapq.raise(arrmonth):\n):\n    int",
+       "accepted": 0
+      },
+      {
+       "text": "_valid_toegers)\n    import import(a",
+       "accepted": 0
+      },
+      {
+       "text": " hashlibercise.subtract int.solve_numbers()\n       ",
+       "accepted": 0
+      },
+      {
+       "text": " collections.collections import from from,,,",
+       "accepted": 0
+      }
+     ],
+     "kept": "from",
+     "kept_tokens": 1,
+     "tree_nodes": 70
+    },
+    {
+     "context_tail": ", 4.0, 5.0, 2.0], 0.3)\n    True\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom",
+     "bonus": " typing",
+     "drafts": [
+      {
+       "text": " importhở import\n\nimport    import_table",
+       "accepted": 1
+      },
+      {
+       "text": " import defaultdict\n\nimport_difference_to import.keys",
+       "accepted": 1
+      },
+      {
+       "text": " =индивид_common\n\ndefimport import sorted",
+       "accepted": 0
+      },
+      {
+       "text": " importhở\n\n    #\n\nards\n\n",
+       "accepted": 1
+      },
+      {
+       "text": " import math\n\ndef import import importarrays",
+       "accepted": 1
+      },
+      {
+       "text": " import heapq\n\ndef Sub_in std",
+       "accepted": 1
+      },
+      {
+       "text": " import heapq\n\ndef heapq.get.index\n\n",
+       "accepted": 1
+      },
+      {
+       "text": " import defaultdict\n\ndef math\n import n",
+       "accepted": 1
+      },
+      {
+       "text": " import math\n\n\n\n,,,,",
+       "accepted": 1
+      }
+     ],
+     "kept": " typing import",
+     "kept_tokens": 2,
+     "tree_nodes": 58
+    },
+    {
+     "context_tail": "4.0, 5.0, 2.0], 0.3)\n    True\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom typing import",
+     "bonus": " List",
+     "drafts": [
+      {
+       "text": "\n\ndef find defaultdict defaultdict = max_n",
+       "accepted": 0
+      },
+      {
+       "text": "\n\ndef Function = import from import abs",
+       "accepted": 0
+      },
+      {
+       "text": "\n\ndef main_to heapq(math_area.append",
+       "accepted": 0
+      },
+      {
+       "text": "\n\ndef main:\n        from pandas:\n",
+       "accepted": 0
+      },
+      {
+       "text": "\n\ndef importhở_numbers.sort() {\n",
+       "accepted": 0
+      },
+      {
+       "text": "\n\ndef heapqdef result = \"\"\"\n\n",
+       "accepted": 0
+      },
+      {
+       "text": "\n\ndef common\n    return.sort.sort",
+       "accepted": 0
+      },
+      {
+       "text": "\n\ndef defaultdict\n.merge defaultdict:\n       ",
+       "accepted": 0
+      },
+      {
+       "text": "\n\ndef find_length,,,,",
+       "accepted": 0
+      }
+     ],
+     "kept": " List",
+     "kept_tokens": 1,
+     "tree_nodes": 55
+    },
+    {
+     "context_tail": ".0, 5.0, 2.0], 0.3)\n    True\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom typing import List",
+     "bonus": "\n\n\n",
+     "drafts": [
+      {
+       "text": "def import heapq_index.merge_tuples):\n   ",
+       "accepted": 1
+      },
+      {
+       "text": "def heapq_sort_to(lambda(a_dict\n",
+       "accepted": 1
+      },
+      {
+       "text": "def import_numbers = import_list(\ndef",
+       "accepted": 1
+      },
+      {
+       "text": "def heapq(math5, math(lambdaertools",
+       "accepted": 1
+      },
+      {
+       "text": "import itertools itertools_list(lst = max(n",
+       "accepted": 0
+      },
+      {
+       "text": "def find_sorted(n(n n)\n \"\"\"\n",
+       "accepted": 1
+      },
+      {
+       "text": "def heapq_numbers = list_a_list):\n",
+       "accepted": 1
+      },
+      {
+       "text": "def common(sorted(sorted(arr):\n    \"\"\"\n",
+       "accepted": 1
+      },
+      {
+       "text": "def find_from,,,):\n,",
+       "accepted": 1
+      }
+     ],
+     "kept": "\n\n\ndef",
+     "kept_tokens": 2,
+     "tree_nodes": 62
+    },
+    {
+     "context_tail": ", 5.0, 2.0], 0.3)\n    True\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom typing import List\n\n\ndef",
+     "bonus": " has",
+     "drafts": [
+      {
+       "text": "_multiple_times_value(arr,, int):\n",
+       "accepted": 0
+      },
+      {
+       "text": "_element_element(arr, int2,Cumhurbaşkan",
+       "accepted": 0
+      },
+      {
+       "text": "_count(array_range), range_list,       ",
+       "accepted": 0
+      },
+      {
+       "text": "_multiple_mod_element, k):\n):\n   ",
+       "accepted": 0
+      },
+      {
+       "text": "_count_indexallest_numbers):\n, \"\"\"\n):\n",
+       "accepted": 0
+      },
+      {
+       "text": "_long_length(data,, list, lst",
+       "accepted": 0
+      },
+      {
+       "text": "_difference(arr(arr,Cumhurbaşkan):\n):\n   ",
+       "accepted": 0
+      },
+      {
+       "text": "_number(n_area(a, t):\n):\n",
+       "accepted": 0
+      },
+      {
+       "text": "_area_a_area,,,:,",
+       "accepted": 0
+      }
+     ],
+     "kept": " has",
+     "kept_tokens": 1,
+     "tree_nodes": 71
+    },
+    {
+     "context_tail": " 5.0, 2.0], 0.3)\n    True\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom typing import List\n\n\ndef has",
+     "bonus": "_close",
+     "drafts": [
+      {
+       "text": "_duplicatesations(arrayallest(array, idx):\n",
+       "accepted": 0
+      },
+      {
+       "text": "_even_number_number(n, n, n",
+       "accepted": 0
+      },
+      {
+       "text": "_number_number_missing(rranges(nums, \"\"\"\n",
+       "accepted": 0
+      },
+      {
+       "text": "_sort_points(r(n_multiuples):\n):\n",
+       "accepted": 0
+      },
+      {
+       "text": "_sequences_zations, b,Cumhurbaşkan x",
+       "accepted": 0
+      },
+      {
+       "text": "_number_list(array([_a, x):\n",
+       "accepted": 0
+      },
+      {
+       "text": "_two(numsarrays(numbers(number_list, list",
+       "accepted": 0
+      },
+      {
+       "text": "_two_numbers(arr,_value,, list",
+       "accepted": 0
+      },
+      {
+       "text": "_area_a_length,,,):\n):\n",
+       "accepted": 0
+      }
+     ],
+     "kept": "_close",
+     "kept_tokens": 1,
+     "tree_nodes": 71
+    },
+    {
+     "context_tail": "5.0, 2.0], 0.3)\n    True\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom typing import List\n\n\ndef has_close",
+     "bonus": "_elements",
+     "drafts": [
+      {
+       "text": "acent_list, \"\"\"\n, int1):\n",
+       "accepted": 0
+      },
+      {
+       "text": "_missing_number(original_tuple, \"\"\"\n, list",
+       "accepted": 0
+      },
+      {
+       "text": "(arr, triangle,,2, int",
+       "accepted": 0
+      },
+      {
+       "text": "_range(arr,, nums, if,",
+       "accepted": 0
+      },
+      {
+       "text": "_intersection(arr_two,_column, int_column",
+       "accepted": 0
+      },
+      {
+       "text": "_number(a, num, b):\n       ",
+       "accepted": 0
+      },
+      {
+       "text": "_sub_points, nums):\n        int):\n",
+       "accepted": 0
+      },
+      {
+       "text": "_intersection(arr,2):\n left, lst",
+       "accepted": 0
+      },
+      {
+       "text": "(int1,,,:: if",
+       "accepted": 0
+      }
+     ],
+     "kept": "_elements",
+     "kept_tokens": 1,
+     "tree_nodes": 71
+    },
+    {
+     "context_tail": ".0, 2.0], 0.3)\n    True\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom typing import List\n\n\ndef has_close_elements",
+     "bonus": "(numbers",
+     "drafts": [
+      {
+       "text": ",, nums, 3):\n       ",
+       "accepted": 0
+      },
+      {
+       "text": ", nums_list, int1 2",
+       "accepted": 0
+      },
+      {
+       "text": ", nums(arr,, num, isinstance",
+       "accepted": 0
+      },
+      {
+       "text": ", k, num(arr22 ",
+       "accepted": 0
+      },
+      {
+       "text": ",_list,Cumhurbaşkan list):\n   أهد",
+       "accepted": 0
+      },
+      {
+       "text": ", int(numbers, int_list):\n   ",
+       "accepted": 0
+      },
+      {
+       "text": ",, nums, lambda_list, \"\"\"\n",
+       "accepted": 0
+      },
+      {
+       "text": ", nums, int):\n):\n):\n   ",
+       "accepted": 0
+      },
+      {
+       "text": ", nums,,,:,):",
+       "accepted": 0
+      }
+     ],
+     "kept": "(numbers",
+     "kept_tokens": 1,
+     "tree_nodes": 58
+    },
+    {
+     "context_tail": "0, 2.0], 0.3)\n    True\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom typing import List\n\n\ndef has_close_elements(numbers",
+     "bonus": ":",
+     "drafts": [
+      {
+       "text": " num,, tuples):\n):\n \"\"\"\n lst",
+       "accepted": 0
+      },
+      {
+       "text": " list, n2, list):\n   ",
+       "accepted": 0
+      },
+      {
+       "text": " list,,22):\n        to",
+       "accepted": 0
+      },
+      {
+       "text": " case, arrrange(arr(arr):\n   ",
+       "accepted": 0
+      },
+      {
+       "text": " list, nums(arr,, int):\n",
+       "accepted": 0
+      },
+      {
+       "text": " list, n):\n):\n    return =",
+       "accepted": 0
+      },
+      {
+       "text": " list, list0):\n:\n        num",
+       "accepted": 0
+      },
+      {
+       "text": " []\n(n num,_tuple):\n    \"\"\"\n",
+       "accepted": 0
+      },
+      {
+       "text": " list,,,):      ):",
+       "accepted": 0
+      }
+     ],
+     "kept": ":",
+     "kept_tokens": 1,
+     "tree_nodes": 61
+    },
+    {
+     "context_tail": ", 2.0], 0.3)\n    True\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom typing import List\n\n\ndef has_close_elements(numbers:",
+     "bonus": " List",
+     "drafts": [
+      {
+       "text": ",, numbers: list2):\n \"\"\"\n",
+       "accepted": 0
+      },
+      {
+       "text": ", lst, arr):\n):\n    nums",
+       "accepted": 0
+      },
+      {
+       "text": "(t2, 1):\n 2",
+       "accepted": 0
+      },
+      {
+       "text": ", list, list, list, list",
+       "accepted": 0
+      },
+      {
+       "text": ",Cumhurbaşkan num, list:\n    return",
+       "accepted": 0
+      },
+      {
+       "text": ", n, list):\n):\n \"\"\"\n   ",
+       "accepted": 0
+      },
+      {
+       "text": ", list2, int(numbers:\n   ",
+       "accepted": 0
+      },
+      {
+       "text": ",, list_list,00   ",
+       "accepted": 0
+      },
+      {
+       "text": ", n,:):       if",
+       "accepted": 0
+      }
+     ],
+     "kept": " List",
+     "kept_tokens": 1,
+     "tree_nodes": 62
+    },
+    {
+     "context_tail": " 2.0], 0.3)\n    True\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom typing import List\n\n\ndef has_close_elements(numbers: List",
+     "bonus": "[float",
+     "drafts": [
+      {
+       "text": ", max_sum_a =):\n):\n =",
+       "accepted": 0
+      },
+      {
+       "text": ", list, list):\n):\n {\n       ",
+       "accepted": 0
+      },
+      {
+       "text": ", start, lambda):\n):\n    return",
+       "accepted": 0
+      },
+      {
+       "text": ", \"\"\"\n count::0):\n   ",
+       "accepted": 0
+      },
+      {
+       "text": ", idx isinstance2):\n       List",
+       "accepted": 0
+      },
+      {
+       "text": ", n):\n):\n x:\n 0",
+       "accepted": 0
+      },
+      {
+       "text": ", max_count_to:\n    # num",
+       "accepted": 0
+      },
+      {
+       "text": ", n):\n               list =2",
+       "accepted": 0
+      },
+      {
+       "text": ", num:: int:: if",
+       "accepted": 0
+      }
+     ],
+     "kept": "[float",
+     "kept_tokens": 1,
+     "tree_nodes": 62
+    }
+   ]
+  },
+  {
+   "set": "humaneval",
+   "prompt": "Complete the following Python function. Reply with the full function in a Python code block.\n\n```python\nfrom typing import List\n\n\ndef separate_paren_groups(paren_string: str) -> List[str]:\n    \"\"\" Input to this function is a string containing multiple groups of nested parentheses. Your goal is to\n    separate those group into separate strings and return the list of those.\n    Separate groups are balanced (each open brace is properly closed) and not nested within each other\n    Ignore any spaces in the input string.\n    >>> separate_paren_groups('( ) (( )) (( )( ))')\n    ['()', '(())', '(()())']\n    \"\"\"\n```",
+   "rounds": [
+    {
+     "context_tail": " the input string.\n    >>> separate_paren_groups('( ) (( )) (( )( ))')\n    ['()', '(())', '(()())']\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+     "bonus": "```",
+     "drafts": [
+      {
+       "text": "python\nprint_increment(\"#include_chars =",
+       "accepted": 2
+      },
+      {
+       "text": "python\nfunction.append.split(FILEienia_spaces",
+       "accepted": 2
+      },
+      {
+       "text": "python\nprintмедицинск(binary使用網路 += {\n",
+       "accepted": 2
+      },
+      {
+       "text": "python\nimport.subtract(def // LinkedList)",
+       "accepted": 2
+      },
+      {
+       "text": "python\ndefdef = list_list {\n",
+       "accepted": 2
+      },
+      {
+       "text": "javascript\nfunctionfunction_number_number += strt",
+       "accepted": 0
+      },
+      {
+       "text": "python\n(is_characters(input(input(arr,\n",
+       "accepted": 2
+      },
+      {
+       "text": " Python Function\n\n``` Regex.split.get.split",
+       "accepted": 0
+      },
+      {
+       "text": " math\n = = = = = =",
+       "accepted": 0
+      }
+     ],
+     "kept": "```python\n",
+     "kept_tokens": 3,
+     "tree_nodes": 62
+    },
+    {
+     "context_tail": ".\n    >>> separate_paren_groups('( ) (( )) (( )( ))')\n    ['()', '(())', '(()())']\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\n",
+     "bonus": "from",
+     "drafts": [
+      {
+       "text": " string_string_elements(s0 0\n",
+       "accepted": 0
+      },
+      {
+       "text": " itertools_chars_string    \"\"\"\n = sUnicode",
+       "accepted": 0
+      },
+      {
+       "text": " input(stringelines:\n \"\"\"\n\n    camel",
+       "accepted": 0
+      },
+      {
+       "text": " itertools_sequences_elements    \"\"\"\n = string =",
+       "accepted": 0
+      },
+      {
+       "text": " return_palution,\n    string(s string",
+       "accepted": 0
+      },
+      {
+       "text": "_second(string(string    \"\"\"\n = list_list",
+       "accepted": 0
+      },
+      {
+       "text": " hashlib_input.append2 = temp):\n   ",
+       "accepted": 0
+      },
+      {
+       "text": "_concat_except(input(input):\n    string(input",
+       "accepted": 0
+      },
+      {
+       "text": " re, import,, = = =",
+       "accepted": 0
+      }
+     ],
+     "kept": "from",
+     "kept_tokens": 1,
+     "tree_nodes": 72
+    },
+    {
+     "context_tail": "    >>> separate_paren_groups('( ) (( )) (( )( ))')\n    ['()', '(())', '(()())']\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom",
+     "bonus": " typing",
+     "drafts": [
+      {
+       "text": " import_string\n\n input_string\ndefестественн",
+       "accepted": 1
+      },
+      {
+       "text": " import import\n\n\n\n import input\n   ",
+       "accepted": 1
+      },
+      {
+       "text": " import euler\n\ndefdef #_split_to",
+       "accepted": 1
+      },
+      {
+       "text": " import importhở_string importhở(string(\"",
+       "accepted": 1
+      },
+      {
+       "text": " import itertools\n\ndef importunicode_elements_to",
+       "accepted": 1
+      },
+      {
+       "text": ",hở\n\ndef smallest_numbers\n\n#",
+       "accepted": 0
+      },
+      {
+       "text": " import math\n\ndef\n\n-Semit_non\n\n",
+       "accepted": 1
+      },
+      {
+       "text": "\n\nчрежден\n\ndef import string_integer(input",
+       "accepted": 0
+      },
+      {
+       "text": " import import,,,ings string =",
+       "accepted": 1
+      }
+     ],
+     "kept": " typing import",
+     "kept_tokens": 2,
+     "tree_nodes": 65
+    },
+    {
+     "context_tail": " separate_paren_groups('( ) (( )) (( )( ))')\n    ['()', '(())', '(()())']\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom typing import",
+     "bonus": " List",
+     "drafts": [
+      {
+       "text": "\n\ndef_concat =чрежден_tokenize\n``",
+       "accepted": 2
+      },
+      {
+       "text": "\n\ndefиндив = split_elements.append_non",
+       "accepted": 2
+      },
+      {
+       "text": "\n\ndef main_list_elements('_string\n\n",
+       "accepted": 2
+      },
+      {
+       "text": "\n\ndef import string_string    convert_chars",
+       "accepted": 2
+      },
+      {
+       "text": "\n\ndef concatenate_with_length:\n       :\n",
+       "accepted": 2
+      },
+      {
+       "text": "\n\ndef_valid_list(input input(input(input",
+       "accepted": 2
+      },
+      {
+       "text": "\n\ndef def_elements_elements    from_chars",
+       "accepted": 2
+      },
+      {
+       "text": "\n\ndef sample_string:\n input(input input",
+       "accepted": 2
+      },
+      {
+       "text": "\n\ndef def = = =    =",
+       "accepted": 2
+      }
+     ],
+     "kept": " List\n\ndef",
+     "kept_tokens": 3,
+     "tree_nodes": 56
+    },
+    {
+     "context_tail": "_groups('( ) (( )) (( )( ))')\n    ['()', '(())', '(()())']\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom typing import List\n\ndef",
+     "bonus": " separate",
+     "drafts": [
+      {
+       "text": "_side_neighbor_start,, string, n",
+       "accepted": 0
+      },
+      {
+       "text": "_input_input(input):\n):\n, string_tuple",
+       "accepted": 0
+      },
+      {
+       "text": "agram(input_tuple(p_tuple,مصالح,",
+       "accepted": 0
+      },
+      {
+       "text": "_intersection(p_tuple_by_string_number(ns",
+       "accepted": 0
+      },
+      {
+       "text": "_charactersange_string(input string, string_string",
+       "accepted": 0
+      },
+      {
+       "text": "_characters_with_split_list(input):\n:\n \"\"\"\n",
+       "accepted": 0
+      },
+      {
+       "text": "_elements(input_list, string, c,",
+       "accepted": 0
+      },
+      {
+       "text": "_qu_tuple(input_list, list):\n   ",
+       "accepted": 0
+      },
+      {
+       "text": "_toenings(s,, s =",
+       "accepted": 0
+      }
+     ],
+     "kept": " separate",
+     "kept_tokens": 1,
+     "tree_nodes": 72
+    },
+    {
+     "context_tail": "('( ) (( )) (( )( ))')\n    ['()', '(())', '(()())']\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom typing import List\n\ndef separate",
+     "bonus": "_p",
+     "drafts": [
+      {
+       "text": "adecimal(input(text(text):\n       return",
+       "accepted": 0
+      },
+      {
+       "text": "_non(input_extract(input):\n):\n \"\"\"\n =",
+       "accepted": 0
+      },
+      {
+       "text": "_integer(binaryagram_list, args[:_list",
+       "accepted": 0
+      },
+      {
+       "text": "adecimal(input(text, input(input2,",
+       "accepted": 0
+      },
+      {
+       "text": "_nonimiters( strs, list):\n   ",
+       "accepted": 0
+      },
+      {
+       "text": "_strings(textagram(text, string, input",
+       "accepted": 0
+      },
+      {
+       "text": "_elements(pagram, lambda=lambda_list):\n",
+       "accepted": 0
+      },
+      {
+       "text": "aren_elements_strings(inputstring, string,",
+       "accepted": 1
+      },
+      {
+       "text": "(inputagram(s, + str + =",
+       "accepted": 0
+      }
+     ],
+     "kept": "_paren",
+     "kept_tokens": 2,
+     "tree_nodes": 69
+    },
+    {
+     "context_tail": " (( )) (( )( ))')\n    ['()', '(())', '(()())']\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom typing import List\n\ndef separate_paren",
+     "bonus": "_groups",
+     "drafts": [
+      {
+       "text": ".split(text_strings, strings, s):\n",
+       "accepted": 0
+      },
+      {
+       "text": "(input(string,,):\n):\n    arr",
+       "accepted": 0
+      },
+      {
+       "text": "(inputinput(input(input_list, string #",
+       "accepted": 0
+      },
+      {
+       "text": "(input_list, str(n, string)",
+       "accepted": 0
+      },
+      {
+       "text": "_numbers(p_list):\n   ) if if",
+       "accepted": 0
+      },
+      {
+       "text": "(input(input_tuple(input,, ',",
+       "accepted": 0
+      },
+      {
+       "text": "(input(s_indices(s):\n: list(",
+       "accepted": 0
+      },
+      {
+       "text": "(text(paren, n)):\n    if",
+       "accepted": 0
+      },
+      {
+       "text": "(string,, string string str string =",
+       "accepted": 0
+      }
+     ],
+     "kept": "_groups",
+     "kept_tokens": 1,
+     "tree_nodes": 69
+    },
+    {
+     "context_tail": " )) (( )( ))')\n    ['()', '(())', '(()())']\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom typing import List\n\ndef separate_paren_groups",
+     "bonus": "(paren",
+     "drafts": [
+      {
+       "text": "_str_list) ==:\n:\n    #",
+       "accepted": 0
+      },
+      {
+       "text": "_string_list):\n):\n       string =",
+       "accepted": 1
+      },
+      {
+       "text": "_list_list):\n int):\n    if n",
+       "accepted": 0
+      },
+      {
+       "text": "_list,,ឋ)):\n)\n   ",
+       "accepted": 0
+      },
+      {
+       "text": "_string):\n):\n):\n    if if input",
+       "accepted": 1
+      },
+      {
+       "text": "_list_str_list)):\n       if",
+       "accepted": 0
+      },
+      {
+       "text": "_p(n_list):\n \"\"\"\n    abc =",
+       "accepted": 0
+      },
+      {
+       "text": "arian_list):\n       if string =",
+       "accepted": 0
+      },
+      {
+       "text": "_string,):\n):\n string    string s",
+       "accepted": 1
+      }
+     ],
+     "kept": "(paren_string",
+     "kept_tokens": 2,
+     "tree_nodes": 69
+    },
+    {
+     "context_tail": " )( ))')\n    ['()', '(())', '(()())']\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom typing import List\n\ndef separate_paren_groups(paren_string",
+     "bonus": ":",
+     "drafts": [
+      {
+       "text": " string):\n):\n # split 0:\n",
+       "accepted": 0
+      },
+      {
+       "text": " str):\n):\n    string: string string",
+       "accepted": 1
+      },
+      {
+       "text": " text) == string    nums(sأهد",
+       "accepted": 0
+      },
+      {
+       "text": " string):\n string.split(string_string    strings",
+       "accepted": 0
+      },
+      {
+       "text": " strings)    string_string = string_string",
+       "accepted": 0
+      },
+      {
+       "text": " string) input(\"_string)\n    print",
+       "accepted": 0
+      },
+      {
+       "text": " str) = string_list):\n    #",
+       "accepted": 2
+      },
+      {
+       "text": " string):\n \"\"\"\n string:\n    if_list",
+       "accepted": 0
+      },
+      {
+       "text": " str) str input string string string string",
+       "accepted": 2
+      }
+     ],
+     "kept": ": str)",
+     "kept_tokens": 3,
+     "tree_nodes": 65
+    },
+    {
+     "context_tail": "    ['()', '(())', '(()())']\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom typing import List\n\ndef separate_paren_groups(paren_string: str)",
+     "bonus": " ->",
+     "drafts": [
+      {
+       "text": " split(string_string):\n       # string",
+       "accepted": 0
+      },
+      {
+       "text": " return:\n:\n        if int: ",
+       "accepted": 0
+      },
+      {
+       "text": " str:\n    \"\"\"\n = split_to_string",
+       "accepted": 0
+      },
+      {
+       "text": " string:\n:\n    # if True ends",
+       "accepted": 0
+      },
+      {
+       "text": " str_str):\n    # Split a strings",
+       "accepted": 0
+      },
+      {
+       "text": " strings(input:\n   : string_string_string",
+       "accepted": 0
+      },
+      {
+       "text": " \"\"\"\n string:\n    Strings and string\n",
+       "accepted": 0
+      },
+      {
+       "text": " return_string):\n    \"\"\"\n    num +=",
+       "accepted": 0
+      },
+      {
+       "text": " str             the the the",
+       "accepted": 0
+      }
+     ],
+     "kept": " ->",
+     "kept_tokens": 1,
+     "tree_nodes": 70
+    },
+    {
+     "context_tail": " ['()', '(())', '(()())']\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom typing import List\n\ndef separate_paren_groups(paren_string: str) ->",
+     "bonus": " List",
+     "drafts": [
+      {
+       "text": "():\n:\n    # Replace recursively nested_strings",
+       "accepted": 0
+      },
+      {
+       "text": "_list):\n    # = string_string_string",
+       "accepted": 0
+      },
+      {
+       "text": "():\n    # # the binary_chars():\n",
+       "accepted": 0
+      },
+      {
+       "text": "):\n    \"\"\"\n # Iterate list into string",
+       "accepted": 0
+      },
+      {
+       "text": "):\n    \"\"\"\n # return not not ==",
+       "accepted": 0
+      },
+      {
+       "text": "):\n       \"\"\"\n bool: allings",
+       "accepted": 0
+      },
+      {
+       "text": "(arr:\n    # first s:\n   ",
+       "accepted": 0
+      },
+      {
+       "text": "):\n):\n    if string string:\nString",
+       "accepted": 0
+      },
+      {
+       "text": ":\n       = Extract the the a",
+       "accepted": 0
+      }
+     ],
+     "kept": " List",
+     "kept_tokens": 1,
+     "tree_nodes": 65
+    },
+    {
+     "context_tail": "()', '(())', '(()())']\n    \"\"\"\n```<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n```python\nfrom typing import List\n\ndef separate_paren_groups(paren_string: str) -> List",
+     "bonus": "[str",
+     "drafts": [
+      {
+       "text": "):\n    \"\"\"\n string_string == string_str",
+       "accepted": 0
+      },
+      {
+       "text": ":\n    # in in_string:\n   ",
+       "accepted": 0
+      },
+      {
+       "text": "():\n    \"\"\"\n_string\n string\n   ",
+       "accepted": 0
+      },
+      {
+       "text": ":\n    \"\"\"\n #_tuple: not:",
+       "accepted": 0
+      },
+      {
+       "text": ":\n    #: string: str(str",
+       "accepted": 0
+      },
+      {
+       "text": ":\n    \"\"\"\n = a string a str",
+       "accepted": 0
+      },
+      {
+       "text": "):\n    \"\"\"\n sum_str_string::<1",
+       "accepted": 0
+      },
+      {
+       "text": "():\n    \"\"\"\n True: split_str_sub",
+       "accepted": 0
+      },
+      {
+       "text": "):\n        # = the the the a",
+       "accepted": 0
+      }
+     ],
+     "kept": "[str",
+     "kept_tokens": 1,
+     "tree_nodes": 58
+    }
+   ]
+  }
+ ]
+}

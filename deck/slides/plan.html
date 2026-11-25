@@ -1,0 +1,18 @@
+<section id="plan" class="alt">
+<p class="eyebrow">09 · THE PLAN AND THE ASK</p>
+<h2>What the compute would test, in order</h2>
+<div class="row" style="align-items:stretch">
+<div class="col">
+<div class="card teal"><h3>1 · Full context</h3><p>Cross-attend to the target’s states at every earlier position, the structural limit we measured.</p></div>
+<div class="card"><h3>2 · Matched budget</h3><p>Sampled latent tree vs DFlash / DDTree per-slot tree at the same node count.</p></div>
+<div class="card"><h3>3 · Is the latent needed</h3><p>At small scale the latent edges direct token prediction by ~3% (2.80 vs 2.73 math). Re-test at scale.</p></div>
+</div>
+<div class="col">
+<div class="card"><h3>4 · Data</h3><p>100M+ on-policy positions. Here, 800M positions is about 3 days of target forward passes.</p></div>
+<div class="card"><h3>5 · Model</h3><p>A warm-started 0.5B to 1B sampler; 1B barely fits this 12 GB GPU.</p></div>
+<div class="card"><h3>6 · Latency</h3><p>One-step sampler, CUDA graphs, a bf16 target, so a tree drafts near the chain’s 11 ms.</p></div>
+</div>
+</div>
+<p class="note">Risks: trees may not pay off even with sharper samples; stage 1 must be tightened before sampling at temperature above 0. Deliverables: result files, training dashboards, checkpoints, a weekly write-up.</p>
+<aside>Running today on this PC: the full-context test and the direct-token control. Results will be added if they finish before the presentation.</aside>
+</section>
