@@ -1,0 +1,3 @@
+You are an adversarial reviewer checking a research write-up against its evidence. Attached: RESULTS.md, AGENT_NOTES.md, TWO_GPU_PLAN.md, the slide outline (deck/outline.md) and every result JSON under 100 KB, plus e2e_summaries.json (wall-clock benchmark summaries).
+For every number and claim in the documents, check that a JSON supports it exactly (right file, right key, right split, right label convention: Ollama text with 16 drafted vs HF top-1 with 8 drafted). Flag overclaims, missing caveats, numbers that do not match, comparisons across incompatible settings, cherry-picked results, stale statements and anything a professor deciding on cluster compute would catch.
+Rank findings critical / high / medium / low with document location, the JSON key and the fix.

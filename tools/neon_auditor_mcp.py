@@ -110,29 +110,56 @@ def _read_files(paths):
     return "\n\n".join(parts), notes
 
 
+PENDING = TOOLS / ".neon_pending.json"                 # submitted interactions, so an interrupted poll can be fetched
+
+
+def _wait(client, r, max_min=90):
+    """Poll a background interaction until it finishes. Returns the same tuple as _call."""
+    iid = getattr(r, "id", None)
+    pend = json.loads(PENDING.read_text(encoding="utf-8")) if PENDING.exists() else {}
+    pend[iid] = time.strftime("%Y-%m-%d %H:%M:%S")
+    PENDING.write_text(json.dumps(pend, indent=1), encoding="utf-8")
+    log.info("submitted interaction %s (status %s)", iid, getattr(r, "status", None))
+    t0 = time.time()
+    while getattr(r, "status", None) in ("in_progress", "queued", None) and time.time() - t0 < max_min * 60:
+        time.sleep(15)
+        r = client.interactions.get(iid)
+    st = getattr(r, "status", None)
+    if st in ("in_progress", "queued"):
+        raise TimeoutError(f"interaction {iid} still {st} after {max_min} min; fetch later with --fetch {iid}")
+    pend.pop(iid, None)
+    PENDING.write_text(json.dumps(pend, indent=1), encoding="utf-8")
+    u = getattr(r, "usage", None)
+    inp = (getattr(u, "total_input_tokens", 0) or 0)
+    cached = (getattr(u, "total_cached_tokens", 0) or 0)
+    out = (getattr(u, "total_output_tokens", 0) or 0) + (getattr(u, "total_thought_tokens", 0) or 0)
+    reply = getattr(r, "output_text", None) or ""
+    if st != "completed":
+        reply = f"[status: {st}; errors: {getattr(r, 'errors', None)}]" + "\n\n" + reply
+    return reply, inp, cached, out, iid, "interactions"
+
+
 def _call(text, level, prev_id):
     """One model call. Returns (reply, input_tokens, cached_tokens, output_tokens, interaction_id, api_used)."""
     global _api
     client = _client_()
     if _api in ("auto", "interactions"):
+        kw = {"model": MODEL, "input": text, "background": True,
+              "generation_config": {"thinking_level": level, "max_output_tokens": MAX_OUT}}
+        if prev_id:
+            kw["previous_interaction_id"] = prev_id
         try:
-            kw = {"model": MODEL, "input": text,
-                  "generation_config": {"thinking_level": level, "max_output_tokens": MAX_OUT}}
-            if prev_id:
-                kw["previous_interaction_id"] = prev_id
+            # background mode: submit, then poll by id, so a long high/xhigh audit never holds a connection open
             r = client.interactions.create(**kw)
-            u = r.usage
-            inp = (getattr(u, "total_input_tokens", 0) or 0)
-            cached = (getattr(u, "total_cached_tokens", 0) or 0)
-            out = (getattr(u, "total_output_tokens", 0) or 0) + (getattr(u, "total_thought_tokens", 0) or 0)
-            reply = getattr(r, "output_text", None) or ""
-            _api = "interactions"
-            return reply, inp, cached, out, getattr(r, "id", None), "interactions"
-        except Exception as e:                          # not available on Vertex here, or rejected: fall back once
-            if _api == "interactions":
-                raise
-            log.warning("interactions API failed (%s: %s); using models.generate_content", type(e).__name__, e)
+        except Exception as e:
+            name = type(e).__name__
+            if _api == "interactions" or "Timeout" in name or "Connection" in name:
+                raise                                   # never resend after a timeout: the first request may bill
+            log.warning("interactions API rejected (%s: %s); using models.generate_content", name, e)
             _api = "generate_content"
+        else:
+            _api = "interactions"
+            return _wait(client, r)
     from google.genai import types
     if prev_id:
         log.warning("previous_interaction_id ignored: generate_content has no server-side conversation state")
