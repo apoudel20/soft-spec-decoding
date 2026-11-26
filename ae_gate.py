@@ -119,6 +119,27 @@ class Data:
         return g[:, :, C:].flatten(1, 2), idx, g[:, :, :C].flatten(1, 2)   # chunk (B, R*k, D) row-major, context
 
 
+class MultiTrain:
+    """Several train caches read as one (no context rows): starts are global, get() reads from each part."""
+
+    def __init__(self, parts):
+        self.parts = parts
+        self.off = np.cumsum([0] + [len(p.seq) for p in parts])
+        self.starts = np.concatenate([p.starts + o for p, o in zip(parts, self.off[:-1])])
+
+    def get(self, st):
+        out = None
+        for i, p in enumerate(self.parts):
+            m = (st >= self.off[i]) & (st < self.off[i + 1])
+            if not m.any():
+                continue
+            x = p.get(st[m] - self.off[i])[0]
+            if out is None:
+                out = torch.zeros((len(st),) + tuple(x.shape[1:]), dtype=x.dtype)
+            out[torch.from_numpy(m)] = x
+        return out, None, torch.zeros(len(st), 0, out.shape[-1])
+
+
 def prefetch(data, B, steps, rng):
     q = queue.Queue(maxsize=6)
 
@@ -165,6 +186,8 @@ def main():
     ap.add_argument("--mid_w", type=float, default=0.1, help="weight of masked MSE on the middle rows")
     ap.add_argument("--ce", type=float, default=0.0, help="weight of cross-entropy on the target's top-1 token")
     ap.add_argument("--headfeat", action="store_true", help="encoder also gets the head row of each state's top-1")
+    ap.add_argument("--train_cache", default="",
+                    help="comma list of caches under data/ to train on (e.g. cache_pb,cache_pb2,cache_pb3); stats, head and dev stay on --cache")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
     cache = os.path.join(DATA, "cache_smoke" if args.smoke else args.cache)
@@ -182,7 +205,11 @@ def main():
     fstat = [t.cuda() for t in stats[-1]]
     W = torch.load(os.path.join(cache, "lm_head.pt")).cuda()
     D, R = W.shape[1], len(layers)
-    tr = Data(cache, "train", layers, args.k, stats, args.ctx)
+    if args.train_cache and not args.smoke:
+        assert not args.ctx, "--train_cache does not support --ctx"
+        tr = MultiTrain([Data(os.path.join(DATA, n), "train", layers, args.k, stats) for n in args.train_cache.split(",")])
+    else:
+        tr = Data(cache, "train", layers, args.k, stats, args.ctx)
     Cm = 0 if args.nocond else args.ctx
     model = AE(D, R, args.k, args.zdim, d=args.d, depth=args.depth, C=Cm, headfeat=args.headfeat).cuda()
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)

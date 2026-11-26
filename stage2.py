@@ -122,13 +122,36 @@ class Search(nn.Module):
         self.body = tblock(d, depth)
         self.out = nn.Sequential(nn.LayerNorm(d), nn.Linear(d, out_dim or zq))
 
-    def forward(self, zc, xt, t, raw=None):    # zc, xt (B, nq, zq) normalised, t (B,), raw (B, R*k, D)
+    def forward(self, zc, xt, t, raw=None, extra=None):    # zc, xt (B, nq, zq) normalised, t (B,), raw (B, R*k, D)
         f = torch.exp(torch.linspace(0, np.log(1000), 32, device=t.device))
         te = torch.cat([torch.sin(t[:, None] * f), torch.cos(t[:, None] * f)], -1)
         h = torch.cat([self.cin(zc), self.xin(xt) + self.temb(te)[:, None]], 1) + self.pos
         if raw is not None:
             h = torch.cat([self.rin(raw) + self.rpos, h], 1)
+        if extra is not None:                   # gist tokens (B, G, d), e.g. from GistEnc
+            h = torch.cat([extra, h], 1)
         return self.out(self.body(h)[:, -self.nq:])
+
+
+class GistEnc(nn.Module):
+    """Oracle gist: a long stretch of the future (token ids, embedded with the frozen head rows) compressed into G
+    tokens of gdim numbers each, then projected to the search network's width. The stretch starts after the
+    drafted chunk, so it carries no drafted tokens directly."""
+
+    def __init__(self, L, D, d=512, G=8, gdim=64, depth=4):
+        super().__init__()
+        self.inp = nn.Sequential(nn.LayerNorm(D), nn.Linear(D, d))
+        self.pos = nn.Parameter(torch.randn(L, d) * 0.02)
+        self.pad = nn.Parameter(torch.zeros(d))
+        self.q = nn.Parameter(torch.randn(G, d) * 0.02)
+        self.body = tblock(d, depth)
+        self.down, self.up = nn.Linear(d, gdim), nn.Linear(gdim, d)
+        self.gpos = nn.Parameter(torch.randn(G, d) * 0.02)
+
+    def forward(self, e, m):                    # e (B, L, D) embeddings, m (B, L) bool, True = inside the answer
+        h = torch.where(m[:, :, None], self.inp(e), self.pad) + self.pos
+        h = self.body(torch.cat([h, self.q.expand(len(e), -1, -1)], 1))[:, -len(self.q):]
+        return self.up(self.down(h)) + self.gpos
 
 
 def main():
@@ -160,6 +183,12 @@ def main():
     ap.add_argument("--bestk", default="", help="flow eval: comma list of K; report best-of-K sampled drafts")
     ap.add_argument("--eval_only", action="store_true", help="no training; evaluate --init")
     ap.add_argument("--smoke", action="store_true")
+    ap.add_argument("--far", type=int, default=0, help="oracle gist over this many future tokens after the drafted chunk")
+    ap.add_argument("--far_zero", action="store_true", help="control: same network, gist input zeroed")
+    ap.add_argument("--gist_q", type=int, default=8)
+    ap.add_argument("--gist_dim", type=int, default=64)
+    ap.add_argument("--gist_npy", default="", help="precomputed gists from jepa_gist.py export (data/gist/<name>_...)")
+    ap.add_argument("--gist_kind", default="orc", choices=["orc", "pred"], help="train with the oracle or predicted gist")
     args = ap.parse_args()
     if args.eval_only:
         args.steps = 0
@@ -293,6 +322,38 @@ def main():
 
     cl = [layers.index(int(x)) for x in args.ctx_layers.split(",")] if args.ctx_pos else []
 
+    genc = GistEnc(args.far, W.shape[1], args.d, args.gist_q, args.gist_dim).to(dev) if args.far else None
+    GM = {}
+    if args.gist_npy:                           # precomputed G x gdim gists per chunk start, projected to width d
+        gdir = os.path.join(DATA, "gist")
+        for sp in ["train", "dev_math", "dev_code", "dev_chat"]:
+            cn = args.train_cache if sp == "train" and args.train_cache else os.path.basename(cache)
+            for kind in ["orc", "pred"]:
+                GM[sp, kind] = np.load(os.path.join(gdir, f"{args.gist_npy}_{cn}_{sp}_{kind}.npy"), mmap_mode="r")
+        Gq, gd = GM["train", "orc"].shape[1:]
+        gsub = GM["train", args.gist_kind][np.sort(np.random.default_rng(2).choice(len(GM["train", "orc"]), 20000, replace=False))]
+        gmu = torch.from_numpy(gsub.astype(np.float32).mean(0)).to(dev)
+        gsd = torch.from_numpy(gsub.astype(np.float32).std(0)).clamp_min(1e-3).to(dev)
+        genc = nn.ModuleDict({"up": nn.Linear(gd, args.d), "pos": nn.ParameterList([nn.Parameter(torch.randn(Gq, args.d) * 0.02)])}).to(dev)
+
+    def gist(sp, s, kind=None):                 # (B, G, d) gist for chunk starts s, or None
+        if args.gist_npy:
+            kind = kind or args.gist_kind
+            if kind == "zero":
+                x = torch.zeros(len(s), Gq, gd, device=dev)
+            else:
+                x = (torch.from_numpy(np.ascontiguousarray(GM[sp, kind][np.sort(s)][np.argsort(np.argsort(s))]).astype(np.float32)).to(dev) - gmu) / gsd
+            return genc["up"](x) + genc["pos"][0]
+        if not args.far:
+            return None
+        rows = (s + 2 * k)[:, None] + np.arange(args.far)[None]
+        seq = meta[sp][0].seq
+        rc = np.clip(rows, 0, len(seq) - 1)
+        m = torch.from_numpy((rows < len(seq)) & (seq[rc] == seq[s][:, None])).to(dev)
+        ids = torch.from_numpy(T1[sp][rc].astype(np.int64)).to(dev)
+        g_ = genc(W[ids].float(), m)
+        return g_ * 0 if args.far_zero else g_
+
     def ctxraw(sp, s):                          # (B, len(cl)*C, D): raw states of the C positions before chunk s
         dt = meta[sp][0]
         assert not isinstance(dt, MultiData), "--ctx_pos supports a single train cache"
@@ -327,10 +388,12 @@ def main():
         z = (Z[sp][np.clip(idx, 0, None)].float().to(dev) - zm) / zs
         z = z * torch.from_numpy(ok).to(dev)[:, :, None, None]
         return z.flatten(1, 2)
-    opt = torch.optim.AdamW(net.parameters(), lr=args.lr, weight_decay=0.01)
+    params = list(net.parameters()) + (list(genc.parameters()) if genc is not None else [])
+    opt = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.01)
     sched = torch.optim.lr_scheduler.LambdaLR(
         opt, lambda s: min(1, (s + 1) / 500) * max(0.1, 0.5 * (1 + np.cos(np.pi * min(1, s / max(1, args.steps))))))
-    print(f"search params {sum(p.numel() for p in net.parameters()) / 1e6:.1f}M", flush=True)
+    print(f"search params {sum(p.numel() for p in net.parameters()) / 1e6:.1f}M"
+          f"{f', gist encoder {sum(p.numel() for p in genc.parameters()) / 1e6:.1f}M' if genc is not None else ''}", flush=True)
 
     def tmap(u):                                # data at t=1; shift spends more steps near noise
         sig = 1 - u
@@ -339,17 +402,17 @@ def main():
     def to_head(o):                             # stage-2 output -> head inputs (B, k, D)
         return unz(o.float()) if args.direct else dec_final(o * zs + zm)
 
-    def predict(zc_n, g=None, raw=None):        # normalised z_t -> normalised z_t+1 (a sample in flow mode)
+    def predict(zc_n, g=None, raw=None, extra=None):   # normalised z_t -> normalised z_t+1 (a sample in flow mode)
         B = zc_n.shape[0]
         shp = (B, nq_out, ae.zq)
         raw = raw.float() if raw is not None else None
         if args.mode == "det":
-            return net(zc_n, torch.zeros(shp, device=dev), torch.zeros(B, device=dev), raw)
+            return net(zc_n, torch.zeros(shp, device=dev), torch.zeros(B, device=dev), raw, extra)
         x = torch.randn(shp, device=dev, generator=g)
         grid = tmap(torch.linspace(0, 1, args.nfe + 1, device=dev))
         for i in range(args.nfe):
             t = grid[i].expand(B)
-            x = x + net(zc_n, x, t, raw) * (grid[i + 1] - grid[i])
+            x = x + net(zc_n, x, t, raw, extra) * (grid[i + 1] - grid[i])
         return x
 
     rng = np.random.default_rng(0)
@@ -363,13 +426,14 @@ def main():
         lab = torch.from_numpy(T1["train"][(s + k)[:, None] + np.arange(k)[None]]).to(dev)
         with torch.autocast("cuda", torch.bfloat16):
             if args.mode == "det":
-                z1h = net(zc, torch.zeros(args.B, nq_out, ae.zq, device=dev), torch.zeros(args.B, device=dev), rx).float()
+                gx = gist("train", s)
+                z1h = net(zc, torch.zeros(args.B, nq_out, ae.zq, device=dev), torch.zeros(args.B, device=dev), rx, gx).float()
                 lat = torch.zeros((), device=dev) if args.direct else F.mse_loss(z1h, z1)
             else:
                 x0 = torch.randn_like(z1)
                 t = tmap(torch.rand(args.B, device=dev))
                 xt = (1 - t)[:, None, None] * x0 + t[:, None, None] * z1
-                v = net(zc, xt, t, rx).float()
+                v = net(zc, xt, t, rx, gist("train", s)).float()
                 lat = F.mse_loss(v, z1 - x0)
                 z1h = xt + (1 - t)[:, None, None] * v
         loss = args.lat_w * lat
@@ -389,12 +453,15 @@ def main():
             print(json.dumps(r), flush=True)
             if not np.isfinite(loss.item()):
                 raise SystemExit("non-finite loss")
-    tag = f"{'eval_' if args.eval_only else ''}{args.ae}_{args.mode}{'_direct' if args.direct else ''}{'_raw' if args.raw else ''}{f'_ctx{args.ctx_pos}' if args.ctx_pos else ''}{f'_{args.train_cache.replace(",", "+")}' if args.train_cache else ''}{f'_lat{args.lat_w:g}' if args.lat_w != 1 else ''}{f'_h{args.hist}' if args.hist > 1 else ''}{f'_d{args.d}x{args.depth}' if (args.d, args.depth) != (512, 6) else ''}{f'_s{args.steps}' if args.steps != 6000 else ''}{f'_nfe{args.nfe}' if args.mode == 'flow' and args.nfe != 8 else ''}{'_smoke' if args.smoke else ''}"
+    tag = f"{'eval_' if args.eval_only else ''}{args.ae}_{args.mode}{'_direct' if args.direct else ''}{'_raw' if args.raw else ''}{f'_ctx{args.ctx_pos}' if args.ctx_pos else ''}{f'_{args.train_cache.replace(",", "+")}' if args.train_cache else ''}{f'_lat{args.lat_w:g}' if args.lat_w != 1 else ''}{f'_h{args.hist}' if args.hist > 1 else ''}{f'_d{args.d}x{args.depth}' if (args.d, args.depth) != (512, 6) else ''}{f'_s{args.steps}' if args.steps != 6000 else ''}{f'_nfe{args.nfe}' if args.mode == 'flow' and args.nfe != 8 else ''}{f'_far{args.far}g{args.gist_q}x{args.gist_dim}' if args.far else ''}{f'_gist-{args.gist_npy}-{args.gist_kind}' if args.gist_npy else ''}{'zero' if args.far_zero else ''}{'_smoke' if args.smoke else ''}"
     if not args.smoke and not args.eval_only:
-        torch.save({"model": net.state_dict(), "args": vars(args), "zm": zm.cpu(), "zs": zs.cpu()},
+        torch.save({"model": net.state_dict(), "args": vars(args), "zm": zm.cpu(), "zs": zs.cpu(),
+                    "gist": genc.state_dict() if genc is not None else None},
                    os.path.join(CKPT, f"stage2_{tag}.pt"))
 
     net.eval()
+    if genc is not None:
+        genc.eval()
     res = {"args": vars(args), "stage1": a, "train_log": log, "sets": {}}
     g = torch.Generator(device=dev).manual_seed(0)
     for sp in ["dev_math", "dev_code", "dev_chat"]:
@@ -407,6 +474,8 @@ def main():
                 last = s
         pairs = np.array(keep)
         out = {"pred": [], "oracle": [], "copy": []}
+        if args.gist_npy:
+            out.update({"pred_gist_orc": [], "pred_gist_pred": [], "pred_gist_zero": []})
         slot = []
         with torch.no_grad():
             for i in range(0, len(pairs), 128):
@@ -414,8 +483,11 @@ def main():
                 zc = Z[sp][s].float().to(dev)
                 zh = ctx(sp, s)
                 lab = torch.from_numpy(top1[(s + k)[:, None] + np.arange(k)[None]].astype(np.int64))
-                po = predict(zh, g, rawx(sp, s))
+                po = predict(zh, g, rawx(sp, s), gist(sp, s))
                 heads = {"pred": to_head(po), "oracle": dec_final(Z[sp][s + k].float().to(dev)), "copy": dec_final(zc)}
+                if args.gist_npy:
+                    for gk in ["orc", "pred", "zero"]:
+                        heads[f"pred_gist_{gk}"] = to_head(predict(zh, g, rawx(sp, s), gist(sp, s, gk)))
                 for kind, hx in heads.items():
                     tok = logp(hx.flatten(0, 1)).argmax(-1).view(len(s), k).cpu()
                     eq = (tok == lab).int()

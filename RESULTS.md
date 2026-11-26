@@ -660,6 +660,57 @@ at least 20% more tokens on code and chat. Estimated compute for test 1: about o
 including data generation. Caching 4 layers for 100M positions takes about 3.2 TB, so larger runs compute states on
 the fly.
 
+## Long-horizon gist and paragraph plan (25 to 26 Nov)
+
+These runs start the proposed next step at small scale on one RTX 4070 Ti. Unless noted, the drafter is the 24M
+direct drafter of `stage2.py --mode det --direct --raw` (8 output queries over the target's states at the current
+chunk), trained 10k steps on `cache_pb`, and the score is accepted tokens per round out of 9 on the dev sets,
+math / code / chat.
+
+**Gist of the stretch after the draft.** The gist covers rows s+16 onward, so it holds no drafted token.
+`stage2.py --far`: the target's top-1 tokens over that stretch, embedded with the frozen head rows, compressed to
+8 × 64 numbers and fed to the drafter as 8 extra tokens. `jepa_gist.py`: an encoder over the target's states at
+those rows (layers 24 and 36) and a predictor from the 64 rows of context (layers 30 and 36), trained with VICReg
+(invariance 25, variance 25, covariance 1, 4k steps). The state gist can carry drafted tokens indirectly, since the
+states after the draft have read them.
+
+| Gist given to the drafter | Math | Code | Chat |
+|---|---|---|---|
+| none (same network, gist zeroed) | 3.02 | 2.10 | 1.48 |
+| true next 64 tokens after the draft | 3.19 | 2.17 | 1.50 |
+| true next 256 tokens after the draft | 3.09 | 2.18 | 1.46 |
+| JEPA encoder of the true future states | 3.02 | 2.08 | 1.49 |
+| JEPA predictor from context | 2.96 | 2.13 | 1.46 |
+
+The largest gain is 6% on math with the true 64 tokens, below the 20% bar. The JEPA predictor's error is 0.027 on
+train and 0.052 to 0.071 on dev. Its encoder did not collapse (per-dimension spread 0.70 at step 1,000). This setup
+only tests a gist used as an extra drafter input. It does not test a gist that stage 2 predicts and the decoder
+drafts from block by block.
+
+**Paragraph plan** (`plan_gist.py`). The plan is G ordered block latents over the next 8·G tokens, and its first
+block is the block drafted this round. An encoder over the target's own next tokens (head-row embeddings) gives
+G × c numbers, scaled to unit average power, and a Gaussian channel with noise σ limits it to at most
+G·c·½·log₂(1 + 1/σ²) bits. The 23M decoder drafts 8 tokens from the plan, the current chunk's states and the offset
+of the drafted block inside the plan, so one plan can serve later rounds. A deterministic predictor and a
+rectified-flow sampler learn the plan from the states at the plan's anchor. Evaluation covers the oracle plan, the
+predicted plan, a zeroed plan, plans made 16 to 504 tokens earlier, and best of K sampled plans against the K most
+likely drafts of the decoder's own per-slot distribution, with trie node counts.
+
+- The first run (64 tokens, c = 4, tanh output) collapsed. The encoder's output spread fell to 0 by step 2,000 as
+  tanh saturated, and the oracle plan then scored the same as no plan (2.99 / 2.16 / 1.49). Its numbers say nothing
+  about plans. Power normalisation and a noise warmup replaced the tanh.
+- 2,000-step checks after the fix (undertrained, for debugging only). With c = 4 and σ = 0.5 the oracle plan gives
+  2.33 against 2.25 without a plan on math. With c = 64 and σ = 0.05 it gives 2.63 against 2.02 on math (+30%), +4%
+  on code and none on chat. Best of 8 sampled plans is level with the 8 most likely per-position drafts at about
+  30 trie nodes (math 2.52 against 2.53). Zeroing the raw states in half of the training rounds weakened the decoder
+  and did not make it use the plan.
+- Queued (`run_plan4.sh`): 256, 512 and 64 tokens at c = 16, σ = 0.25, a decoder without a plan, and a 256-token plan
+  with c = 64, σ = 0.05. A first attempt at this queue stopped when the PC shut down.
+
+**Stage 1 with more data.** The larger stage-1 model (d1024 × 6, 36k steps) overfit the 512k-row cache (section
+above). Two runs on the 5.9M windows of `cache_pb`, `cache_pb2` and `cache_pb3` are queued after the plan runs:
+d1024 × 6 and d512 × 4, both z2048, 36k steps, scored on the same dev sets and gate.
+
 ## What the results say
 
 1. **Target-side refinement.** Arm C uses the spare width of the verification pass to reach τ 2.3 without a second
