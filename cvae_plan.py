@@ -6,6 +6,8 @@ predictor is a learned prior and the training loss charges the plan for every na
   prior     p(z | target states at the current chunk)   -> G x c Gaussian
   decoder   p(drafted block | z, current chunk states)  the 23M decoder of plan_gist.py
   loss      NLL(drafted block | z ~ q) + beta * KL(q || p) / 8      (both per token; beta = 1 is the ELBO)
+            --mix f: in a fraction f of rounds the decoder reads a prior sample instead, so the decoder learns to
+            use an imperfect plan and the prior learns directly from the token loss.
 The KL weight rises from 0 to beta over --warm steps. At drafting time z comes from the prior, so the prior's samples
 give the tree branches. The drafted block is the plan's first block (offset 0).
 
@@ -73,6 +75,9 @@ def main():
     ap.add_argument("--c", type=int, default=16)
     ap.add_argument("--beta", type=float, default=1.0)
     ap.add_argument("--warm", type=int, default=3000)
+    ap.add_argument("--mix", type=float, default=0.0,
+                    help="fraction of training rounds where the decoder reads a prior sample instead of a posterior sample "
+                         "(reparameterised, so the prior also learns from the token loss)")
     ap.add_argument("--train_cache", default="cache_pb")
     ap.add_argument("--dev_cache", default="cache")
     ap.add_argument("--steps", type=int, default=10000)
@@ -85,7 +90,7 @@ def main():
         args.steps, args.B = 30, 16
     dev = "cuda"
     G, c = args.G, args.c
-    tag = f"G{G}c{c}b{args.beta:g}" + (f"_st{args.steps}" if args.steps != 10000 else "") + ("_smoke" if args.smoke else "")
+    tag = f"G{G}c{c}b{args.beta:g}" + (f"_mix{args.mix:g}" if args.mix else "") + (f"_st{args.steps}" if args.steps != 10000 else "") + ("_smoke" if args.smoke else "")
     print(f"=== cvae {tag}: plan {G * K} tokens, {G} x {c}, beta {args.beta}", flush=True)
 
     dev_cache = os.path.join(DATA, args.dev_cache)
@@ -119,6 +124,10 @@ def main():
             mq, lq = q(W[ids], m)
             mp, lp = p(raw)
             z = mq + (0.5 * lq).exp() * torch.randn_like(mq)
+            if args.mix:
+                zp = mp + (0.5 * lp).exp() * torch.randn_like(mp)
+                use_p = (torch.rand(len(z), 1, 1, device=dev) < args.mix).to(z.dtype)
+                z = use_p * zp + (1 - use_p) * z
             nll = F.nll_loss(logp(dec(z, o, raw)).flatten(0, 1), lab.flatten())
         kl = gkl(mq, lq, mp, lp).mean()
         beta = args.beta * min(1.0, step / max(1, args.warm))

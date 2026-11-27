@@ -735,8 +735,24 @@ likely drafts of the decoder's own per-slot distribution, with trie node counts.
   prior cannot predict (KL weight β, ELBO at β = 1).
 
 **Stage 1 with more data.** The larger stage-1 model (d1024 × 6, 36k steps) overfit the 512k-row cache (section
-above). Two runs on the 5.9M windows of `cache_pb`, `cache_pb2` and `cache_pb3` are queued after the plan runs:
-d1024 × 6 and d512 × 4, both z2048, 36k steps, scored on the same dev sets and gate.
+above). Both sizes were retrained on the 5.9M windows of `cache_pb`, `cache_pb2` and `cache_pb3` (`ae_gate.py
+--train_cache`, z2048, 36k steps, B 96), with the same dev sets and gate (`results/ae_gate_*_6m_z2048.json`).
+
+| Stage 1 (states only, all four layers) | Math | Code | Chat |
+|---|---|---|---|
+| d512 × 4, 512k rows, 12k steps | 94.6% | 93.0% | 78.3% |
+| d512 × 4, 5.9M windows | 96.7% | 95.4% | 85.4% |
+| d1024 × 6, 5.9M windows, latent mean | 88.8% | 85.3% | 69.8% |
+| d1024 × 6, 5.9M windows, posterior sample | 94.3% | 91.7% | 78.2% |
+
+- More data lifts the original model by 2 to 7 points, chat most. All runs remain below the gate.
+- The larger decoder depends on the norm of its input latent. The latent mean has a smaller norm than any sample it
+  saw in training, so it scores lower than a sample. Rescaling the mean to the expected sample norm gives 94.1%
+  (math) and 78.7% (chat), equal to a sample. Even so, the larger model is below the original one on the same data,
+  which points at its training recipe (same learning rate and noise settings as the small model) rather than at a
+  capacity limit.
+- Errors sit at near-tie positions. For the original model on 5.9M windows, agreement is 99.4 / 99.0 / 96.7% where
+  the target's top-1 logit leads by 2 or more, and 60 / 55 / 47% where it leads by less than 0.5.
 
 ## What the results say
 
