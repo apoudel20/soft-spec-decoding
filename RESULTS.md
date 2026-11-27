@@ -731,8 +731,36 @@ likely drafts of the decoder's own per-slot distribution, with trie node counts.
   are not tied to their own blocks, so this test of progressive drafting is inconclusive.
 - Reading. The plan encoder is trained only to help a decoder that already reads the context, so it learns what the
   context does not contain, mostly the identity of the drafted tokens. A predictor from the same context cannot
-  supply that. `cvae_plan.py` (queued) makes the predictor a learned prior and charges the plan for each nat the
-  prior cannot predict (KL weight β, ELBO at β = 1).
+  supply that. `cvae_plan.py` makes the predictor a learned prior and charges the plan for each nat the prior cannot
+  predict (KL weight β, ELBO at β = 1).
+
+**Plan as a conditional VAE** (`cvae_plan.py`, `results/cvae_*.json`). Posterior over the next 256 target tokens,
+Gaussian prior from the current chunk's states, the same 23M decoder trained on posterior samples, loss
+NLL + β·KL/8 with the KL weight rising over 3k steps, 10k steps, offset 0. At drafting time the plan comes from the
+prior. Trees: best of K prior samples, with trie nodes in brackets (math).
+
+| β | KL per round | True-future plan (posterior mean) | Prior mean | Prior sample | Best of 4 prior samples | Best of 8 prior samples |
+|---|---|---|---|---|---|---|
+| 1 | 0.003 bits | 2.91 / 2.01 / 1.43 | 2.91 / 2.01 / 1.43 | 3.06 / 2.08 / 1.46 | 3.14 (10) | 3.15 (11) |
+| 0.3 | 8 bits | 3.05 / 2.08 / 1.48 | 2.69 / 1.98 / 1.44 | 2.90 / 2.13 / 1.45 | 3.12 (20) | 3.28 (31) |
+| 0.1 | 34 to 44 bits | 4.10 / 2.64 / 1.55 | 2.71 / 2.06 / 1.46 | 2.79 / 2.11 / 1.46 | 3.15 (22) | 3.32 (38) |
+| 0.3, decoder also reads prior samples in half the rounds | 0.005 bits | 2.64 / 1.99 / 1.44 | 2.64 / 1.99 / 1.44 | 2.94 / 2.09 / 1.46 | | 3.09 (12) |
+| 0.3, 64-token plan | 15 to 19 bits | 4.09 / 2.75 / 1.60 | 2.86 / 2.10 / 1.48 | 2.82 / 2.05 / 1.46 | 3.27 (22) | 3.45 (39) |
+
+The control without a plan gives 3.02 / 2.16 / 1.48 for one draft, 3.26 / 2.29 / 1.52 for its 4 most likely drafts
+(18 nodes) and 3.46 / 2.38 / 1.55 for its 8 most likely drafts (29 nodes).
+
+- At β = 1, and whenever the decoder also trains on prior samples, the posterior collapses onto the prior and the
+  plan carries no information. Smaller β lets the plan carry more, and the gap between the true-future plan and the
+  prior grows with it. The prior does not follow.
+- No prior-mean or prior-sample draft beats the control's single draft.
+- Within one decoder, best of K prior samples beats that decoder's own K most likely drafts at a similar node count
+  (β = 0.3: 3.28 against 3.08 on math, 2.35 against 2.17 on code, at 31 to 34 nodes). Against the control's
+  per-position tree, the sampled-plan trees of β = 0.1 match code and chat (2.40 / 1.59 against 2.38 / 1.55) and are
+  4% lower on math (3.32 against 3.46), with 30 to 40% more nodes. The 64-token plan at β = 0.3 matches it on all
+  three sets (3.45 / 2.40 / 1.57 against 3.46 / 2.38 / 1.55) with 30 to 40% more nodes.
+- With a collapsed plan, z acts as an input noise the decoder learned to follow. Its 8 samples give 3.15 on math at
+  11 nodes, close to the control's 4 most likely drafts (3.26 at 18 nodes).
 
 **Stage 1 with more data.** The larger stage-1 model (d1024 × 6, 36k steps) overfit the 512k-row cache (section
 above). Both sizes were retrained on the 5.9M windows of `cache_pb`, `cache_pb2` and `cache_pb3` (`ae_gate.py
