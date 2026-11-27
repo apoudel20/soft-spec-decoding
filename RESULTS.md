@@ -704,8 +704,35 @@ likely drafts of the decoder's own per-slot distribution, with trie node counts.
   on code and none on chat. Best of 8 sampled plans is level with the 8 most likely per-position drafts at about
   30 trie nodes (math 2.52 against 2.53). Zeroing the raw states in half of the training rounds weakened the decoder
   and did not make it use the plan.
-- Queued (`run_plan4.sh`): 256, 512 and 64 tokens at c = 16, σ = 0.25, a decoder without a plan, and a 256-token plan
-  with c = 64, σ = 0.05. A first attempt at this queue stopped when the PC shut down.
+- Full runs (10k decoder steps plus 2k predictor steps, `results/plan_pw_*.json`). Offset 0, drafted block = first
+  plan block. "Zeroed" is the same decoder with its plan input set to zero. The control is the same 23M decoder
+  trained without a plan. Trees: best of 8 flow samples against the decoder's own 8 most likely drafts, with trie
+  nodes in brackets (math).
+
+| Run | Oracle plan | Predicted plan (det) | Zeroed | Best of 8 flow plans | 8 most likely drafts |
+|---|---|---|---|---|---|
+| control, no plan | | | 3.02 / 2.16 / 1.48 | | 3.46 (29) |
+| 64 tokens, c = 16, σ = 0.25 | 5.51 / 4.10 / 2.03 | 2.67 / 1.98 / 1.42 | 2.22 / 1.85 / 1.41 | 3.18 (49) | 3.13 (35) |
+| 256 tokens, c = 16, σ = 0.25 | 4.79 / 3.29 / 1.73 | 2.73 / 2.10 / 1.48 | 2.49 / 2.03 / 1.46 | 3.10 (47) | 3.18 (34) |
+| 512 tokens, c = 16, σ = 0.25, B 64 | 3.97 / 2.42 / 1.55 | 2.45 / 1.95 / 1.45 | 2.42 / 1.89 / 1.42 | 2.77 (47) | 2.79 (36) |
+| 256 tokens, c = 64, σ = 0.05 | 5.89 / 4.69 / 2.46 | 2.57 / 1.96 / 1.43 | 2.17 / 1.94 / 1.41 | 2.79 (52) | 2.94 (33) |
+| 256 tokens, predictor reads the previous plan | 4.91 / 3.29 / 1.75 | 2.79 / 2.04 / 1.48 | 2.61 / 2.09 / 1.47 | 3.13 (46) | 3.17 (34) |
+
+- The oracle plan beats the control by 37 to 117%. Every predicted plan is below the control. Sampled-plan trees use
+  more nodes than the per-position trees of the control and accept fewer tokens. The 512-token run used batch 64
+  (memory), so it saw half the training rounds of the others.
+- A longer plan lowers the oracle at offset 0. The oracle's gain sits in the drafted block.
+- Predicting the next plan from the plan of the previous 256 verified tokens (the gist-to-gist step) does not help.
+  The predictor's error rises from 0.60 to 0.66 (plan variance about 0.7).
+- Plans made earlier (offsets 16 to 248) never help, also for the oracle. With offsets drawn uniformly over blocks the
+  oracle at offset 0 reaches 7.80 / 7.01 / 5.25, so each block latent becomes a close code of its own tokens, but at
+  offset 16 it gives 3.07 against 2.95 zeroed (math). Shifting the plan so the drafted block comes first did not fix
+  it (5.44 at offset 0, 3.12 against 3.03 at offset 16). The encoder's block queries attend to the whole window and
+  are not tied to their own blocks, so this test of progressive drafting is inconclusive.
+- Reading. The plan encoder is trained only to help a decoder that already reads the context, so it learns what the
+  context does not contain, mostly the identity of the drafted tokens. A predictor from the same context cannot
+  supply that. `cvae_plan.py` (queued) makes the predictor a learned prior and charges the plan for each nat the
+  prior cannot predict (KL weight β, ELBO at β = 1).
 
 **Stage 1 with more data.** The larger stage-1 model (d1024 × 6, 36k steps) overfit the 512k-row cache (section
 above). Two runs on the 5.9M windows of `cache_pb`, `cache_pb2` and `cache_pb3` are queued after the plan runs:

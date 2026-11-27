@@ -88,8 +88,9 @@ class PlanEnc(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, G, c, D, d=512, depth=6):
+    def __init__(self, G, c, D, d=512, depth=6, rel=False):
         super().__init__()
+        self.G, self.rel = G, rel
         self.up = nn.Linear(max(c, 1), d)
         self.gpos = nn.Parameter(torch.randn(G, d) * 0.02)
         self.oemb = nn.Embedding(G * K - K + 1, d)      # the drafted block can sit anywhere inside the plan
@@ -99,28 +100,48 @@ class Decoder(nn.Module):
         self.out = nn.Sequential(nn.LayerNorm(d), nn.Linear(d, D))
 
     def forward(self, y, o, raw):               # y (B, G, c) plan, o (B,) offset, raw (B, 32, D)
+        if self.rel:                            # shift the plan so the block holding the drafted tokens comes first
+            idx = torch.arange(self.G, device=y.device)[None] + torch.div(o, K, rounding_mode="floor")[:, None]
+            ok = (idx < self.G)[:, :, None].to(y.dtype)
+            y = y.gather(1, idx.clamp(max=self.G - 1)[:, :, None].expand(-1, -1, y.shape[2])) * ok
         p = self.up(y) + self.gpos + self.oemb(o)[:, None]
         h = torch.cat([p, self.raw(raw), self.q.expand(len(raw), -1, -1)], 1)
         return self.out(self.body(h)[:, -K:])
 
 
+class PrevIn(nn.Module):
+    """The plan of the 8G already verified tokens before the drafted block, as G extra tokens."""
+
+    def __init__(self, G, c, d):
+        super().__init__()
+        self.pin = nn.Linear(c, d)
+        self.ppos = nn.Parameter(torch.randn(G, d) * 0.02)
+
+    def forward(self, prev):
+        return self.pin(prev) + self.ppos
+
+
 class PlanPred(nn.Module):
-    def __init__(self, G, c, D, d=512, depth=4):
+    def __init__(self, G, c, D, d=512, depth=4, hist=False):
         super().__init__()
         self.raw = RawIn(D, d)
+        self.prev = PrevIn(G, c, d) if hist else None
         self.q = nn.Parameter(torch.randn(G, d) * 0.02)
         self.body = tblock(d, depth)
         self.out = nn.Sequential(nn.LayerNorm(d), nn.Linear(d, c))
 
-    def forward(self, raw):
+    def forward(self, raw, prev=None):
         h = torch.cat([self.raw(raw), self.q.expand(len(raw), -1, -1)], 1)
+        if self.prev is not None:
+            h = torch.cat([self.prev(prev), h], 1)
         return self.out(self.body(h)[:, -len(self.q):])
 
 
 class PlanFlow(nn.Module):
-    def __init__(self, G, c, D, d=512, depth=4):
+    def __init__(self, G, c, D, d=512, depth=4, hist=False):
         super().__init__()
         self.raw = RawIn(D, d)
+        self.prev = PrevIn(G, c, d) if hist else None
         self.xin = nn.Linear(c, d)
         self.gpos = nn.Parameter(torch.randn(G, d) * 0.02)
         self.te = nn.Sequential(nn.Linear(64, d), nn.SiLU(), nn.Linear(d, d))
@@ -128,16 +149,18 @@ class PlanFlow(nn.Module):
         self.out = nn.Sequential(nn.LayerNorm(d), nn.Linear(d, c))
         self.G = G
 
-    def forward(self, raw, x, t):
+    def forward(self, raw, x, t, prev=None):
         h = torch.cat([self.raw(raw), self.xin(x) + self.gpos + self.te(temb(t))[:, None]], 1)
+        if self.prev is not None:
+            h = torch.cat([self.prev(prev), h], 1)
         return self.out(self.body(h)[:, -self.G:])
 
     @torch.no_grad()
-    def sample(self, raw, c, nfe, g):
+    def sample(self, raw, c, nfe, g, prev=None):
         x = torch.randn(len(raw), self.G, c, device=raw.device, generator=g)
         for i in range(nfe):
             t = torch.full((len(raw),), i / nfe, device=raw.device)
-            x = x + self.forward(raw, x, t).float() / nfe
+            x = x + self.forward(raw, x, t, prev).float() / nfe
         return x
 
 
@@ -159,10 +182,14 @@ def pack(dt, T1, s, s0, G):
     rc = np.clip(rows, 0, n - 1)
     m = (rows < n) & (seq[rc] == seq[s0][:, None])
     lab = T1[(s + K)[:, None] + np.arange(K)[None]]
-    return raw, raw_a, torch.from_numpy(T1[rc]), torch.from_numpy(m), torch.from_numpy(lab), torch.from_numpy(s - s0)
+    pr = (s0 + K - G * K)[:, None] + np.arange(G * K)[None]       # the 8G tokens before the plan, ending at the bonus
+    pc = np.clip(pr, 0, n - 1)
+    pm = (pr >= 0) & (seq[pc] == seq[s0][:, None])
+    return (raw, raw_a, torch.from_numpy(T1[rc]), torch.from_numpy(m), torch.from_numpy(lab), torch.from_numpy(s - s0),
+            torch.from_numpy(T1[pc]), torch.from_numpy(pm))
 
 
-def loader(dt, T1, starts, B, steps, G, poff, seed):
+def loader(dt, T1, starts, B, steps, G, poff, seed, oblock=False):
     q = queue.Queue(maxsize=6)
     rng = np.random.default_rng(seed)
     seq = dt.seq
@@ -170,7 +197,10 @@ def loader(dt, T1, starts, B, steps, G, poff, seed):
     def work():
         for _ in range(steps):
             s = rng.choice(starts, B)
-            o = np.where(rng.random(B) < poff, rng.integers(1, G * K - K + 1, B), 0)
+            if oblock:                          # the drafted block equally often at each block of the plan
+                o = K * rng.integers(0, G, B)
+            else:
+                o = np.where(rng.random(B) < poff, rng.integers(1, G * K - K + 1, B), 0)
             s0 = s - o
             bad = (s0 < 0) | (seq[np.clip(s0, 0, None)] != seq[s])
             s0[bad] = s[bad]
@@ -210,6 +240,10 @@ def main():
     ap.add_argument("--c", type=int, default=4, help="numbers per block latent; 0 = control with no plan")
     ap.add_argument("--sigma", type=float, default=0.5, help="channel noise on the unit-power plan")
     ap.add_argument("--warm", type=int, default=3000, help="steps over which channel noise rises from 0.1 sigma to sigma")
+    ap.add_argument("--rel", action="store_true", help="decoder reads the plan shifted to the drafted block")
+    ap.add_argument("--oblock", action="store_true", help="train offsets uniform over the plan's blocks (0, 8, ..)")
+    ap.add_argument("--phist", action="store_true",
+                    help="predictor and flow also read the plan of the previous 8G verified tokens (gist to next gist)")
     ap.add_argument("--raw_drop", type=float, default=0.0, help="fraction of training rounds with the raw states zeroed")
     ap.add_argument("--e_pred", type=float, default=0.0,
                     help="weight pulling the plan towards what P predicts (the encoder learns a predictable plan)")
@@ -230,7 +264,7 @@ def main():
     G, c = args.G, args.c
     bits = G * c * 0.5 * np.log2(1 + 1 / args.sigma ** 2)
     tag = "pw_" + f"G{G}c{c}" + (f"s{args.sigma:g}" if c else "") + (f"_ep{args.e_pred:g}" if args.e_pred else "") + \
-          (f"_poff{args.poff:g}" if args.poff != 0.5 else "") + (f"_rd{args.raw_drop:g}" if args.raw_drop else "") + (f"_st{args.steps}" if args.steps != 10000 else "") + \
+          (f"_poff{args.poff:g}" if args.poff != 0.5 else "") + (f"_rd{args.raw_drop:g}" if args.raw_drop else "") + ("_ob" if args.oblock else "") + ("_rel" if args.rel else "") + ("_ph" if args.phist else "") + (f"_st{args.steps}" if args.steps != 10000 else "") + \
           ("_smoke" if args.smoke else "")
     print(f"=== plan {tag}: plan {G * K} tokens, {G} x {c}, channel bound {bits:.1f} bits", flush=True)
 
@@ -254,9 +288,9 @@ def main():
     print(f"train rounds {len(trst)}", flush=True)
 
     E = PlanEnc(G, D, c).to(dev) if c else None
-    dec = Decoder(G, c, D).to(dev)
-    P = PlanPred(G, c, D).to(dev) if c else None
-    fl = PlanFlow(G, c, D).to(dev) if c else None
+    dec = Decoder(G, c, D, rel=args.rel).to(dev)
+    P = PlanPred(G, c, D, hist=args.phist).to(dev) if c else None
+    fl = PlanFlow(G, c, D, hist=args.phist).to(dev) if c else None
     count = lambda m: sum(p.numel() for p in m.parameters()) / 1e6 if m is not None else 0
     print(f"params E {count(E):.1f}M, decoder {count(dec):.1f}M, P {count(P):.1f}M, flow {count(fl):.1f}M", flush=True)
     main_p = list(dec.parameters()) + (list(E.parameters()) if E is not None else [])
@@ -275,8 +309,8 @@ def main():
         return E(W[ids], m).float()
 
     log = []
-    for step, b in enumerate(loader(tr, trT1, trst, args.B, total, G, args.poff, 0)):
-        raw, raw_a, ids, m, lab, o = [x.to(dev, non_blocking=True) for x in b]
+    for step, b in enumerate(loader(tr, trT1, trst, args.B, total, G, args.poff, 0, args.oblock)):
+        raw, raw_a, ids, m, lab, o, pids, pm = [x.to(dev, non_blocking=True) for x in b]
         tail = step >= args.steps
         nll = pl = fll = torch.zeros((), device=dev)
         with torch.autocast("cuda", torch.bfloat16):
@@ -294,12 +328,16 @@ def main():
                 nll = F.nll_loss(logp(dec(y, o, rin)).flatten(0, 1), lab.flatten())
             if c:
                 tgt = mu.detach()
-                ph = P(raw_a).float()
+                prev = None
+                if args.phist:
+                    with torch.no_grad():
+                        prev = plan(pids, pm)
+                ph = P(raw_a, prev).float()
                 pl = F.mse_loss(ph, tgt)
                 x0 = torch.randn_like(tgt)
                 t = torch.rand(len(tgt), device=dev)
                 xt = (1 - t)[:, None, None] * x0 + t[:, None, None] * tgt
-                fll = F.mse_loss(fl(raw_a, xt, t).float(), tgt - x0)
+                fll = F.mse_loss(fl(raw_a, xt, t, prev).float(), tgt - x0)
         loss = nll + pl + fll
         if c and args.e_pred and not tail:
             loss = loss + args.e_pred * F.mse_loss(mu, ph.detach())
@@ -349,15 +387,16 @@ def main():
             ex = {}
             with torch.no_grad():
                 for i in range(0, len(s), 64):
-                    raw, raw_a, ids, m, lab, oo = [x.to(dev) for x in pack(dt, T1, s[i:i + 64], s0[i:i + 64], G)]
+                    raw, raw_a, ids, m, lab, oo, pids, pm = [x.to(dev) for x in pack(dt, T1, s[i:i + 64], s0[i:i + 64], G)]
                     B = len(raw)
                     noise = lambda: args.sigma * torch.randn(B, G, max(c, 1), device=dev, generator=g)
                     with torch.autocast("cuda", torch.bfloat16):
                         ys = {"zero": torch.zeros(B, G, max(c, 1), device=dev)}
                         if c:
                             mu = plan(ids, m)
-                            ph = P(raw_a).float()
-                            fs = fl.sample(raw_a, c, args.nfe, g)
+                            prev = plan(pids, pm) if args.phist else None
+                            ph = P(raw_a, prev).float()
+                            fs = fl.sample(raw_a, c, args.nfe, g, prev)
                             ys.update({"oracle": mu + noise(), "oracle_clean": mu, "det": ph + noise(),
                                        "det_clean": ph, "flow": fs + noise()})
                         for kind, y in ys.items():
@@ -371,7 +410,8 @@ def main():
                                         ex.setdefault(f"kbest{Kb}_{nm}", []).append(v)
                         if c and o == 0:
                             for Kb in bk:      # K sampled plans -> K drafts
-                                ysk = fl.sample(raw_a.repeat_interleave(Kb, 0), c, args.nfe, g)
+                                ysk = fl.sample(raw_a.repeat_interleave(Kb, 0), c, args.nfe, g,
+                                                prev.repeat_interleave(Kb, 0) if prev is not None else None)
                                 ysk = ysk + args.sigma * torch.randn(ysk.shape, device=dev, generator=g)
                                 hk = dec(ysk, oo.repeat_interleave(Kb, 0), raw.repeat_interleave(Kb, 0))
                                 tk = torch.cat([logp(x).argmax(-1) for x in hk.split(128)])
