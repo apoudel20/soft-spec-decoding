@@ -737,8 +737,13 @@ likely drafts of the decoder's own per-slot distribution, with trie node counts.
   0, so offset 0 is heavily over-represented (only 10 to 19% of dev rounds have room for offset 248), and the decoder
   learns a separate embedding for every offset, each seen in well under 1% of rounds. The encoder's block queries
   also attend to the whole window. With block-aligned offsets the oracle at offset 0 reaches 7.80 / 7.01 / 5.25, which
-  shows a tight code of the drafted block at offset 0 only. A rerun samples only offsets inside the answer and gives
-  the shifted decoder only the offset within a block (`--ofix`).
+  shows a tight code of the drafted block at offset 0 only.
+- Rerun with offsets sampled only inside the answer and the shifted decoder given only the offset within a block
+  (`--oblock --rel --ofix`, `plan_pw_G32c16s0.25_ob_rel_of.json`). The plan now helps about equally at every offset,
+  so a plan made 16 to 128 tokens earlier works as well as a fresh one (math, oracle against zeroed: 3.17 / 2.88 at
+  offset 0, 3.18 / 2.92 at 16, 3.25 / 3.01 at 48, 3.36 / 3.14 at 128). But the oracle's gain falls to about 0.3 on
+  math and about 0.04 on code and chat, since each block must now serve as the drafted block. The predicted plan gives
+  3.02 / 2.14 / 1.46 at offset 0 and 3.15 / 2.24 / 1.48 at offset 48, level with the control.
 - Reading. The plan encoder is trained only to help a decoder that already reads the context, so it learns what the
   context does not contain, mostly the identity of the drafted tokens. A predictor from the same context cannot
   supply that. `cvae_plan.py` makes the predictor a learned prior and charges the plan for each nat the prior cannot
@@ -760,7 +765,9 @@ prior. Trees: best of K prior samples, with trie nodes in brackets (math).
 The control without a plan gives 3.02 / 2.16 / 1.48 for one draft. Its K most likely drafts give 3.22 / 2.29 / 1.51
 (K = 4, 18 / 18 / 19 nodes), 3.47 / 2.38 / 1.54 (K = 8, 29 / 31 / 32 nodes), 3.54 / 2.43 / 1.57 (K = 12, 40 / 42 / 45
 nodes) and 3.61 / 2.48 / 1.58 (K = 16, 51 / 53 / 57 nodes). The control was trained with offsets (half of the rounds
-at offsets up to 56), the CVAE runs at offset 0 only, so a control at offset 0 only is queued.
+at offsets up to 56), the CVAE runs at offset 0 only. A control trained at offset 0 only (`plan_pw_G8c0_poff0.json`)
+gives 3.03 / 2.10 / 1.46 for one draft and 3.43 / 2.37 / 1.53 for its 8 most likely drafts (29 / 31 / 32 nodes),
+within 0.06 of the first control, so the comparisons below hold for both.
 
 - At β = 1 the posterior collapses onto the prior and the plan carries no information. In the β = 0.3 run where the
   decoder also read prior samples in half of the rounds, the KL was applied to all rounds although the posterior was
