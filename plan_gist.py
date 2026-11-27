@@ -88,9 +88,9 @@ class PlanEnc(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, G, c, D, d=512, depth=6, rel=False):
+    def __init__(self, G, c, D, d=512, depth=6, rel=False, omod=False):
         super().__init__()
-        self.G, self.rel = G, rel
+        self.G, self.rel, self.omod = G, rel, omod
         self.up = nn.Linear(max(c, 1), d)
         self.gpos = nn.Parameter(torch.randn(G, d) * 0.02)
         self.oemb = nn.Embedding(G * K - K + 1, d)      # the drafted block can sit anywhere inside the plan
@@ -104,7 +104,7 @@ class Decoder(nn.Module):
             idx = torch.arange(self.G, device=y.device)[None] + torch.div(o, K, rounding_mode="floor")[:, None]
             ok = (idx < self.G)[:, :, None].to(y.dtype)
             y = y.gather(1, idx.clamp(max=self.G - 1)[:, :, None].expand(-1, -1, y.shape[2])) * ok
-        p = self.up(y) + self.gpos + self.oemb(o)[:, None]
+        p = self.up(y) + self.gpos + self.oemb(o % K if self.omod else o)[:, None]
         h = torch.cat([p, self.raw(raw), self.q.expand(len(raw), -1, -1)], 1)
         return self.out(self.body(h)[:, -K:])
 
@@ -189,15 +189,23 @@ def pack(dt, T1, s, s0, G):
             torch.from_numpy(T1[pc]), torch.from_numpy(pm))
 
 
-def loader(dt, T1, starts, B, steps, G, poff, seed, oblock=False):
+def loader(dt, T1, starts, B, steps, G, poff, seed, oblock=False, ofix=False):
     q = queue.Queue(maxsize=6)
     rng = np.random.default_rng(seed)
     seq = dt.seq
+    first = np.r_[0, np.nonzero(seq[1:] != seq[:-1])[0] + 1]        # first row of each answer
+    room = np.arange(len(seq)) - first[np.searchsorted(first, np.arange(len(seq)), side="right") - 1]
 
     def work():
         for _ in range(steps):
             s = rng.choice(starts, B)
-            if oblock:                          # the drafted block equally often at each block of the plan
+            if ofix:                            # only offsets that stay inside the answer (audit C2)
+                hi = np.minimum(room[s], G * K - K)
+                if oblock:
+                    o = K * (rng.random(B) * (hi // K + 1)).astype(np.int64)
+                else:
+                    o = np.where((rng.random(B) < poff) & (hi >= 1), 1 + (rng.random(B) * np.maximum(hi, 1)).astype(np.int64), 0)
+            elif oblock:                        # the drafted block equally often at each block of the plan
                 o = K * rng.integers(0, G, B)
             else:
                 o = np.where(rng.random(B) < poff, rng.integers(1, G * K - K + 1, B), 0)
@@ -240,6 +248,8 @@ def main():
     ap.add_argument("--c", type=int, default=4, help="numbers per block latent; 0 = control with no plan")
     ap.add_argument("--sigma", type=float, default=0.5, help="channel noise on the unit-power plan")
     ap.add_argument("--warm", type=int, default=3000, help="steps over which channel noise rises from 0.1 sigma to sigma")
+    ap.add_argument("--ofix", action="store_true",
+                    help="sample only offsets inside the answer; with --rel the decoder sees only o mod 8")
     ap.add_argument("--rel", action="store_true", help="decoder reads the plan shifted to the drafted block")
     ap.add_argument("--oblock", action="store_true", help="train offsets uniform over the plan's blocks (0, 8, ..)")
     ap.add_argument("--phist", action="store_true",
@@ -264,7 +274,7 @@ def main():
     G, c = args.G, args.c
     bits = G * c * 0.5 * np.log2(1 + 1 / args.sigma ** 2)
     tag = "pw_" + f"G{G}c{c}" + (f"s{args.sigma:g}" if c else "") + (f"_ep{args.e_pred:g}" if args.e_pred else "") + \
-          (f"_poff{args.poff:g}" if args.poff != 0.5 else "") + (f"_rd{args.raw_drop:g}" if args.raw_drop else "") + ("_ob" if args.oblock else "") + ("_rel" if args.rel else "") + ("_ph" if args.phist else "") + (f"_st{args.steps}" if args.steps != 10000 else "") + \
+          (f"_poff{args.poff:g}" if args.poff != 0.5 else "") + (f"_rd{args.raw_drop:g}" if args.raw_drop else "") + ("_ob" if args.oblock else "") + ("_rel" if args.rel else "") + ("_of" if args.ofix else "") + ("_ph" if args.phist else "") + (f"_st{args.steps}" if args.steps != 10000 else "") + \
           ("_smoke" if args.smoke else "")
     print(f"=== plan {tag}: plan {G * K} tokens, {G} x {c}, channel bound {bits:.1f} bits", flush=True)
 
@@ -288,7 +298,7 @@ def main():
     print(f"train rounds {len(trst)}", flush=True)
 
     E = PlanEnc(G, D, c).to(dev) if c else None
-    dec = Decoder(G, c, D, rel=args.rel).to(dev)
+    dec = Decoder(G, c, D, rel=args.rel, omod=args.ofix and args.rel).to(dev)
     P = PlanPred(G, c, D, hist=args.phist).to(dev) if c else None
     fl = PlanFlow(G, c, D, hist=args.phist).to(dev) if c else None
     count = lambda m: sum(p.numel() for p in m.parameters()) / 1e6 if m is not None else 0
@@ -309,7 +319,7 @@ def main():
         return E(W[ids], m).float()
 
     log = []
-    for step, b in enumerate(loader(tr, trT1, trst, args.B, total, G, args.poff, 0, args.oblock)):
+    for step, b in enumerate(loader(tr, trT1, trst, args.B, total, G, args.poff, 0, args.oblock, args.ofix)):
         raw, raw_a, ids, m, lab, o, pids, pm = [x.to(dev, non_blocking=True) for x in b]
         tail = step >= args.steps
         nll = pl = fll = torch.zeros((), device=dev)

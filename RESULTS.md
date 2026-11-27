@@ -713,22 +713,32 @@ likely drafts of the decoder's own per-slot distribution, with trie node counts.
 |---|---|---|---|---|---|
 | control, no plan | | | 3.02 / 2.16 / 1.48 | | 3.46 (29) |
 | 64 tokens, c = 16, σ = 0.25 | 5.51 / 4.10 / 2.03 | 2.67 / 1.98 / 1.42 | 2.22 / 1.85 / 1.41 | 3.18 (49) | 3.13 (35) |
-| 256 tokens, c = 16, σ = 0.25 | 4.79 / 3.29 / 1.73 | 2.73 / 2.10 / 1.48 | 2.49 / 2.03 / 1.46 | 3.10 (47) | 3.18 (34) |
+| 256 tokens, c = 16, σ = 0.25 | 4.79 / 3.29 / 1.73 | 2.73 / 2.10 / 1.48 | 2.49 / 2.03 / 1.46 | 3.10 (47) | 3.18 (33) |
 | 512 tokens, c = 16, σ = 0.25, B 64 | 3.97 / 2.42 / 1.55 | 2.45 / 1.95 / 1.45 | 2.42 / 1.89 / 1.42 | 2.77 (47) | 2.79 (36) |
 | 256 tokens, c = 64, σ = 0.05 | 5.89 / 4.69 / 2.46 | 2.57 / 1.96 / 1.43 | 2.17 / 1.94 / 1.41 | 2.79 (52) | 2.94 (33) |
 | 256 tokens, predictor reads the previous plan | 4.91 / 3.29 / 1.75 | 2.79 / 2.04 / 1.48 | 2.61 / 2.09 / 1.47 | 3.13 (46) | 3.17 (34) |
 
-- The oracle plan beats the control by 37 to 117%. Every predicted plan is below the control. Sampled-plan trees use
-  more nodes than the per-position trees of the control and accept fewer tokens. The 512-token run used batch 64
-  (memory), so it saw half the training rounds of the others.
-- A longer plan lowers the oracle at offset 0. The oracle's gain sits in the drafted block.
-- Predicting the next plan from the plan of the previous 256 verified tokens (the gist-to-gist step) does not help.
-  The predictor's error rises from 0.60 to 0.66 (plan variance about 0.7).
-- Plans made earlier (offsets 16 to 248) never help, also for the oracle. With offsets drawn uniformly over blocks the
-  oracle at offset 0 reaches 7.80 / 7.01 / 5.25, so each block latent becomes a close code of its own tokens, but at
-  offset 16 it gives 3.07 against 2.95 zeroed (math). Shifting the plan so the drafted block comes first did not fix
-  it (5.44 at offset 0, 3.12 against 3.03 at offset 16). The encoder's block queries attend to the whole window and
-  are not tied to their own blocks, so this test of progressive drafting is inconclusive.
+- The oracle plan beats the control by 17 to 117% in the batch-128 runs (5 to 31% for the 512-token run at batch 64,
+  which saw half the training rounds). Every predicted plan is below the control on math and code and at most level
+  with it on chat (1.48 against 1.48). The table's predicted-plan column adds channel noise and feeds the predictor's
+  output as is, at 0.21 to 0.45 of the power the decoder was trained on. Rescaled to unit power without noise
+  (`plan_reeval.py`, `results/plan_reeval.json`) it gives 2.71 / 1.98 / 1.43 (64 tokens) and 2.76 / 2.06 / 1.47
+  (256 tokens), still below the control.
+- The plan length comparison is confounded. A longer plan at the same c per block has more total capacity, a longer
+  attention sequence for the same 10k steps, and (512 tokens) half the batch. The oracle at offset 0 falls from 5.51
+  (64 tokens) to 4.79 (256) and 3.97 (512) on math.
+- Predicting the next plan from the plan of the previous 256 verified tokens (the gist-to-gist step) does not help:
+  2.79 / 2.04 / 1.48 against 2.73 / 2.10 / 1.48. The previous window is left-padded near the start of an answer, while
+  the encoder was trained on right-padded future windows, so this test is weaker than it looks. The predictor errors
+  (0.60, 0.66) come from two runs with different encoders and are not directly comparable.
+- Plans made earlier (offsets 16 to 248) give at most small gains, also for the oracle (for example 3.07 against 2.95
+  zeroed at offset 16 with block-aligned offsets, 3.12 against 3.03 with the plan shifted to the drafted block). Two
+  sampling problems make this test inconclusive. An offset that reaches before the start of the answer falls back to
+  0, so offset 0 is heavily over-represented (only 10 to 19% of dev rounds have room for offset 248), and the decoder
+  learns a separate embedding for every offset, each seen in well under 1% of rounds. The encoder's block queries
+  also attend to the whole window. With block-aligned offsets the oracle at offset 0 reaches 7.80 / 7.01 / 5.25, which
+  shows a tight code of the drafted block at offset 0 only. A rerun samples only offsets inside the answer and gives
+  the shifted decoder only the offset within a block (`--ofix`).
 - Reading. The plan encoder is trained only to help a decoder that already reads the context, so it learns what the
   context does not contain, mostly the identity of the drafted tokens. A predictor from the same context cannot
   supply that. `cvae_plan.py` makes the predictor a learned prior and charges the plan for each nat the prior cannot
@@ -742,25 +752,42 @@ prior. Trees: best of K prior samples, with trie nodes in brackets (math).
 | β | KL per round | True-future plan (posterior mean) | Prior mean | Prior sample | Best of 4 prior samples | Best of 8 prior samples |
 |---|---|---|---|---|---|---|
 | 1 | 0.003 bits | 2.91 / 2.01 / 1.43 | 2.91 / 2.01 / 1.43 | 3.06 / 2.08 / 1.46 | 3.14 (10) | 3.15 (11) |
-| 0.3 | 8 bits | 3.05 / 2.08 / 1.48 | 2.69 / 1.98 / 1.44 | 2.90 / 2.13 / 1.45 | 3.12 (20) | 3.28 (31) |
+| 0.3 | 8 to 8.5 bits | 3.05 / 2.08 / 1.48 | 2.69 / 1.98 / 1.44 | 2.90 / 2.13 / 1.45 | 3.12 (20) | 3.28 (31) |
 | 0.1 | 34 to 44 bits | 4.10 / 2.64 / 1.55 | 2.71 / 2.06 / 1.46 | 2.79 / 2.11 / 1.46 | 3.15 (22) | 3.32 (38) |
 | 0.3, decoder also reads prior samples in half the rounds | 0.005 bits | 2.64 / 1.99 / 1.44 | 2.64 / 1.99 / 1.44 | 2.94 / 2.09 / 1.46 | | 3.09 (12) |
 | 0.3, 64-token plan | 15 to 19 bits | 4.09 / 2.75 / 1.60 | 2.86 / 2.10 / 1.48 | 2.82 / 2.05 / 1.46 | 3.27 (22) | 3.45 (39) |
 
-The control without a plan gives 3.02 / 2.16 / 1.48 for one draft, 3.26 / 2.29 / 1.52 for its 4 most likely drafts
-(18 nodes) and 3.46 / 2.38 / 1.55 for its 8 most likely drafts (29 nodes).
+The control without a plan gives 3.02 / 2.16 / 1.48 for one draft. Its K most likely drafts give 3.22 / 2.29 / 1.51
+(K = 4, 18 / 18 / 19 nodes), 3.47 / 2.38 / 1.54 (K = 8, 29 / 31 / 32 nodes), 3.54 / 2.43 / 1.57 (K = 12, 40 / 42 / 45
+nodes) and 3.61 / 2.48 / 1.58 (K = 16, 51 / 53 / 57 nodes). The control was trained with offsets (half of the rounds
+at offsets up to 56), the CVAE runs at offset 0 only, so a control at offset 0 only is queued.
 
-- At β = 1, and whenever the decoder also trains on prior samples, the posterior collapses onto the prior and the
-  plan carries no information. Smaller β lets the plan carry more, and the gap between the true-future plan and the
-  prior grows with it. The prior does not follow.
-- No prior-mean or prior-sample draft beats the control's single draft.
-- Within one decoder, best of K prior samples beats that decoder's own K most likely drafts at a similar node count
-  (β = 0.3: 3.28 against 3.08 on math, 2.35 against 2.17 on code, at 31 to 34 nodes). Against the control's
-  per-position tree, the sampled-plan trees of β = 0.1 match code and chat (2.40 / 1.59 against 2.38 / 1.55) and are
-  4% lower on math (3.32 against 3.46), with 30 to 40% more nodes. The 64-token plan at β = 0.3 matches it on all
-  three sets (3.45 / 2.40 / 1.57 against 3.46 / 2.38 / 1.55) with 30 to 40% more nodes.
+- At β = 1 the posterior collapses onto the prior and the plan carries no information. In the β = 0.3 run where the
+  decoder also read prior samples in half of the rounds, the KL was applied to all rounds although the posterior was
+  used in only half, which doubled its weight on the posterior. That run also collapsed, and it is rerun with the KL
+  masked. Smaller β lets the plan carry more (8 to 8.5 bits at β = 0.3, 34 to 44 bits at β = 0.1), and the gap between
+  the true-future plan and the prior grows with it.
+- The decoder is trained on samples. A latent mean scores lower than a sample (posterior sample 3.23 / 2.30 / 1.50
+  against posterior mean 3.05 / 2.08 / 1.48 at β = 0.3), and rescaling the mean to the sample norm does not close the
+  gap, so samples are the fair input.
+- A single prior draft does not beat the control on math or code. The collapsed β = 1 model's prior sample is above
+  it on math only (3.06 against 3.02).
+- Trees at matched trie nodes (`results/plan_reeval.json`, best accepted per round interpolated at 20 / 30 / 40 nodes,
+  math): control 3.27 / 3.47 / 3.54. Best of K prior samples: 3.20 / 3.29 / 3.35 (256 tokens, β = 0.3), 3.16 / 3.25 /
+  3.36 (β = 0.1), 3.26 / 3.34 / 3.44 (64 tokens, β = 0.3). On code the control gives 2.30 / 2.37 / 2.42 and the best
+  plan tree 2.32 / 2.35 / 2.39. On chat the plan trees are 0.01 to 0.04 above the control (1.55 / 1.56 / 1.57 against
+  1.51 / 1.54 / 1.56), within the spread between runs. The per-position tree of the control is better on math and
+  level on code and chat.
+- Within one decoder, with the K most likely drafts taken at a prior sample (the decoder's training input), sampling
+  the plan gives the better tree for the 64-token plan (math 3.34 against 3.15 at 30 nodes, code 2.35 against 2.32)
+  and for β = 0.1 (math 3.25 against 3.09). For the 256-token plan at β = 0.3 the two are level (3.29 against 3.31).
+  The earlier within-decoder comparison took the K most likely drafts at the prior mean, which the decoder never saw,
+  and overstated the gain.
+- Sampled-plan trees run the decoder and the LM head once per sample (8 times for K = 8), the per-position tree once.
+- The K most likely drafts of a product of per-slot distributions maximise sequence probability, not expected
+  accepted length, so they are not the strongest per-position tree.
 - With a collapsed plan, z acts as an input noise the decoder learned to follow. Its 8 samples give 3.15 on math at
-  11 nodes, close to the control's 4 most likely drafts (3.26 at 18 nodes).
+  11 nodes, against 3.22 for the control's 4 most likely drafts at 18 nodes.
 
 **Stage 1 with more data.** The larger stage-1 model (d1024 × 6, 36k steps) overfit the 512k-row cache (section
 above). Both sizes were retrained on the 5.9M windows of `cache_pb`, `cache_pb2` and `cache_pb3` (`ae_gate.py
@@ -773,14 +800,16 @@ above). Both sizes were retrained on the 5.9M windows of `cache_pb`, `cache_pb2`
 | d1024 × 6, 5.9M windows, latent mean | 88.8% | 85.3% | 69.8% |
 | d1024 × 6, 5.9M windows, posterior sample | 94.3% | 91.7% | 78.2% |
 
-- More data lifts the original model by 2 to 7 points, chat most. All runs remain below the gate.
-- The larger decoder depends on the norm of its input latent. The latent mean has a smaller norm than any sample it
-  saw in training, so it scores lower than a sample. Rescaling the mean to the expected sample norm gives 94.1%
-  (math) and 78.7% (chat), equal to a sample. Even so, the larger model is below the original one on the same data,
-  which points at its training recipe (same learning rate and noise settings as the small model) rather than at a
-  capacity limit.
-- Errors sit at near-tie positions. For the original model on 5.9M windows, agreement is 99.4 / 99.0 / 96.7% where
-  the target's top-1 logit leads by 2 or more, and 60 / 55 / 47% where it leads by less than 0.5.
+- Training on 5.9M windows for 36k steps, against 512k rows for 12k steps, lifts the original model by 2.1 to 7.1
+  points, chat most. Data scale and 3x longer training are confounded here. All runs remain below the gate.
+- The larger model underfits its training data (final token KL 0.345 against 0.211 for the original model, training
+  agreement 90.9% against 92.3%), which points at its training recipe (same learning rate and noise settings as the
+  small model). Its latent mean also scores lower than a posterior sample, while for the original model the mean is
+  better. In a separate check on the first 600 dev windows (not in the JSON), rescaling the mean to the expected
+  sample norm gave 94.1% (math) and 78.7% (chat), equal to a sample.
+- Agreement is 99.4 / 99.0 / 96.7% where the target's top-1 logit leads by 2 or more, and 60 / 55 / 47% where it
+  leads by less than 0.5. By error count, 29 to 39% of errors fall below a margin of 0.5, 47 to 52% between 0.5 and 2,
+  and 14 to 20% at 2 or more.
 
 ## What the results say
 

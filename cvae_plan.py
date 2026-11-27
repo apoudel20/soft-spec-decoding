@@ -90,7 +90,7 @@ def main():
         args.steps, args.B = 30, 16
     dev = "cuda"
     G, c = args.G, args.c
-    tag = f"G{G}c{c}b{args.beta:g}" + (f"_mix{args.mix:g}" if args.mix else "") + (f"_st{args.steps}" if args.steps != 10000 else "") + ("_smoke" if args.smoke else "")
+    tag = f"G{G}c{c}b{args.beta:g}" + (f"_mix{args.mix:g}km" if args.mix else "") + (f"_st{args.steps}" if args.steps != 10000 else "") + ("_smoke" if args.smoke else "")
     print(f"=== cvae {tag}: plan {G * K} tokens, {G} x {c}, beta {args.beta}", flush=True)
 
     dev_cache = os.path.join(DATA, args.dev_cache)
@@ -124,12 +124,14 @@ def main():
             mq, lq = q(W[ids], m)
             mp, lp = p(raw)
             z = mq + (0.5 * lq).exp() * torch.randn_like(mq)
+            w = torch.ones(len(z), device=dev)
             if args.mix:
                 zp = mp + (0.5 * lp).exp() * torch.randn_like(mp)
                 use_p = (torch.rand(len(z), 1, 1, device=dev) < args.mix).to(z.dtype)
                 z = use_p * zp + (1 - use_p) * z
+                w = 1 - use_p.view(-1).float()      # KL only where the decoder read the posterior (audit H1)
             nll = F.nll_loss(logp(dec(z, o, raw)).flatten(0, 1), lab.flatten())
-        kl = gkl(mq, lq, mp, lp).mean()
+        kl = (gkl(mq, lq, mp, lp) * w).sum() / w.sum().clamp_min(1)
         beta = args.beta * min(1.0, step / max(1, args.warm))
         loss = nll + beta * kl / K
         opt.zero_grad(set_to_none=True)
