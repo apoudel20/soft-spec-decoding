@@ -764,8 +764,9 @@ at offsets up to 56), the CVAE runs at offset 0 only, so a control at offset 0 o
 
 - At β = 1 the posterior collapses onto the prior and the plan carries no information. In the β = 0.3 run where the
   decoder also read prior samples in half of the rounds, the KL was applied to all rounds although the posterior was
-  used in only half, which doubled its weight on the posterior. That run also collapsed, and it is rerun with the KL
-  masked. Smaller β lets the plan carry more (8 to 8.5 bits at β = 0.3, 34 to 44 bits at β = 0.1), and the gap between
+  used in only half, which doubled its weight on the posterior. That run also collapsed. Rerun with the KL masked to
+  the posterior rounds (`cvae_G32c16b0.3_mix0.5km.json`) it collapses again (KL 0.008 to 0.009 bits, prior sample
+  3.07 / 2.12 / 1.48), so reading prior samples is enough to make the decoder stop using the plan. Smaller β lets the plan carry more (8 to 8.5 bits at β = 0.3, 34 to 44 bits at β = 0.1), and the gap between
   the true-future plan and the prior grows with it.
 - The decoder is trained on samples. A latent mean scores lower than a sample (posterior sample 3.23 / 2.30 / 1.50
   against posterior mean 3.05 / 2.08 / 1.48 at β = 0.3), and rescaling the mean to the sample norm does not close the
