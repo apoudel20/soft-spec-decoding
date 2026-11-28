@@ -1,5 +1,39 @@
 # Results
 
+## Headline: measured speedup (updated 27 Nov 2026)
+
+Qwen3-8B 4-bit target on one idle RTX 4070 Ti, greedy, 20 prompts per benchmark, 256 new tokens, one decoding loop for
+every drafter (`results/e2e_final.json`). Plain decoding runs at 22.5 / 21.6 / 22.3 tok/s. tau is tokens kept per round.
+
+| Drafter | MT-Bench | GSM8K | HumanEval | ms per round |
+|---|---|---|---|---|
+| DFlash (released, about 1B) | 2.69x (tau 3.15) | 4.73x (5.52) | 7.89x (10.01) | 52 to 57 |
+| Gister v2 chain (32M + 154M) | 1.34x (1.60) | 2.05x (2.38) | 1.40x (1.67) | 53 to 54 |
+| Gister tree, 8 samples + chain (285M sampler) | 1.07x (1.99) | 1.77x (3.13) | 1.14x (2.11) | 82 to 83 |
+
+Published numbers on other hardware: DFlash 2.75x and EAGLE-3 1.90x on MT-Bench with Qwen3-8B on an H200 (DFlash
+paper). On this machine DFlash is 2.0x / 2.3x / 5.6x faster than Gister's chain. Gister's chain and DFlash take the
+same time per round, so the gap is in tau.
+
+What has changed speedup or acceptance. Offline rows are accepted per round out of 9 on the dev rounds (math / code /
+chat). Offline values are higher than the measured tau because the dev rounds and the benchmarks differ, so they only
+rank variants.
+
+| Change | Effect | Measured as | Source | Confound |
+|---|---|---|---|---|
+| Stage 2 also reads the target's hidden states (20M, gist only to v1) | 2.17 / 1.80 / 1.34 to 2.80 / 2.23 / 1.43 | offline | section "Gister" | none, same size and data |
+| v1 to v2 | 2.80 / 2.23 / 1.43 to 3.08 / 2.22 / 1.45 | offline | section "Gister" | network 20M to 154M and data 512K to 2M own-answer positions changed together |
+| Gist latent instead of predicting the 8 states directly | 2.73 / 2.16 / 1.39 to 2.80 / 2.23 / 1.43 | offline | `stage2_gist_hf_z2048_det_direct_raw.json` | none, same inputs, size and steps |
+| Tree of 8 sampled latents + chain, instead of the chain | speedup 1.34x / 2.05x / 1.40x to 1.07x / 1.77x / 1.14x, tau +18 to 31%, round 53 to 82 ms | end to end | `e2e_final.json` | none |
+| Paragraph plan from the predictor (64 or 256 tokens) | 2.71 / 1.98 / 1.43 and 2.76 / 2.06 / 1.47 against 3.00 / 2.15 / 1.48 without a plan | offline | `plan_reeval.json` | none, same decoder size and steps |
+| Same, decoder fine-tuned on the predicted plan | within 0.08 of the no-plan control, all 95% intervals include zero | offline | `ft_pred_diag.json` | one seed, control starts from no-plan training |
+| Plan as a conditional VAE, one prior sample | 2.79 to 2.90 on math against 3.00 | offline | `cvae_*.json`, `plan_reeval.json` | none |
+| Gist history, a 154M gist-only network on the same data, no latent loss | no gain (2.30 / 2.19 / 1.30 overfits, 2.79 / 2.20 / 1.40) | offline | section "Gister" | none |
+
+Time per round for the tree, profiled before the bf16-drafting fix (`profile_tree_idle.json`): the chain takes 11 ms
+to draft and 40 ms to verify, a 67-node tree with the 285M sampler 30 ms and 62 ms. Both parts grow. Whether faster
+verification kernels would make the tree faster than the chain is untested.
+
 **Read this first (updated 2026-11-25).** The project now centres on **Gister** (Qwen3-8B 4-bit target, one RTX
 4070 Ti). Its results are in the sections "Stage-2 gate", "Gist autoencoder and stage 2" and "Gister" near the end.
 The early sections below are the original Qwen2.5-1.5B study (target Qwen2.5-1.5B-Instruct, drafter
@@ -516,7 +550,8 @@ DFlash on our own dev sets (`dflash_eval.py`, 10 prompts, 160 tokens): tau 5.41 
 Gister v2: stage 2 at 154M trained on 2M positions of Qwen3-8B's own non-thinking PerfectBlend answers
 (`cache_states.py --pb_tokens 2.0`, `stage2.py --train_cache cache_pb`), 4x v1's data. Offline 3.08 / 2.22 / 1.45
 (v1 2.80 / 2.23 / 1.43). Training loss levelled at about 3.8 to 4.1 nats after more than one pass over the 2M
-PerfectBlend positions; data helped math only. That fits a deterministic predictor averaging over futures, but the flat
+PerfectBlend positions. Math rose and code and chat did not. Network size and data changed together, so
+the cause is not separated. That fits a deterministic predictor averaging over futures, but the flat
 code and chat results are also confounded with PerfectBlend's domain mix. The sampler (flow matching from v2) is next.
 
 Full end-to-end benchmark (`e2e.py`, 20 prompts per set, 256 new tokens, `results/e2e.json`):
@@ -743,7 +778,9 @@ likely drafts of the decoder's own per-slot distribution, with trie node counts.
   so a plan made 16 to 128 tokens earlier works as well as a fresh one (math, oracle against zeroed: 3.17 / 2.88 at
   offset 0, 3.18 / 2.92 at 16, 3.25 / 3.01 at 48, 3.36 / 3.14 at 128). But the oracle's gain falls to about 0.3 on
   math and about 0.04 on code and chat, since each block must now serve as the drafted block. The predicted plan gives
-  3.02 / 2.14 / 1.46 at offset 0 and 3.15 / 2.24 / 1.48 at offset 48, level with the control.
+  3.02 / 2.14 / 1.46 at offset 0 and 3.15 / 2.24 / 1.48 at offset 48. Offset 48 scores only rounds at least 48
+  tokens into an answer, where the zeroed plan also rises (2.88 at offset 0, 3.01 at offset 48), so the offset-48 values
+  are not comparable with the all-rounds control.
 - Reading. The plan encoder is trained only to help a decoder that already reads the context, so it learns what the
   context does not contain, mostly the identity of the drafted tokens. A predictor from the same context cannot
   supply that. `cvae_plan.py` makes the predictor a learned prior and charges the plan for each nat the prior cannot
@@ -754,11 +791,15 @@ on the oracle plan and see the predictor's plan only at drafting time. Each arm 
 trains 4,000 more steps (batch 128, learning rate 1e-4, offset 0) on `cache_pb`, with the plan the decoder gets at
 drafting time. `dec` freezes the predictor and fine-tunes the decoder on its plan (unit average power, no channel
 noise). `e2e` fine-tunes the predictor (15M) and the decoder (23M) together on the token loss. `ctrl` fine-tunes the
-no-plan control with the same recipe, so all arms have the same number of decoder steps. Scored on the
+no-plan control (`plan_pw_G8c0`, used for both plan lengths) with the same recipe, so all arms get the same 4,000
+fine-tuning steps on the same batch sequence. The comparison is not symmetric. The control starts from 10k steps of
+training without a plan, which is the setting it is scored in, while the plan decoders start from 10k steps on the
+oracle plan. Both arms keep the unit-power rescaling between the predictor and the decoder. Scored on the
 `plan_reeval.py` dev rounds at offset 0, one draft and the K most likely drafts with trie nodes (math).
 
 | Arm | One draft | 8 most likely drafts, math (nodes) | 16 most likely drafts, math (nodes) |
 |---|---|---|---|
+| control, before fine-tuning | 3.00 / 2.15 / 1.48 | 3.47 (29) | 3.60 (51) |
 | control, fine-tuned | 3.02 / 2.22 / 1.47 | 3.46 (29) | 3.65 (51) |
 | 64 tokens, before fine-tuning | 2.71 / 1.98 / 1.43 | 3.17 (35) | 3.31 (63) |
 | 64 tokens, `dec` | 3.07 / 2.20 / 1.45 | 3.52 (29) | 3.67 (50) |
@@ -767,15 +808,23 @@ no-plan control with the same recipe, so all arms have the same number of decode
 | 256 tokens, `dec` | 3.04 / 2.22 / 1.47 | 3.42 (29) | 3.64 (50) |
 | 256 tokens, `e2e` | 3.01 / 2.24 / 1.48 | 3.44 (29) | 3.64 (51) |
 
-- Training on the predicted plan brings the plan decoders up to the control and no further. All arms are within 0.08
-  of the control on every set, at matched trie nodes as well. One seed per arm.
-- Training the predictor and decoder together adds 15M trainable parameters and gives the same result as freezing
-  the predictor, so extra capacity on this path does not help at 4,000 steps either.
-- The plan arms start far from the control, since their decoders were trained on oracle plans (token loss 8.11
-  against 3.49 on the first batch), and end at 3.47 to 3.49 against 3.35 on the final batch (the same batches for
-  all 64-token arms). They may not have converged in 4,000 steps.
-- All arms run at offset 0, so the predictor reads the same 32 states as the decoder and its plan can add capacity
-  or structure but no new information. Within these checkpoints and this budget it adds neither.
+- After fine-tuning, every arm is within 0.08 of the fine-tuned control on every set. Paired bootstrap intervals over
+  the dev rounds (`ft_pred_diag.py`, `results/ft_pred_diag.json`, 95%, 10k resamples) include zero for every arm and
+  set, one draft and 8 most likely drafts. Their half-width is about 0.09 on math and code and 0.04 on chat, so
+  differences smaller than about 3% on math and 4% on code are not resolved. One training seed per arm, and
+  seed-to-seed variance is not in these intervals.
+- The fine-tuned decoders still use the plan on math. Setting the plan to zero lowers one draft by 0.08 to 0.14 on math
+  (intervals exclude zero for all four arms), by -0.002 to 0.05 on code and by -0.005 to 0.015 on chat.
+- Training the predictor and decoder together (`e2e`, 15M more trainable parameters) gives the same result as freezing
+  the predictor, within the intervals above.
+- Token loss. On the first training batch the plan arms are at 8.09 to 8.11 against 3.49 for the control, since their
+  decoders were trained on oracle plans. On the final batch they are at 3.46 to 3.49 against 3.35, but single-batch
+  values move by about 0.14 between logged steps. On the dev rounds the plan arms are at 2.92 to 2.95 against 2.90 on
+  math, 4.00 to 4.01 against 4.09 on code and 5.46 to 5.47 against 5.51 on chat. Whether longer fine-tuning, or
+  training from scratch on the predicted plan, would change the result is untested.
+- All arms run at offset 0, so the predictor reads the same 32 states as the decoder, and at drafting time its plan
+  carries no information the decoder lacks. It could still help through its own capacity or through its training
+  targets, which come from the next 256 tokens. In these runs neither gave a resolved gain.
 
 **Plan as a conditional VAE** (`cvae_plan.py`, `results/cvae_*.json`). Posterior over the next 256 target tokens,
 Gaussian prior from the current chunk's states, the same 23M decoder trained on posterior samples, loss
@@ -790,14 +839,14 @@ prior. Trees: best of K prior samples, with trie nodes in brackets (math).
 | 0.3, decoder also reads prior samples in half the rounds | 0.005 bits | 2.64 / 1.99 / 1.44 | 2.64 / 1.99 / 1.44 | 2.94 / 2.09 / 1.46 | | 3.09 (12) |
 | 0.3, 64-token plan | 15 to 19 bits | 4.09 / 2.75 / 1.60 | 2.86 / 2.10 / 1.48 | 2.82 / 2.05 / 1.46 | 3.27 (22) | 3.45 (39) |
 
-The control without a plan gives 3.02 / 2.16 / 1.48 for one draft. Its K most likely drafts give 3.22 / 2.29 / 1.51
+Reevaluated on the `plan_reeval.py` rounds, the control without a plan gives 3.00 / 2.15 / 1.48 for one draft. Its K
+most likely drafts give 3.22 / 2.29 / 1.51
 (K = 4, 18 / 18 / 19 nodes), 3.47 / 2.38 / 1.54 (K = 8, 29 / 31 / 32 nodes), 3.54 / 2.43 / 1.57 (K = 12, 40 / 42 / 45
-nodes) and 3.61 / 2.48 / 1.58 (K = 16, 51 / 53 / 57 nodes). The control was trained with offsets (half of the rounds
+nodes) and 3.60 / 2.48 / 1.58 (K = 16, 51 / 53 / 57 nodes). The control was trained with offsets (half of the rounds
 at offsets up to 56), the CVAE runs at offset 0 only. A control trained at offset 0 only (`plan_pw_G8c0_poff0.json`)
 gives 3.03 / 2.10 / 1.46 for one draft and 3.43 / 2.37 / 1.53 for its 8 most likely drafts (29 / 31 / 32 nodes),
-within 0.06 of the first control, so the comparisons below hold for both. Reevaluated on the same rounds
-(`plan_reeval.py`), the first control gives 3.01 / 2.15 / 1.48 and 3.47 for its 8 most likely drafts, against
-3.02 / 2.16 / 1.48 and 3.46 from its own run.
+within 0.06 of the first control, so the comparisons below hold for both. Its own run reported 3.02 / 2.16 / 1.48 and 3.46 for
+its 8 most likely drafts.
 
 - At β = 1 the posterior collapses onto the prior and the plan carries no information. In the β = 0.3 run where the
   decoder also read prior samples in half of the rounds, the KL was applied to all rounds although the posterior was
@@ -811,12 +860,12 @@ within 0.06 of the first control, so the comparisons below hold for both. Reeval
   3.95, 4.09 against 3.67).
 - A single prior draft does not beat the control on math or code. The prior samples of the collapsed β = 1 model and
   of the masked-KL mixing run are above it on math only (3.06 and 3.07 against 3.02).
-- Trees at matched trie nodes (`results/plan_reeval.json`, best accepted per round interpolated at 20 / 30 / 40 nodes,
-  math): control 3.27 / 3.47 / 3.54. Best of K prior samples: 3.20 / 3.29 / 3.35 (256 tokens, β = 0.3), 3.16 / 3.25 /
-  3.36 (β = 0.1), 3.26 / 3.34 / 3.44 (64 tokens, β = 0.3). On code the control gives 2.30 / 2.37 / 2.42 and the best
-  plan tree 2.32 / 2.35 / 2.39. On chat the plan trees are 0.01 to 0.04 above the control (1.55 / 1.56 / 1.57 against
-  1.51 / 1.54 / 1.56), within the spread between runs. The per-position tree of the control is better on math and
-  level on code and chat. Plan trees start at 22 to 26 nodes (K = 4), so their values at 20 nodes are extrapolated.
+- Trees at matched trie nodes (`results/plan_reeval.json`, best accepted per round interpolated at 30 / 40 nodes, math):
+  control 3.47 / 3.54. Best of K prior samples: 3.29 / 3.35 (256 tokens, β = 0.3), 3.25 / 3.36 (β = 0.1), 3.34 / 3.44
+  (64 tokens, β = 0.3). On code the control gives 2.37 / 2.42 and the best plan tree 2.35 / 2.39. On chat the plan
+  trees are up to 0.02 above the control (1.56 / 1.57 against 1.54 / 1.56). The per-position tree of the control is
+  better on math and level on code and chat. Plan trees with K = 4 have 19 to 26 nodes, so 20 nodes is outside the
+  range of most of them and is not reported.
 - Within one decoder, with the K most likely drafts taken at a prior sample (the decoder's training input), sampling
   the plan gives the better tree for the 64-token plan (math 3.34 against 3.15 at 30 nodes, code 2.35 against 2.32)
   and for β = 0.1 (math 3.25 against 3.09). For the 256-token plan at β = 0.3 the two are level (3.29 against 3.31).
