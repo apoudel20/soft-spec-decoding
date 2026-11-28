@@ -19,6 +19,16 @@ What has changed speedup or acceptance. Offline rows are accepted per round out 
 chat). Offline values are higher than the measured tau because the dev rounds and the benchmarks differ, so they only
 rank variants.
 
+Offline labels and their prefixes come from different models. The dev answers were generated greedily by Qwen3-8B
+Q4_K_M through Ollama (`gen_q3.py`). The labels are the top-1 of the HF nf4 target on those answers
+(`cache_states.py`). The answer's next token equals that top-1 at 96.8 / 95.4 / 89.6% of dev positions (math / code /
+chat, `top1_eq_next` in `results/state_stats.json`). In the PerfectBlend training cache it is 91.4% (`cache_pb`). Where
+they differ, the labels after that position are conditioned on a prefix the nf4 target would not have produced
+greedily. No future information enters the drafter's inputs. The drafter reads states at rows s to s+7, and the labels
+are rows s+8 to s+15 from one causal forward pass. The mismatch affects every offline number, including DFlash's, and
+it is not known whether it raises or lowers them. The end-to-end speedups are not affected, since they come from real
+verification.
+
 | Change | Effect | Measured as | Source | Confound |
 |---|---|---|---|---|
 | Stage 2 also reads the target's hidden states (20M, gist only to v1) | 2.17 / 1.80 / 1.34 to 2.80 / 2.23 / 1.43 | offline | section "Gister" | none, same size and data |
