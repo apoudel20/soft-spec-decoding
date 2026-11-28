@@ -749,6 +749,33 @@ likely drafts of the decoder's own per-slot distribution, with trie node counts.
   supply that. `cvae_plan.py` makes the predictor a learned prior and charges the plan for each nat the prior cannot
   predict (KL weight β, ELBO at β = 1).
 
+**Decoder fine-tuned on predicted plans** (`ft_pred.py`, `results/ft_pred_*.json`). The decoders above were trained
+on the oracle plan and see the predictor's plan only at drafting time. Each arm starts from a saved checkpoint and
+trains 4,000 more steps (batch 128, learning rate 1e-4, offset 0) on `cache_pb`, with the plan the decoder gets at
+drafting time. `dec` freezes the predictor and fine-tunes the decoder on its plan (unit average power, no channel
+noise). `e2e` fine-tunes the predictor (15M) and the decoder (23M) together on the token loss. `ctrl` fine-tunes the
+no-plan control with the same recipe, so all arms have the same number of decoder steps. Scored on the
+`plan_reeval.py` dev rounds at offset 0, one draft and the K most likely drafts with trie nodes (math).
+
+| Arm | One draft | 8 most likely drafts, math (nodes) | 16 most likely drafts, math (nodes) |
+|---|---|---|---|
+| control, fine-tuned | 3.02 / 2.22 / 1.47 | 3.46 (29) | 3.65 (51) |
+| 64 tokens, before fine-tuning | 2.71 / 1.98 / 1.43 | 3.17 (35) | 3.31 (63) |
+| 64 tokens, `dec` | 3.07 / 2.20 / 1.45 | 3.52 (29) | 3.67 (50) |
+| 64 tokens, `e2e` | 3.09 / 2.20 / 1.45 | 3.49 (29) | 3.69 (50) |
+| 256 tokens, before fine-tuning | 2.76 / 2.06 / 1.47 | 3.20 (34) | 3.31 (61) |
+| 256 tokens, `dec` | 3.04 / 2.22 / 1.47 | 3.42 (29) | 3.64 (50) |
+| 256 tokens, `e2e` | 3.01 / 2.24 / 1.48 | 3.44 (29) | 3.64 (51) |
+
+- Training on the predicted plan brings the plan decoders up to the control and no further. All arms are within 0.07
+  of the control on every set, at matched trie nodes as well. One seed per arm.
+- Training the predictor and decoder together adds 15M trainable parameters and gives the same result as freezing
+  the predictor, so extra capacity on this path does not help at 4,000 steps either.
+- On the final training batch (the same batch for all 64-token arms) the token loss is 3.35 for the control and
+  3.47 to 3.49 for the plan arms.
+- This closes the deterministic plan predicted from the current chunk's states. The predictor reads nothing the
+  decoder does not, so its plan cannot add information.
+
 **Plan as a conditional VAE** (`cvae_plan.py`, `results/cvae_*.json`). Posterior over the next 256 target tokens,
 Gaussian prior from the current chunk's states, the same 23M decoder trained on posterior samples, loss
 NLL + β·KL/8 with the KL weight rising over 3k steps, 10k steps, offset 0. At drafting time the plan comes from the
