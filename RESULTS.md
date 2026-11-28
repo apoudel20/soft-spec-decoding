@@ -701,8 +701,8 @@ likely drafts of the decoder's own per-slot distribution, with trie node counts.
   about plans. Power normalisation and a noise warmup replaced the tanh.
 - 2,000-step checks after the fix (undertrained, for debugging only). With c = 4 and σ = 0.5 the oracle plan gives
   2.33 against 2.25 without a plan on math. With c = 64 and σ = 0.05 it gives 2.63 against 2.02 on math (+30%), +4%
-  on code and none on chat. Best of 8 sampled plans is level with the 8 most likely per-position drafts at about
-  30 trie nodes (math 2.52 against 2.53). Zeroing the raw states in half of the training rounds weakened the decoder
+  on code and none on chat. Best of 8 sampled plans is level with or below the 8 most likely per-position drafts
+  (math 2.49 at 29 trie nodes against 2.54 at 31 with c = 4, 2.51 at 45 against 2.53 at 33 with c = 64). Zeroing the raw states in half of the training rounds weakened the decoder
   and did not make it use the plan.
 - Full runs (10k decoder steps plus 2k predictor steps, `results/plan_pw_*.json`). Offset 0, drafted block = first
   plan block. "Zeroed" is the same decoder with its plan input set to zero. The control is the same 23M decoder
@@ -718,7 +718,7 @@ likely drafts of the decoder's own per-slot distribution, with trie node counts.
 | 256 tokens, c = 64, σ = 0.05 | 5.89 / 4.69 / 2.46 | 2.57 / 1.96 / 1.43 | 2.17 / 1.94 / 1.41 | 2.79 (52) | 2.94 (33) |
 | 256 tokens, predictor reads the previous plan | 4.91 / 3.29 / 1.75 | 2.79 / 2.04 / 1.48 | 2.61 / 2.09 / 1.47 | 3.13 (46) | 3.17 (34) |
 
-- The oracle plan beats the control by 17 to 117% in the batch-128 runs (5 to 31% for the 512-token run at batch 64,
+- The oracle plan beats the control by 17 to 117% in the batch-128 runs (5 to 32% for the 512-token run at batch 64,
   which saw half the training rounds). Every predicted plan is below the control on math and code and at most level
   with it on chat (1.48 against 1.48). The table's predicted-plan column adds channel noise and feeds the predictor's
   output as is, at 0.21 to 0.45 of the power the decoder was trained on. Rescaled to unit power without noise
@@ -734,7 +734,7 @@ likely drafts of the decoder's own per-slot distribution, with trie node counts.
 - Plans made earlier (offsets 16 to 248) give at most small gains, also for the oracle (for example 3.07 against 2.95
   zeroed at offset 16 with block-aligned offsets, 3.12 against 3.03 with the plan shifted to the drafted block). Two
   sampling problems make this test inconclusive. An offset that reaches before the start of the answer falls back to
-  0, so offset 0 is heavily over-represented (only 10 to 19% of dev rounds have room for offset 248), and the decoder
+  0, so offset 0 is heavily over-represented (only 7 to 19% of dev rounds have room for offset 248), and the decoder
   learns a separate embedding for every offset, each seen in well under 1% of rounds. The encoder's block queries
   also attend to the whole window. With block-aligned offsets the oracle at offset 0 reaches 7.80 / 7.01 / 5.25, which
   shows a tight code of the drafted block at offset 0 only.
@@ -767,14 +767,15 @@ no-plan control with the same recipe, so all arms have the same number of decode
 | 256 tokens, `dec` | 3.04 / 2.22 / 1.47 | 3.42 (29) | 3.64 (50) |
 | 256 tokens, `e2e` | 3.01 / 2.24 / 1.48 | 3.44 (29) | 3.64 (51) |
 
-- Training on the predicted plan brings the plan decoders up to the control and no further. All arms are within 0.07
+- Training on the predicted plan brings the plan decoders up to the control and no further. All arms are within 0.08
   of the control on every set, at matched trie nodes as well. One seed per arm.
 - Training the predictor and decoder together adds 15M trainable parameters and gives the same result as freezing
   the predictor, so extra capacity on this path does not help at 4,000 steps either.
-- On the final training batch (the same batch for all 64-token arms) the token loss is 3.35 for the control and
-  3.47 to 3.49 for the plan arms.
-- This closes the deterministic plan predicted from the current chunk's states. The predictor reads nothing the
-  decoder does not, so its plan cannot add information.
+- The plan arms start far from the control, since their decoders were trained on oracle plans (token loss 8.11
+  against 3.49 on the first batch), and end at 3.47 to 3.49 against 3.35 on the final batch (the same batches for
+  all 64-token arms). They may not have converged in 4,000 steps.
+- All arms run at offset 0, so the predictor reads the same 32 states as the decoder and its plan can add capacity
+  or structure but no new information. Within these checkpoints and this budget it adds neither.
 
 **Plan as a conditional VAE** (`cvae_plan.py`, `results/cvae_*.json`). Posterior over the next 256 target tokens,
 Gaussian prior from the current chunk's states, the same 23M decoder trained on posterior samples, loss
@@ -794,7 +795,9 @@ The control without a plan gives 3.02 / 2.16 / 1.48 for one draft. Its K most li
 nodes) and 3.61 / 2.48 / 1.58 (K = 16, 51 / 53 / 57 nodes). The control was trained with offsets (half of the rounds
 at offsets up to 56), the CVAE runs at offset 0 only. A control trained at offset 0 only (`plan_pw_G8c0_poff0.json`)
 gives 3.03 / 2.10 / 1.46 for one draft and 3.43 / 2.37 / 1.53 for its 8 most likely drafts (29 / 31 / 32 nodes),
-within 0.06 of the first control, so the comparisons below hold for both.
+within 0.06 of the first control, so the comparisons below hold for both. Reevaluated on the same rounds
+(`plan_reeval.py`), the first control gives 3.01 / 2.15 / 1.48 and 3.47 for its 8 most likely drafts, against
+3.02 / 2.16 / 1.48 and 3.46 from its own run.
 
 - At β = 1 the posterior collapses onto the prior and the plan carries no information. In the β = 0.3 run where the
   decoder also read prior samples in half of the rounds, the KL was applied to all rounds although the posterior was
@@ -802,17 +805,18 @@ within 0.06 of the first control, so the comparisons below hold for both.
   the posterior rounds (`cvae_G32c16b0.3_mix0.5km.json`) it collapses again (KL 0.008 to 0.009 bits, prior sample
   3.07 / 2.12 / 1.48), so reading prior samples is enough to make the decoder stop using the plan. Smaller β lets the plan carry more (8 to 8.5 bits at β = 0.3, 34 to 44 bits at β = 0.1), and the gap between
   the true-future plan and the prior grows with it.
-- The decoder is trained on samples. A latent mean scores lower than a sample (posterior sample 3.23 / 2.30 / 1.50
-  against posterior mean 3.05 / 2.08 / 1.48 at β = 0.3), and rescaling the mean to the sample norm does not close the
-  gap, so samples are the fair input.
-- A single prior draft does not beat the control on math or code. The collapsed β = 1 model's prior sample is above
-  it on math only (3.06 against 3.02).
+- The decoder is trained on samples. At β = 0.3 (256 tokens) a latent mean scores lower than a sample (posterior
+  sample 3.23 / 2.30 / 1.50 against posterior mean 3.05 / 2.08 / 1.48), and rescaling the mean to the sample norm
+  does not close the gap. At β = 0.1 and for the 64-token plan the posterior mean scores higher (math 4.10 against
+  3.95, 4.09 against 3.67).
+- A single prior draft does not beat the control on math or code. The prior samples of the collapsed β = 1 model and
+  of the masked-KL mixing run are above it on math only (3.06 and 3.07 against 3.02).
 - Trees at matched trie nodes (`results/plan_reeval.json`, best accepted per round interpolated at 20 / 30 / 40 nodes,
   math): control 3.27 / 3.47 / 3.54. Best of K prior samples: 3.20 / 3.29 / 3.35 (256 tokens, β = 0.3), 3.16 / 3.25 /
   3.36 (β = 0.1), 3.26 / 3.34 / 3.44 (64 tokens, β = 0.3). On code the control gives 2.30 / 2.37 / 2.42 and the best
   plan tree 2.32 / 2.35 / 2.39. On chat the plan trees are 0.01 to 0.04 above the control (1.55 / 1.56 / 1.57 against
   1.51 / 1.54 / 1.56), within the spread between runs. The per-position tree of the control is better on math and
-  level on code and chat.
+  level on code and chat. Plan trees start at 22 to 26 nodes (K = 4), so their values at 20 nodes are extrapolated.
 - Within one decoder, with the K most likely drafts taken at a prior sample (the decoder's training input), sampling
   the plan gives the better tree for the 64-token plan (math 3.34 against 3.15 at 30 nodes, code 2.35 against 2.32)
   and for β = 0.1 (math 3.25 against 3.09). For the 256-token plan at β = 0.3 the two are level (3.29 against 3.31).
@@ -845,7 +849,10 @@ above). Both sizes were retrained on the 5.9M windows of `cache_pb`, `cache_pb2`
 - Agreement is 99.4 / 99.0 / 96.7% where the target's top-1 logit leads by 2 or more, and 60 / 55 / 47% where it
   leads by less than 0.5. By error count, 29 to 39% of errors fall below a margin of 0.5, 47 to 52% between 0.5 and 2,
   and 14 to 20% at 2 or more.
-
+- If per-token errors were independent, 96.7% and 85.4% would allow 1 + p + ... + p⁸ ≈ 7.9 (math) and 5.2 (chat)
+  accepted per round from the true latent. For the head-row model the same formula gives 8.8 / 8.7 / 8.1 against a
+  measured 8.5 / 8.5 / 7.6, so the real ceiling is likely lower. Both are reconstruction bounds, since stage 1
+  encodes the drafted positions' own states. One predicted draft reaches 1.4 to 3.1.
 ## What the results say
 
 1. **Target-side refinement.** Arm C uses the spare width of the verification pass to reach τ 2.3 without a second
